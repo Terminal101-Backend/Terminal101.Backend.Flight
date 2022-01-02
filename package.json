@@ -1,0 +1,49 @@
+{
+  "name": "nodejs-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js",
+    "test": "jest --detectOpenHandles"
+  },
+  "_moduleAliases": {
+    "~root": ".",
+    "~app": "app",
+    "~core": "app/core",
+    "~helpers": "app/helpers",
+    "~config": "app/config",
+    "~controllers": "app/controllers",
+    "~repositories": "app/repositories",
+    "~models": "app/models",
+    "~services": "app/services",
+    "~routes": "app/routes",
+    "~validations": "app/validations"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amadeus": "^5.7.0",
+    "auto-bind": "^4.0.0",
+    "bcrypt": "^5.0.1",
+    "celebrate": "^15.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.10.0",
+    "jsonwebtoken": "^8.5.1",
+    "link-module-alias": "^1.2.0",
+    "md5": "^2.3.0",
+    "mongoose": "^5.11.18",
+    "socket.io": "^4.3.2",
+    "swagger-ui-express": "^4.1.6",
+    "uuid": "^8.3.2",
+    "yamljs": "^0.3.0"
+  },
+  "devDependencies": {
+    "jest": "^27.4.3",
+    "nodemon": "^2.0.15",
+    "supertest": "^6.1.6"
+  }
+}
