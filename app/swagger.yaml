@@ -1,0 +1,830 @@
+swagger: '2.0'
+info:
+  version: v1.0.0
+  title: 'Terminal 101: Authentication'
+  description: Terminal 101 - Authentication service
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+host: testterminal101.herokuapp.com
+basePath: /
+tags:
+  - name: Permission
+    description: Roles permission
+  - name: Role
+    description: Services roles
+  - name: Service
+    description: Manage all services of system
+  - name: Setting
+    description: Public setting variables in system
+  - name: SettingPermission
+    description: Public setting's permission
+  - name: User
+    description: User routes
+  - name: UserRole
+    description: Manage roles of user
+
+    
+paths:
+# NOTE: Setting
+  /setting:
+# NOTE: New setting
+    post:
+      tags:
+        - Setting
+      description: Create new public setting for clients and services.
+      parameters:
+        - name: Setting
+          in: body
+          schema:
+            $ref: '#/definitions/Setting'
+          description: Setting's data
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Setting'
+
+# NOTE: Get all settings
+    get:
+      tags:
+        - Setting
+      description: Get all public settings.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Setting'
+
+  /setting/{key}:
+# NOTE: Get one setting
+    get:
+      tags:
+        - Setting
+      description: Get a specific public setting.
+      parameters:
+        - in: path
+          name: key
+          required: true
+          value: set1
+          description: Setting's key
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Setting'
+
+# NOTE: Edit setting
+    patch:
+      tags:
+        - Setting
+      description: Edit an exists public setting.
+      parameters:
+        - in: path
+          name: key
+          required: true
+          value: set1
+          description: Setting's key
+        - in: body
+          name: Setting
+          schema:
+            properties:
+              value:
+                type: string
+                example: val2
+          description: Setting's new value
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Setting'
+
+# NOTE: Delete setting
+    delete:
+      tags:
+        - Setting
+      description: Delete a public setting by key.
+      parameters:
+        - in: path
+          name: key
+          required: true
+          value: set1
+          description: Setting's key
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/Setting'
+
+# NOTE: Setting permission
+  /setting/{key}/permission:
+# NOTE: Set setting permission
+    patch:
+      tags:
+        - SettingPermission
+        # - Setting
+      description: Set new permission to setting
+      parameters:
+        - name: key
+          in: path
+          required: true
+          value: set1
+          description: Setting's key
+        - name: Setting permission info
+          in: body
+          schema:
+            $ref: '#/definitions/SettingPermission'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SettingPermission'
+
+# NOTE: Get setting permission
+    get:
+      tags:
+        - SettingPermission
+        # - Setting
+      description: Set new permission to setting
+      parameters:
+        - name: key
+          in: path
+          required: true
+          value: set1
+          description: Setting's key
+        - name: Setting permission info
+          in: body
+          schema:
+            $ref: '#/definitions/SettingPermissionInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/SettingPermission'
+            
+# NOTE: Delete setting permission
+    delete:
+      tags:
+        - SettingPermission
+        # - Setting
+      description: Set new permission to setting
+      parameters:
+        - name: key
+          in: path
+          required: true
+          value: set1
+          description: Setting's key
+        - name: Setting permission info
+          in: body
+          schema:
+            $ref: '#/definitions/SettingPermissionInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/SettingPermission'
+
+
+# NOTE: Service
+  /service:
+# NOTE: New service
+    post:
+      tags:
+        - Service
+      description: Create new service.
+      parameters:
+        - name: Service Info
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/ServiceInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceInfo'
+
+# NOTE: Get all services
+    get:
+      tags:
+        - Service
+      description: Get all services.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/ServiceInfo'
+
+# NOTE: Get one service
+  /service/{name}:
+    get:
+      tags:
+        - Service
+      description: Get a service by name.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          value: srv1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceInfo'
+
+# NOTE: Edit service
+    patch:
+      tags:
+        - Service
+      description: Edit an exists service.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          value: srv1
+        - name: Service Info
+          in: body
+          schema:
+            type: object
+            properties:
+              description:
+                type: string
+                example: Service edited description
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceInfo'
+
+# NOTE: Delete service
+    delete:
+      tags:
+        - Service
+      description: Delete a service by name.
+      parameters:
+        - name: name
+          in: path
+          required: true
+          value: srv1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceInfo'
+
+
+# NOTE: Role
+  /service/{sname}/role:
+# NOTE: New role
+    patch:
+      tags:
+        - Role
+      description: Set a new role to a service.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: Role Info
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/RoleInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoleInfo'
+
+# NOTE: Get all service's roles
+    get:
+      tags:
+        - Role
+      description: Get all service's roles.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/RoleInfo'
+
+  /service/{sname}/role/{rname}:
+# NOTE: Get one role
+    get:
+      tags:
+        - Role
+      description: Get a specific role of service by name.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: rname
+          in: path
+          description: Role name
+          required: true
+          value: rol1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoleInfo'
+
+# NOTE: Delete role
+    delete:
+      tags:
+        - Role
+      description: Delete a role by name.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: rname
+          in: path
+          description: Role name
+          required: true
+          value: rol1
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/RoleInfo'
+
+
+# NOTE: Permission
+  /service/{sname}/role/{rname}/permission:
+# NOTE: New permission
+    patch:
+      tags:
+        - Permission
+      description: Set a new permission to a role.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: rname
+          in: path
+          description: Role name
+          required: true
+          value: rol1
+        - name: Permission Info
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/PermissionInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PermissionInfo'
+
+# NOTE: Get all role's permissions
+    get:
+      tags:
+        - Permission
+      description: Get all role's permissions.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: rname
+          in: path
+          description: Role name
+          required: true
+          value: rol1
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/PermissionInfo'
+
+# NOTE: Delete permission
+    delete:
+      tags:
+        - Permission
+      description: Delete a permission by name.
+      parameters:
+        - name: sname
+          in: path
+          description: Service name
+          required: true
+          value: srv1
+        - name: rname
+          in: path
+          description: Permission name
+          required: true
+          value: rol1
+        - name: Path
+          in: body
+          description: Path
+          required: true
+          value: ^/test$
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/PermissionInfo'
+
+
+# NOTE: User
+  /user:
+# NOTE: New user
+    post:
+      tags:
+        - User
+      description: Create user by email and password.
+      parameters:
+        - name: User Info
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/UserEmail'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UserInfo'
+
+# NOTE: Get all users
+    get:
+      tags:
+        - User
+      description: Get all users created in system.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/UserInfo'
+
+  /user/{code}:
+# NOTE: Get one user
+    get:
+      tags:
+        - User
+      description: Get one user by user code.
+      parameters:
+        - name: code
+          description: User code
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UserInfo'
+
+# NOTE: Eidt user
+    patch:
+      tags:
+        - User
+      description: Edit a user.
+      parameters:
+        - name: code
+          description: User code
+          required: true
+          type: string
+        - name: User details
+          in: body
+          schema:
+            $ref: '#/definitions/UserInfo'
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UserInfo'
+
+# NOTE: Delete user
+    delete:
+      tags:
+        - User
+      description: Delete a specific user.
+      parameters:
+        - name: code
+          description: User code
+          required: true
+          type: string
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/UserInfo'
+
+  /user/login:
+# NOTE: Login
+    post:
+      tags:
+        - User
+      description: Login user by email and password.
+      parameters:
+        - name: Service-Name
+          in: header
+          required: true
+          value: srv1
+        - name: User-Type
+          in: header
+          required: true
+          enum: [ADMIN, BUSINESS, CLIENT]
+          value: ADMIN
+        - name: User Info
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/UserEmail'
+            properties:
+              device:
+                $ref: '#/definitions/Device'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            $ref: '#/definitions/UserInfo&Token'
+
+
+  /user/{code}/role:
+# NOTE: Set user role
+    patch:
+      tags:
+        - UserRole
+      description: Set new role to user.
+      parameters:
+        - name: code
+          in: path
+          type: string
+        - name: UserRole
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/UserRole'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: object
+            $ref: '#/definitions/UserRole'
+
+# NOTE: Get user role(s)
+    get:
+      tags:
+        - UserRole
+      description: Set new role to user.
+      parameters:
+        - name: code
+          in: path
+          type: string
+        - name: UserRole
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/UserRole'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              $ref: '#/definitions/UserRole'
+
+# NOTE: Delete user role(s)
+    delete:
+      tags:
+        - UserRole
+      description: Set new role to user.
+      parameters:
+        - name: code
+          in: path
+          type: string
+        - name: UserRole
+          in: body
+          schema:
+            type: object
+            $ref: '#/definitions/UserRole'
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              $ref: '#/definitions/UserRole'
+
+
+
+definitions:
+  Setting:
+    required:
+      - key
+      - type
+      - value
+    properties:
+      key:
+        type: string
+        example: set1
+      type:
+        type: string
+        example: String
+      value:
+        type: string
+        example: val1
+        
+  SettingPermissionInfo:
+    properties:
+      userType:
+        type: array
+        items:
+          enum: [ADMIN, CLIENT, BUSINESS]
+        example: [ADMIN]
+      serviceName:
+        type: string
+        example: srv1
+        
+  SettingPermission:
+    required:
+      - userType
+      - serviceName
+      - access
+    properties:
+      userType:
+        type: array
+        items:
+          enum: [ADMIN, CLIENT, BUSINESS]
+        example: [ADMIN]
+      serviceName:
+        type: string
+        example: srv1
+      access:
+        type: string
+        enum: [GET, SET_GET]
+        example: GET
+        
+  ServiceInfo:
+    required:
+      - name
+      - description
+    properties:
+      name:
+        type: string
+        example: srv1
+      description:
+        type: string
+        example: Sample service
+        
+  RoleInfo:
+    required:
+      - name
+      - description
+    properties:
+      name:
+        type: string
+        example: rol1
+      description:
+        type: string
+        example: Sample role
+        
+        
+  PermissionInfo:
+    required:
+      - path
+      - method
+    properties:
+      path:
+        type: string
+        example: ^/test$
+      method:
+        type: string
+        enum: [GET, POST, PATCH, PUT, DELETE]
+        example: ['GET', 'POST']
+        
+  UserEmail:
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        example: a@a.com
+      password:
+        type: string
+        example: 123
+        
+  Device:
+    required:
+      - name
+      - appVersion
+      - deviceVersion
+    properties:
+      name:
+        type: string
+        example: Samsung Galaxy S21
+      appVersion:
+        type: number
+        example: 1
+      deviceVersion:
+        type: number
+        example: 1
+        
+  UserInfo&Token:
+    properties:
+      email:
+        type: string
+        example: a@a.com
+      code:
+        type: string
+        example: 12fgj1jGJG213fU
+      firstName:
+        type: string
+        example: Jack
+      lastName:
+        type: string
+        example: Sparrow
+      nickName:
+        type: string
+        example: Gonjishke
+      birthDate:
+        type: string
+        example: 1640643141
+      mobileNumber:
+        type: string
+        example: +1999888777
+      token:
+        type: string
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiZXF2bm9wN2p2NThkM2JsIiwic2VydmljZSI6InNydjEiLCJ0eXBlIjoiQURNSU4iLCJpYXQiOjE2NDA2NDA0MTMsImV4cCI6MTY0MDgxMzIxM30.RzM5_v4BJj_Uvo0YV_B0sa3_6_GduYB6hMlUQDaXKYI
+      refreshToken:
+        type: string
+        example: 3undefinedOKfiVvtjbKb23.wJowhysUX1n6undefinedzyacFTHvuJT.sJundefinedceugkundefinedBW
+
+  UserInfo:
+    properties:
+      email:
+        type: string
+        example: a@a.com
+      code:
+        type: string
+        example: 12fgj1jGJG213fU
+      firstName:
+        type: string
+        example: Jack
+      lastName:
+        type: string
+        example: Sparrow
+      nickName:
+        type: string
+        example: Gonjishke
+      birthDate:
+        type: string
+        example: 1640643141
+      mobileNumber:
+        type: string
+        example: +1999888777
+
+  UserRole:
+    required:
+      - serviceName
+      - roleName
+      - userTYpe
+    properties:
+      serviceName:
+        type: string
+        example: srv1
+      roleName:
+        type: string
+        example: rol1
+      userType:
+        type: array
+        items:
+          type: string
+          enum: [ADMIN, BUSINESS, CLIENT]
+          example: ADMIN
+
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
