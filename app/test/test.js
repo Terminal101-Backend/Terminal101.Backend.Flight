@@ -22,17 +22,29 @@ describe("Enum", () => {
 describe("Model", () => {
   let vars = {};
 
-  describe("Api Model", () => {
-    vars.api = {};
+  describe("Country Model", () => {
+    vars.country = {};
 
-    // it("Add new Api", done => {
-    //   check(done, { test: modelTests.addApi, params: [vars.api] });
-    // });
+    it("Add new Country", done => {
+      check(done, { test: modelTests.addCountry, params: [vars.country] });
+    });
+
+    it("Add new City", done => {
+      check(done, { test: modelTests.addCity, params: [vars.country] });
+    });
+
+    it("Add new Airport", done => {
+      check(done, { test: modelTests.addAirport, params: [vars.country] });
+    });
+
+    it("Add new Airline", done => {
+      check(done, { test: modelTests.addAirline, params: [vars.country] });
+    });
   });
 
-  // it("Remove test documents", done => {
-  //   check(done, { test: modelTests.cleanApi, params: [vars.api] }, { test: modelTests.cleanService, params: [vars.service] }, { test: modelTests.cleanSetting, params: [vars.setting] }, { test: modelTests.cleanUser, params: [vars.user] });
-  // });
+  it("Remove test documents", done => {
+    check(done, { test: modelTests.cleanCountry, params: [vars.country] });
+  });
 });
 
 describe("Router", () => {

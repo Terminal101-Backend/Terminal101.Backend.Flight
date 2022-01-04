@@ -3,7 +3,7 @@ const db = require("../../core/db")
 require("../..");
 
 module.exports = {
-  // ...require("./api"),
+  ...require("./country"),
 };
 
 module.exports.startDbConnection = async done => {
