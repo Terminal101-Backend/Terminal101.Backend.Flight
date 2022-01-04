@@ -2,6 +2,7 @@ const { check } = require("../helpers/testHelper");
 const enumTests = require("./enum");
 const modelTests = require("./models");
 const routeTests = require("./routes");
+const serviceTests = require("./services");
 
 // jest.setTimeout(10000);
 
@@ -45,6 +46,30 @@ describe("Model", () => {
   it("Remove test documents", done => {
     check(done, { test: modelTests.cleanCountry, params: [vars.country] });
   });
+});
+
+describe("Service", () => {
+  let vars = {};
+
+  describe("Amadeus", () => {
+    vars.amadeus = {};
+
+    it("Get access token", done => {
+      check(done, serviceTests.getAccessToken);
+    });
+
+    it("Airline code lookup", done => {
+      check(done, serviceTests.airlineCodeLookup);
+    });
+
+    it("Search airport and city", done => {
+      check(done, serviceTests.searchAirportAndCity);
+    });
+  });
+
+  // it("Remove route test documents", done => {
+  //   check(done, { test: routeTests.cleanSetting, params: [vars.setting] });
+  // });
 });
 
 describe("Router", () => {

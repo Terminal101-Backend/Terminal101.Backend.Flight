@@ -18,6 +18,14 @@ const flightInfo = new Schema({
         type: Date,
         required: true,
     },
+    searchedCount: {
+        type: Number,
+        default: 0,
+    },
+    selectedCount: {
+        type: Number,
+        default: 0,
+    },
     price: {
         type: Number,
         required: true,

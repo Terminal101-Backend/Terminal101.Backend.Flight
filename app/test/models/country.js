@@ -55,8 +55,6 @@ module.exports.addAirline = async (done, vars) => {
 module.exports.cleanCountry = async (done, vars) => {
   try {
     const countryRepo = repositories.countryRepository;
-
-    console.log(vars);
     await countryRepo.deleteById(vars.id);
 
     done();

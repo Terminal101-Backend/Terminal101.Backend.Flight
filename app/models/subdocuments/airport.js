@@ -16,6 +16,14 @@ const airport = new Schema({
 		type: String,
 		required: true,
 	},
+	searchedCount: {
+		type: Number,
+		default: 0,
+	},
+	selectedCount: {
+		type: Number,
+		default: 0,
+	},
 	location: {
 		type: Location,
 		required: true,
