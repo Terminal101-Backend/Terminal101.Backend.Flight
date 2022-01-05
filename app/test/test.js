@@ -67,6 +67,14 @@ describe("Service", () => {
     });
   });
 
+  describe("Ip", () => {
+    vars.ip = {};
+
+    it("Get IP info", done => {
+      check(done, serviceTests.getIpInfo);
+    });
+  });
+
   // it("Remove route test documents", done => {
   //   check(done, { test: routeTests.cleanSetting, params: [vars.setting] });
   // });
