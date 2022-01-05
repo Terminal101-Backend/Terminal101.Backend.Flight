@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "seed": "node app/core/seed.js",
     "test": "jest --detectOpenHandles"
   },
   "_moduleAliases": {

@@ -12,6 +12,10 @@ const country = new Schema({
         type: String,
         required: true,
     },
+    dialingCode: {
+        type: Number,
+        required: true,
+    },
     searchedCount: {
         type: Number,
         default: 0,

@@ -32,15 +32,16 @@ class CountryRepository extends BaseRepository {
    * @param {String} code 
    * @returns {Promise<Country>}
    */
-  async createCountry(name, code) {
+  async createCountry(name, code, dialingCode) {
     let country = await Country.findOne({ code });
 
     if (!country) {
-      country = new Country({ name: "", code });
+      country = new Country({ name: "", code, dialingCode: "" });
     }
 
     if (country.name !== name) {
       country.name = name;
+      country.dialingCode = dialingCode;
       await country.save();
     }
 

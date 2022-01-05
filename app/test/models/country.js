@@ -5,7 +5,7 @@ module.exports.addCountry = async (done, vars) => {
   try {
     const countryRepo = repositories.countryRepository;
 
-    const country = await countryRepo.createCountry("Merrikh", "MRKH");
+    const country = await countryRepo.createCountry("Merrikh", "MRKH", 9999);
 
     vars.id = country._id;
     vars.code = country.code;
