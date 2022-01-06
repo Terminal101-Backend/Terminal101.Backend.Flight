@@ -122,6 +122,38 @@ class CountryRepository extends BaseRepository {
 
     return country.airlines[idx - 1];
   }
+
+  async search(keyword) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({ $unwind: "$cities" });
+    agrCountry.append({ $unwind: "$cities.airports" });
+    // agrCountry.append({ $unwind: "$airlines" });
+    agrCountry.append({
+      $match: {
+        $or: [
+          { name: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { code: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { "cities.name": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { "cities.code": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { "cities.airports.name": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { "cities.airports.code": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+        ]
+      }
+    });
+    const agrResult = await agrCountry.exec();
+
+    return agrResult;
+  }
+
+  async getAirports(countryCode, cityCode) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({ $unwind: "$cities" });
+    agrCountry.append({ $match: { code: countryCode } });
+    agrCountry.append({ $match: { "cities.code": cityCode } });
+    const agrResult = await agrCountry.exec();
+
+    return agrResult[0];
+  }
 };
 
 

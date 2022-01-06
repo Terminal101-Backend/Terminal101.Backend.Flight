@@ -128,6 +128,13 @@ class Enum {
   check(key, has) {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:
+        if (!(has instanceof Symbol)) {
+          has = this.get(has);
+        }
+        if (key instanceof Symbol) {
+          key = this.find(key);
+        }
+
         return this.#list[key] === has;
 
       case EEnumType.NUMERIC:
