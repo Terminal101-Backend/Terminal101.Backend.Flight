@@ -1,5 +1,4 @@
 node_modules/
 .devcontainer
 package-lock.json
-db
 .env

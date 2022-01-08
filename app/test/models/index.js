@@ -1,5 +1,5 @@
 const { expect } = require("@jest/globals");
-const db = require("../../core/db")
+const db = require("../../core/db/mongo")
 require("../..");
 
 module.exports = {
@@ -9,7 +9,7 @@ module.exports = {
 module.exports.startDbConnection = async done => {
   try {
     var mongoose = require("mongoose");
-    await db.startDataBase();
+    await db.startDatabase();
     expect(mongoose.connection.readyState).toBe(1);
 
     done();

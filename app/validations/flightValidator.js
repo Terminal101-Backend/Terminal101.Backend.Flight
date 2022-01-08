@@ -8,7 +8,7 @@ class SearchOriginDestination extends BaseValidator {
     };
 
     const params = {
-      waypoint: Joi.string().required(),
+      waypointType: Joi.string().required(),
     };
 
     const query = {

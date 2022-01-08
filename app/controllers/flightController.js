@@ -11,7 +11,7 @@ module.exports.searchOriginDestination = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
     if (!keyword) {
-      if (EFlightWaypoint.check("ORIGIN", req.params.waypoint)) {
+      if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
         const ip = request.getRequestIpAddress(req);
         const ipInfo = await getIpInfo("24.48.0.1");
         if (ipInfo.status === "success") {

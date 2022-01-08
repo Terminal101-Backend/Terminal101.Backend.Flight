@@ -3,11 +3,17 @@ const enumTests = require("./enum");
 const modelTests = require("./models");
 const routeTests = require("./routes");
 const serviceTests = require("./services");
+const redisTest = require("./redis");
 
 // jest.setTimeout(10000);
 
+
+describe("Redis", () => {
+});
+
+
 beforeAll(done => {
-  check(done, modelTests.startDbConnection);
+  check(done, modelTests.startDbConnection, redisTest.connect);
 });
 
 describe("Enum", () => {
@@ -98,5 +104,5 @@ describe("Router", () => {
 
 
 afterAll(done => {
-  check(done, modelTests.stopDbConnection);
+  check(done, modelTests.stopDbConnection, redisTest.disconnect);
 });

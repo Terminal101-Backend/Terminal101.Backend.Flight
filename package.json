@@ -38,6 +38,7 @@
     "link-module-alias": "^1.2.0",
     "md5": "^2.3.0",
     "mongoose": "^5.11.18",
+    "redis": "^4.0.1",
     "socket.io": "^4.3.2",
     "swagger-ui-express": "^4.1.6",
     "uuid": "^8.3.2",

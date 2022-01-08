@@ -1,6 +1,6 @@
 const app = require("./app");
 const path = require("path");
-const database = require("./app/core/db");
+const database = require("./app/core/db/mongo");
 
 const server = app.listen(process.env.PORT, () => {
     console.log(`🚀 Server running at port:${process.env.PORT}`);
@@ -12,6 +12,6 @@ io.on('connection', function (socket) {
     console.log(`socket.io connected: ${socket.id}`);
 });
 
-database.startDataBase();
+database.startDatabase();
 
 global.io = io;

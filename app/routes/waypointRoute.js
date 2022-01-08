@@ -5,7 +5,7 @@ const { flightValidator } = require("../validations");
 
 // NOTE: Search flight origin/destination
 router
-  .get("/:waypoint",
+  .get("/:waypointType",
     (req, res, next) => {
       console.log("Search waypoint", req.params, req.body, req.query);
       next();

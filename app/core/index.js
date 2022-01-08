@@ -1,4 +1,4 @@
-const db = require("./db");
+const db = require("./db/mongo");
 const BaseValidator = require("./baseValidator");
 const BaseRepository = require("./baseRepository");
 const Enum = require("./enum");

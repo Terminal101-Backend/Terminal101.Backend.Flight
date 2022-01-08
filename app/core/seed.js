@@ -1,7 +1,7 @@
 //Node_modules
 require("dotenv").config();
 global.config = require("../config");
-const db = require("./db");
+const db = require("./db/mongo");
 
 const { countryRepository } = require("../repositories");
 const { Country } = require("../models/documents");
