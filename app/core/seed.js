@@ -3,7 +3,7 @@ require("dotenv").config();
 global.config = require("../config");
 const db = require("./db/mongo");
 
-const { countryRepository } = require("../repositories");
+const { countryRepository, flightInfoRepository } = require("../repositories");
 const { Country } = require("../models/documents");
 
 const data = require("./initData");
@@ -31,8 +31,31 @@ const addCountriesCitiesAirports = async () => {
   await Country.insertMany(countries);
 };
 
+const addSampleFlightInfos = async () => {
+  const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
+  const airlines = data.airlines.map(airline => airline.AirLineCode);
+
+  const count = 10;
+  const maxSearchCount = 50;
+
+  for (let i = 0; i < count; i++) {
+    const randomOrigin = waypoints[Math.ceil(Math.random() * waypoints.length)];
+    const randomDestination = waypoints[Math.ceil(Math.random() * waypoints.length)];
+    const randomAirline = airlines[Math.ceil(Math.random() * airlines.length)];
+
+    const flight = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline);
+
+    for (let j = 0; j < Math.random() * maxSearchCount; j++) {
+      const time = new Date();
+      time.setDate(time.getDate() + Math.floor(Math.random() * 30));
+      await flightInfoRepository.searchAFlight(flight._id, time, Math.floor(Math.random() * 30000 + 50) / 100);
+    }
+  }
+};
+
 (async () => {
-  await db.startDataBase();
+  await db.startDatabase();
   await addCountriesCitiesAirports();
+  await addSampleFlightInfos();
   await db.stopDatabase();
 })()
