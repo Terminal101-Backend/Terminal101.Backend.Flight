@@ -1,5 +1,8 @@
 const BaseRepository = require("../core/baseRepository");
 const { SearchedFlight } = require("../models/documents");
+const { EFlightWaypoint } = require("../constants")
+const redis = require("../core/db/redis");
+const { print } = require("redis");
 
 class SearchedFlightRepository extends BaseRepository {
   constructor() {
@@ -18,6 +21,25 @@ class SearchedFlightRepository extends BaseRepository {
     await searchedFlight.save();
 
     return searchedFlight;
+  }
+
+  async cachePopularWaypoints() {
+
+  }
+
+  async getCachedPopularWaypoints(waypointType) {
+    let result = [];
+    if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
+
+      // const codes = await redis.client.sMembers(`popular:${waypointType.toLowerCase()}`);
+      // const keys = await redis.client.keys(`popular:${waypointType.toLowerCase()}:*`);
+
+      // console.log(codes, keys)
+
+      // list = await redis.client.sort(`popular:${waypointType.toLowerCase()} by popular:${waypointType.toLowerCase()}:*`, print);
+    }
+
+    return result;
   }
 };
 

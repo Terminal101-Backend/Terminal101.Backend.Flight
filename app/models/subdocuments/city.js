@@ -12,14 +12,14 @@ const city = new Schema({
 		type: String,
 		required: true,
 	},
-	searchedCount: {
-		type: Number,
-		default: 0,
-	},
-	selectedCount: {
-		type: Number,
-		default: 0,
-	},
+	// searchedCount: {
+	// 	type: Number,
+	// 	default: 0,
+	// },
+	// selectedCount: {
+	// 	type: Number,
+	// 	default: 0,
+	// },
 	airports: {
 		type: [Airport],
 		default: [],

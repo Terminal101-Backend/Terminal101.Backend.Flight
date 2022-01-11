@@ -21,6 +21,20 @@ class SearchOriginDestination extends BaseValidator {
   }
 };
 
+class GetPopularWaypoints extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      waypointType: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class GetCountries extends BaseValidator {
   constructor() {
     const body = {
@@ -61,6 +75,7 @@ class GetAirports extends BaseValidator {
 
 module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
+  getPopularWaypoints: new GetPopularWaypoints(),
   getCountries: new GetCountries(),
   getCities: new GetCities(),
   getAirports: new GetAirports(),

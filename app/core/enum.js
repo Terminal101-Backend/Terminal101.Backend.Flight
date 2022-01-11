@@ -128,14 +128,18 @@ class Enum {
   check(key, has) {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:
+        if (!Array.isArray(key)) {
+          key = [key];
+        }
         if (!(has instanceof Symbol)) {
           has = this.get(has);
         }
-        if (key instanceof Symbol) {
-          key = this.find(key);
-        }
+        key = key.map(k => k instanceof Symbol ? this.find(k) : k);
+        // if (key instanceof Symbol) {
+        //   key = this.find(key);
+        // }
 
-        return this.#list[key] === has;
+        return key.some(k => this.#list[k] === has);
 
       case EEnumType.NUMERIC:
         let hasValue = isNaN(has) ? this.get(has) : has;

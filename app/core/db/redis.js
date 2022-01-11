@@ -13,6 +13,7 @@ async function stopDatabase() {
 }
 
 module.exports = {
+	client,
 	startDatabase,
 	stopDatabase
 };

@@ -13,4 +13,14 @@ router
     flightValidator.searchOriginDestination.check(),
     flightController.searchOriginDestination);
 
+// NOTE: Get popular waypoints
+router
+  .get("/:waypointType/popular",
+    (req, res, next) => {
+      console.log("Search popular waypoints", req.params, req.body, req.query);
+      next();
+    },
+    flightValidator.getPopularWaypoints.check(),
+    flightController.getPopularWaypoints);
+
 module.exports = router;

@@ -2,8 +2,7 @@ const { EFlightWaypoint } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
-const { countryRepository } = require("../repositories");
-const { list } = require("../constants/EUserType");
+const { countryRepository, searchedFlightRepository } = require("../repositories");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -39,6 +38,17 @@ module.exports.searchOriginDestination = async (req, res) => {
     const airportsArray = Object.entries(distinctAirports).map(airport => ({ code: airport[0], name: airport[1] }));
 
     response.success(res, { countries: countriesArray, cities: citiesArray, airports: airportsArray });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get popular waypoints
+module.exports.getPopularWaypoints = async (req, res) => {
+  try {
+    const list = await searchedFlightRepository.getCachedPopularWaypoints(req.params.waypointType);
+
+    response.success(res, list);
   } catch (e) {
     response.exception(res, e);
   }
