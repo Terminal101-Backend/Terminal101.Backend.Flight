@@ -35,8 +35,9 @@ const addSampleFlightInfos = async () => {
   const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
   const airlines = data.airlines.map(airline => airline.AirLineCode);
 
-  const count = 10;
-  const maxSearchCount = 50;
+  const count = 30;
+  const maxSearchCount = 200;
+  const daysAfterToday = 10;
 
   for (let i = 0; i < count; i++) {
     const randomOrigin = waypoints[Math.ceil(Math.random() * waypoints.length)];
@@ -47,7 +48,11 @@ const addSampleFlightInfos = async () => {
 
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
       const time = new Date();
-      time.setDate(time.getDate() + Math.floor(Math.random() * 30));
+      time.setDate(time.getDate() + Math.floor(Math.random() * daysAfterToday));
+      time.setHours(12);
+      time.setMinutes(15);
+      time.setSeconds(0);
+      time.setMilliseconds(0);
       await flightInfoRepository.searchAFlight(flight._id, time, Math.floor(Math.random() * 30000 + 50) / 100);
     }
   }

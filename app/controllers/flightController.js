@@ -53,6 +53,38 @@ module.exports.getPopularWaypoints = async (req, res) => {
     response.exception(res, e);
   }
 };
+// NOTE: Search flights
+module.exports.searchFlights = async (req, res) => {
+  try {
+
+    let segments = req.query.segments ?? [];
+    if (!Array.isArray(segments)) {
+      try {
+        segments = JSON.parse(segments);
+      } catch (e) {
+        segments = [segments];
+      }
+    }
+
+    response.success(res, { query: req.query, segments });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get popular flights
+module.exports.getPopularFlights = async (req, res) => {
+  try {
+    const list = await flightInfoRepository.getCachedPopularFlights(req.params.waypointType);
+
+    response.success(res, list.map(flight => ({
+      ...flight,
+      "time.timestamps": new Date(flight.time).getTime(),
+    })));
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
 
 // NOTE: Get countries
 module.exports.getCountries = async (req, res) => {

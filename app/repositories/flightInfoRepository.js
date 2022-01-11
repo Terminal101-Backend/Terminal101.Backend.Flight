@@ -15,9 +15,12 @@ class FlightInfoRepository extends BaseRepository {
    * @returns {Promise<FlightInfo>}
    */
   async createFlightInfo(originCode, destinationCode, airlineCode) {
-    let flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode });
+    let flightInfo = await this.findOne({ originCode, destinationCode, airlineCode });
 
-    await flightInfo.save();
+    if (!flightInfo) {
+      flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode });
+      await flightInfo.save();
+    }
 
     return flightInfo;
   }
@@ -49,13 +52,20 @@ class FlightInfoRepository extends BaseRepository {
       agrFlightInfo.append({
         $group: {
           _id: "$" + waypointType.toLowerCase() + "Code",
-          ct: {
+          count: {
             $sum: 1,
           }
         }
       });
-      agrFlightInfo.append({ $sort: { ct: -1 } });
+      agrFlightInfo.append({ $sort: { count: -1 } });
       agrFlightInfo.append({ $limit: count });
+      agrFlightInfo.append({
+        $addFields: {
+          code: "$_id",
+          count: "$count"
+        }
+      });
+      agrFlightInfo.append({ $project: { code: 1, count: 1, _id: 0 } });
       result = await agrFlightInfo.exec();
     }
 
@@ -66,7 +76,7 @@ class FlightInfoRepository extends BaseRepository {
 
   }
 
-  async getCachedPopularFlights() {
+  async getCachedPopularFlights(count = 10) {
     let result = [];
 
     const agrFlightInfo = FlightInfo.aggregate();
@@ -78,13 +88,22 @@ class FlightInfoRepository extends BaseRepository {
           destination: "$destinationCode",
           time: "$searches.time",
         },
-        ct: {
+        count: {
           $sum: 1,
         }
       }
     });
-    agrFlightInfo.append({ $sort: { ct: -1 } });
+    agrFlightInfo.append({ $sort: { count: -1 } });
     agrFlightInfo.append({ $limit: count });
+    agrFlightInfo.append({
+      $addFields: {
+        origin: "$_id.origin",
+        destination: "$_id.destination",
+        time: "$_id.time",
+        count: "$count",
+      }
+    });
+    agrFlightInfo.append({ $project: { origin: 1, destination: 1, time: 1, count: 1, _id: 0 } });
     result = await agrFlightInfo.exec();
 
     return result;

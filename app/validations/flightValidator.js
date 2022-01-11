@@ -35,6 +35,35 @@ class GetPopularWaypoints extends BaseValidator {
   }
 };
 
+class SearchFlights extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const query = {
+      origin: Joi.string().required(),
+      destination: Joi.string().required(),
+      return: Joi.boolean(),
+      segments: [
+        Joi.string(),
+        Joi.array().items(Joi.string()),
+      ],
+    };
+
+    super(body);
+    this.query(query);
+  }
+};
+
+class GetPopularFlights extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    super(body);
+  }
+};
+
 class GetCountries extends BaseValidator {
   constructor() {
     const body = {
@@ -76,6 +105,8 @@ class GetAirports extends BaseValidator {
 module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
+  searchFlights: new SearchFlights(),
+  getPopularFlights: new GetPopularFlights(),
   getCountries: new GetCountries(),
   getCities: new GetCities(),
   getAirports: new GetAirports(),

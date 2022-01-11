@@ -1,4 +1,5 @@
 module.exports = (app) => {
+  app.use("/flight", require("./flightRoute"));
   app.use("/waypoint", require("./waypointRoute"));
   app.use("/country", require("./countryRoute"));
   app.use("/country", require("./cityRoute"));

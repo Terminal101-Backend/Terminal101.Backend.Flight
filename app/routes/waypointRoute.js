@@ -17,7 +17,7 @@ router
 router
   .get("/:waypointType/popular",
     (req, res, next) => {
-      console.log("Search popular waypoints", req.params, req.body, req.query);
+      console.log("Get popular waypoints", req.params, req.body, req.query);
       next();
     },
     flightValidator.getPopularWaypoints.check(),
