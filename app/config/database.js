@@ -1,11 +1,11 @@
 module.exports = {
   get mongodb() {
-    let result = "mongodb://";
+    let result = "mongodb+srv://";
 
     if (process.env.MONGO_USERNAME) {
       result += process.env.MONGO_USERNAME;
       if (process.env.MONGO_PASSWORD) {
-        result += ":" + process.env.MONGO_PASSWORD;
+        result += ":" + process.env.MONGO_PASSWORD + "@";
       }
     }
 
@@ -23,7 +23,7 @@ module.exports = {
     if (process.env.REDIS_USERNAME) {
       result += process.env.REDIS_USERNAME;
       if (process.env.REDIS_PASSWORD) {
-        result += ":" + process.env.REDIS_PASSWORD;
+        result += ":" + process.env.REDIS_PASSWORD + "@";
       }
     }
 
