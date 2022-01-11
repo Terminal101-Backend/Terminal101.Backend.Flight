@@ -3,22 +3,22 @@ const Schema = mongoose.Schema;
 const SearchedFlight = require("../subdocuments/searchedFlight");
 
 const flightInfo = new Schema({
-    fromAirportId: {
+    originCode: {
         type: String,
         required: true,
     },
-    toAirportId: {
+    destinationCode: {
         type: String,
         required: true,
     },
-    airlineId: {
+    airlineCode: {
         type: String,
         required: true,
     },
-    time: {
-        type: Date,
-        required: true,
-    },
+    // time: {
+    //     type: Date,
+    //     required: true,
+    // },
     // searchedCount: {
     //     type: Number,
     //     default: 0,

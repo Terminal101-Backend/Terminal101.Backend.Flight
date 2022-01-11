@@ -10,13 +10,13 @@ const searchedFlight = new Schema({
     //     ref: FlightInfo,
     //     required: true,
     // },
-    flightTime: {
+    time: {
         type: Date,
         required: true,
     },
     searchedTime: {
         type: Date,
-        default: Date.now(),
+        default: Date.now,
     },
     price: {
         type: Number,
@@ -26,4 +26,5 @@ const searchedFlight = new Schema({
     timestamps: true
 });
 
+module.exports = searchedFlight;
 // module.exports = mongoose.model("searchedFlight", searchedFlight);

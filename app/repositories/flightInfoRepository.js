@@ -9,13 +9,13 @@ class FlightInfoRepository extends BaseRepository {
 
   /**
    * 
-   * @param {String} fromAirportId 
-   * @param {String} toAirportId 
-   * @param {String} airlineId 
+   * @param {String} originCode 
+   * @param {String} destinationCode 
+   * @param {String} airlineCode 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(fromAirportId, toAirportId, airlineId) {
-    let flightInfo = new FlightInfo({ fromAirportId, toAirportId, airlineId, time, price });
+  async createFlightInfo(originCode, destinationCode, airlineCode) {
+    let flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode });
 
     await flightInfo.save();
 
@@ -41,16 +41,22 @@ class FlightInfoRepository extends BaseRepository {
 
   }
 
-  async getCachedPopularWaypoints(waypointType) {
+  async getCachedPopularWaypoints(waypointType, count = 10) {
     let result = [];
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
-
-      // const codes = await redis.client.sMembers(`popular:${waypointType.toLowerCase()}`);
-      // const keys = await redis.client.keys(`popular:${waypointType.toLowerCase()}:*`);
-
-      // console.log(codes, keys)
-
-      // list = await redis.client.sort(`popular:${waypointType.toLowerCase()} by popular:${waypointType.toLowerCase()}:*`, print);
+      const agrFlightInfo = FlightInfo.aggregate();
+      agrFlightInfo.append({ $unwind: "$searches" });
+      agrFlightInfo.append({
+        $group: {
+          _id: "$" + waypointType.toLowerCase() + "Code",
+          ct: {
+            $sum: 1,
+          }
+        }
+      });
+      agrFlightInfo.append({ $sort: { ct: -1 } });
+      agrFlightInfo.append({ $limit: count });
+      result = await agrFlightInfo.exec();
     }
 
     return result;
@@ -63,9 +69,26 @@ class FlightInfoRepository extends BaseRepository {
   async getCachedPopularFlights() {
     let result = [];
 
+    const agrFlightInfo = FlightInfo.aggregate();
+    agrFlightInfo.append({ $unwind: "$searches" });
+    agrFlightInfo.append({
+      $group: {
+        _id: {
+          origin: "$originCode",
+          destination: "$destinationCode",
+          time: "$searches.time",
+        },
+        ct: {
+          $sum: 1,
+        }
+      }
+    });
+    agrFlightInfo.append({ $sort: { ct: -1 } });
+    agrFlightInfo.append({ $limit: count });
+    result = await agrFlightInfo.exec();
+
     return result;
   }
 };
-
 
 module.exports = new FlightInfoRepository();
