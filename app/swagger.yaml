@@ -6,15 +6,20 @@ info:
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
+
 host: test-terminal101-flight.herokuapp.com
+# host: localhost:8005
 basePath: /
+
 tags:
   - name: Airport
-    description: Airport lists
+    description: Airport routes
   - name: City
-    description: Country's cities
+    description: City routes
   - name: Country
-    description: All countries list
+    description: Country routes
+  - name: Flight
+    description: Flight routes
   - name: Waypoint
     description: Flight origin/destination points
 
@@ -111,10 +116,149 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/Country'
+              $ref: '#/definitions/Waypoint'
+
+  /waypoint/{waypointType}/popular:
+# NOTE: New setting
+    get:
+      tags:
+        - Waypoint
+      description: Get popular waypoints.
+      parameters:
+        - name: waypointType
+          in: path
+          type: string
+          enums: [ORIGIN, DESTINATION]
+          required: true
+          value: ORIGIN
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/WaypointPopular'
+
+# NOTE: Flight
+  /flight:
+# NOTE: New setting
+    get:
+      tags:
+        - Flight
+      description: Get autocomplete value list.
+      parameters:
+        - name: origin
+          in: query
+          type: string
+          required: true
+          value: MUC
+          description: Keyword for search.
+        - name: destination
+          in: query
+          type: string
+          required: true
+          value: WDC
+          description: Keyword for search.
+        - name: return
+          in: query
+          type: boolean
+          required: false
+          # value: false
+          description: Keyword for search.
+        - name: segments
+          in: query
+          type: array
+          required: false
+          value:
+            - NYC
+            - IST
+          items:
+            type: string
+          description: Keyword for search.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Flight'
+
+  /flight/popular:
+# NOTE: New setting
+    get:
+      tags:
+        - Flight
+      description: Get popular waypoints.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FlightPopular'
 
 
 definitions:
+  Flight:
+    required:
+      - origin
+      - destination
+      - time
+    properties:
+      origin:
+        type: string
+        example: MUC
+      destination:
+        type: string
+        example: NYC
+      time:
+        type: string
+        example: "2022-01-13T12:15:00.000Z"
+
+  FlightPopular:
+    required:
+      - origin
+      - destination
+      - time
+      - count
+    properties:
+      origin:
+        type: string
+        example: MUC
+      destination:
+        type: string
+        example: NYC
+      time:
+        type: string
+        example: "2022-01-13T12:15:00.000Z"
+      count:
+        type: number
+        example: 13
+
+  WaypointPopular:
+    required:
+      - code
+      - count
+    properties:
+      code:
+        type: string
+        example: MUC
+      count:
+        type: number
+        example: 10
+
+  Waypoint:
+    required:
+      - code
+      - name
+    properties:
+      code:
+        type: string
+        example: MUC
+      name:
+        type: string
+        example: Munchen
+
   Airport:
     required:
       - code
@@ -152,6 +296,7 @@ definitions:
         example: Munchen
 
 schemes:
+  # - http
   - https
 consumes:
   - application/json
