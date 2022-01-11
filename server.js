@@ -1,7 +1,7 @@
 const app = require("./app");
 const path = require("path");
 const mongo = require("./app/core/db/mongo");
-const redis = require("./app/core/db/redis");
+// const redis = require("./app/core/db/redis");
 
 const server = app.listen(process.env.PORT, () => {
     console.log(`🚀 Server running at port:${process.env.PORT}`);
