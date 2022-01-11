@@ -60,7 +60,7 @@ module.exports.searchFlights = async (req, res) => {
     let segments = req.query.segments ?? [];
     if (!Array.isArray(segments)) {
       try {
-        segments = JSON.parse(segments);
+        segments = segments.split(",").map(segment => segment.trim());
       } catch (e) {
         segments = [segments];
       }
