@@ -14,6 +14,6 @@ io.on('connection', function (socket) {
 });
 
 mongo.startDatabase();
-redis.startDatabase();
+// redis.startDatabase();
 
 global.io = io;
