@@ -1,6 +1,6 @@
 module.exports = {
   get mongodb() {
-    let result = process.env.MONGO_PREFEIX + "://";
+    let result = process.env.MONGO_PREFIX + "://";
 
     if (process.env.MONGO_USERNAME) {
       result += process.env.MONGO_USERNAME;
