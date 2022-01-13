@@ -117,7 +117,7 @@ class CountryRepository extends BaseRepository {
     }
 
     const country = await Country.findOne({ code: countryCode });
-    const idx = country.airlines.push({ name, code, description, location: headOfficeLocation });
+    const idx = country.airlines.push({ name, code, description, headOfficeLocation });
     await country.save();
 
     return country.airlines[idx - 1];
