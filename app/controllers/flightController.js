@@ -23,21 +23,22 @@ module.exports.searchOriginDestination = async (req, res) => {
     }
 
     const result = await countryRepository.search(keyword);
-    const reKeyword = new RegExp(`.*${keyword}.*`, "i");
+    // const reKeyword = new RegExp(`.*${keyword}.*`, "i");
 
-    const foundCountries = result.filter(country => reKeyword.test(`${country.name}|${country.code}`));
-    const distinctCountries = foundCountries.reduce((list, country) => ({ ...list, [country.code]: country.name }), {});
-    const countriesArray = Object.entries(distinctCountries).map(country => ({ code: country[0], name: country[1] }));
+    // const foundCountries = result.filter(country => reKeyword.test(`${country.name}|${country.code}`));
+    // const distinctCountries = foundCountries.reduce((list, country) => ({ ...list, [country.code]: { name: country.name, cities: country.countryInfo.cities } }), {});
+    // const countriesArray = Object.entries(distinctCountries).map(country => ({ code: country[0], name: country[1].name, cities: country[1].cities }));
 
-    const foundCities = result.filter(country => reKeyword.test(`${country.cities.name}|${country.cities.code}`));
-    const distinctCities = foundCities.reduce((list, country) => ({ ...list, [country.cities.code]: country.cities.name }), {});
-    const citiesArray = Object.entries(distinctCities).map(city => ({ code: city[0], name: city[1] }));
+    // const foundCities = result.filter(country => reKeyword.test(`${country.cities.name}|${country.cities.code}`));
+    // const distinctCities = foundCities.reduce((list, country) => ({ ...list, [country.cities.code]: country.cities.name }), {});
+    // const citiesArray = Object.entries(distinctCities).map(city => ({ code: city[0], name: city[1] }));
 
-    const foundAirports = result.filter(country => reKeyword.test(`${country.cities.airports.name}|${country.cities.airports.code}`));
-    const distinctAirports = foundAirports.reduce((list, country) => ({ ...list, [country.cities.airports.code]: country.cities.airports.name }), {});
-    const airportsArray = Object.entries(distinctAirports).map(airport => ({ code: airport[0], name: airport[1] }));
+    // const foundAirports = result.filter(country => reKeyword.test(`${country.cities.airports.name}|${country.cities.airports.code}`));
+    // const distinctAirports = foundAirports.reduce((list, country) => ({ ...list, [country.cities.airports.code]: country.cities.airports.name }), {});
+    // const airportsArray = Object.entries(distinctAirports).map(airport => ({ code: airport[0], name: airport[1] }));
 
-    response.success(res, { countries: countriesArray, cities: citiesArray, airports: airportsArray });
+    // response.success(res, { countries: countriesArray, cities: citiesArray, airports: airportsArray });
+    response.success(res, result);
   } catch (e) {
     response.exception(res, e);
   }

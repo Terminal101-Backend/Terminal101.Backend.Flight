@@ -22,6 +22,202 @@ const { Country } = require("../models/documents");
  */
 
 class CountryRepository extends BaseRepository {
+  async #getCountries(keyword, limit = 10) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({
+      $unwind: {
+        path: "$cities",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $unwind: {
+        path: "$cities.airports",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $group: {
+        _id: {
+          code: "$code",
+          name: "$name",
+          cities_code: "$cities.code",
+          cities_name: "$cities.name",
+        },
+        city_airports: { $push: { code: "$cities.airports.code", name: "$cities.airports.name" } },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        "airports": {
+          $slice: [
+            "$city_airports", limit
+          ]
+        },
+      }
+    });
+    agrCountry.append({
+      $group: {
+        _id: {
+          code: "$_id.code",
+          name: "$_id.name",
+        },
+        country_cities: { $push: { code: "$_id.cities_code", name: "$_id.cities_name", airports: "$airports" } },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        "cities": {
+          $slice: [
+            "$country_cities", limit
+          ]
+        },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        code: "$_id.code",
+        name: "$_id.name",
+      }
+    });
+    agrCountry.append({
+      $match: {
+        $or: [
+          { name: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { code: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+        ],
+      },
+    });
+    agrCountry.append({
+      $limit: limit
+    });
+    agrCountry.append({
+      $project: {
+        _id: 0,
+        code: 1,
+        name: 1,
+        "cities.name": 1,
+        "cities.code": 1,
+        "cities.airports.name": 1,
+        "cities.airports.code": 1,
+      }
+    });
+
+    return await agrCountry.exec();
+  }
+
+  async #getCities(keyword, limit = 10) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({
+      $unwind: {
+        path: "$cities",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $unwind: {
+        path: "$cities.airports",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $group: {
+        _id: {
+          code: "$cities.code",
+          name: "$cities.name",
+        },
+        city_airports: { $push: { code: "$cities.airports.code", name: "$cities.airports.name" } },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        "airports": {
+          $slice: [
+            "$city_airports", limit
+          ]
+        },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        code: "$_id.code",
+        name: "$_id.name",
+      }
+    });
+    agrCountry.append({
+      $match: {
+        $or: [
+          { name: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { code: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+        ],
+      },
+    });
+    agrCountry.append({
+      $limit: limit
+    });
+    agrCountry.append({
+      $project: {
+        _id: 0,
+        code: 1,
+        name: 1,
+        "airports.name": 1,
+        "airports.code": 1,
+      }
+    });
+
+    return await agrCountry.exec();
+  }
+
+  async #getAirports(keyword, limit = 10) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({
+      $unwind: {
+        path: "$cities",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $unwind: {
+        path: "$cities.airports",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
+    agrCountry.append({
+      $group: {
+        _id: {
+          code: "$cities.airports.code",
+          name: "$cities.airports.name",
+        },
+      }
+    });
+    agrCountry.append({
+      $addFields: {
+        code: "$_id.code",
+        name: "$_id.name",
+      }
+    });
+    agrCountry.append({
+      $match: {
+        $or: [
+          { name: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+          { code: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
+        ],
+      },
+    });
+    agrCountry.append({
+      $limit: limit
+    });
+    agrCountry.append({
+      $project: {
+        _id: 0,
+        code: 1,
+        name: 1,
+      }
+    });
+
+    return await agrCountry.exec();
+  }
+
   constructor() {
     super(Country);
   }
@@ -124,25 +320,11 @@ class CountryRepository extends BaseRepository {
   }
 
   async search(keyword) {
-    const agrCountry = Country.aggregate();
-    agrCountry.append({ $unwind: "$cities" });
-    agrCountry.append({ $unwind: "$cities.airports" });
-    // agrCountry.append({ $unwind: "$airlines" });
-    agrCountry.append({
-      $match: {
-        $or: [
-          { name: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-          { code: new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-          { "cities.name": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-          { "cities.code": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-          { "cities.airports.name": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-          { "cities.airports.code": new RegExp(`.*${keyword.toLowerCase()}.*`, "i") },
-        ]
-      }
-    });
-    const agrResult = await agrCountry.exec();
+    let countries = await this.#getCountries(keyword);
+    let cities = await this.#getCities(keyword);
+    let airports = await this.#getAirports(keyword);
 
-    return agrResult;
+    return { countries, cities, airports };
   }
 
   async getAirports(countryCode, cityCode) {
