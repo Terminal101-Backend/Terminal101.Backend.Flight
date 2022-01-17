@@ -71,6 +71,10 @@ describe("Service", () => {
     it("Search airport and city", done => {
       check(done, serviceTests.searchAirportAndCity);
     });
+
+    it("Search flight", done => {
+      check(done, serviceTests.flightOffersSearch);
+    });
   });
 
   describe("Ip", () => {

@@ -152,19 +152,41 @@ paths:
           type: string
           required: true
           value: MUC
-          description: Keyword for search.
+          description: Flight origin code.
         - name: destination
           in: query
           type: string
           required: true
           value: WDC
-          description: Keyword for search.
-        - name: return
+          description: Flight destination code.
+        - name: departureDate
           in: query
-          type: boolean
+          type: string
+          required: true
+          value: '2022-01-20'
+          description: Flight departure date.
+        - name: returnDate
+          in: query
+          type: string
           required: false
-          # value: false
-          description: Keyword for search.
+          value: '2022-01-25'
+          description: Flight return date.
+        - name: adults
+          in: query
+          type: number
+          required: false
+          value: 1
+          description: Travelers adults count (Default equals 1).
+        - name: children
+          in: query
+          type: number
+          required: false
+          description: Travelers children count (Default equals 0).
+        - name: infants
+          in: query
+          type: number
+          required: false
+          description: Travelers infants count (Default equals 0).
         - name: segments
           in: query
           type: array

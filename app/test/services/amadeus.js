@@ -31,7 +31,6 @@ module.exports.airlineCodeLookup = async done => {
   }
 };
 
-
 module.exports.searchAirportAndCity = async done => {
   try {
     const response = await amadeus.searchAirportAndCity("MUC");
@@ -44,6 +43,43 @@ module.exports.searchAirportAndCity = async done => {
       id: expect.any(String),
       timeZoneOffset: expect.any(String),
       iataCode: "MUC",
+    })]));
+
+    done();
+  } catch (err) {
+    done(err);
+  }
+};
+
+module.exports.flightOffersSearch = async done => {
+  try {
+    const departureDate = new Date();
+    departureDate.setDate(departureDate.getDate() + 5);
+    const response = await amadeus.flightOffersSingleSearch("SYD", "BKK", departureDate.toISOString().split("T")[0]);
+
+    expect(response.data).toEqual(expect.arrayContaining([expect.objectContaining({
+      type: "flight-offer",
+      lastTicketingDate: expect.any(String),
+      itineraries: expect.arrayContaining([expect.objectContaining({
+        duration: expect.any(String),
+        segments: expect.arrayContaining([expect.objectContaining({
+          duration: expect.any(String),
+          numberOfStops: expect.any(Number),
+          departure: expect.objectContaining({
+            iataCode: expect.any(String),
+            at: expect.any(String),
+          }),
+          arrival: expect.objectContaining({
+            iataCode: expect.any(String),
+            at: expect.any(String),
+          }),
+          aircraft: expect.objectContaining({
+            code: expect.any(String),
+          }),
+          carrierCode: expect.any(String),
+          number: expect.any(String),
+        })]),
+      })]),
     })]));
 
     done();

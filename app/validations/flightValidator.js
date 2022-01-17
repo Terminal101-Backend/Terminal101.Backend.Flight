@@ -43,7 +43,11 @@ class SearchFlights extends BaseValidator {
     const query = {
       origin: Joi.string().required(),
       destination: Joi.string().required(),
-      return: Joi.boolean(),
+      departureDate: Joi.date().required(),
+      returnDate: Joi.date(),
+      adults: Joi.number().default(1),
+      children: Joi.number(),
+      infants: Joi.number(),
       segments: [
         Joi.string(),
         Joi.array().items(Joi.string()),

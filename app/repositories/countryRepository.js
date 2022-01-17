@@ -319,10 +319,10 @@ class CountryRepository extends BaseRepository {
     return country.airlines[idx - 1];
   }
 
-  async search(keyword) {
-    let countries = await this.#getCountries(keyword);
-    let cities = await this.#getCities(keyword);
-    let airports = await this.#getAirports(keyword);
+  async search(keyword, limit = 10) {
+    let countries = await this.#getCountries(keyword, limit);
+    let cities = await this.#getCities(keyword, limit);
+    let airports = await this.#getAirports(keyword, limit);
 
     return { countries, cities, airports };
   }

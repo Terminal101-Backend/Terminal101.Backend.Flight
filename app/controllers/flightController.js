@@ -3,6 +3,7 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
+const { amadeus } = require("../services");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -22,7 +23,7 @@ module.exports.searchOriginDestination = async (req, res) => {
       }
     }
 
-    const result = await countryRepository.search(keyword);
+    const result = await countryRepository.search(keyword, 5);
     // const reKeyword = new RegExp(`.*${keyword}.*`, "i");
 
     // const foundCountries = result.filter(country => reKeyword.test(`${country.name}|${country.code}`));
@@ -57,17 +58,33 @@ module.exports.getPopularWaypoints = async (req, res) => {
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
-
     let segments = req.query.segments ?? [];
     if (!Array.isArray(segments)) {
       try {
-        segments = segments.split(",").map(segment => segment.trim());
+        segments = segments.split(",");
       } catch (e) {
         segments = [segments];
       }
+    };
+    segments = segments.map(segment => {
+      const segment_date = segment.trim().split(":");
+      return {
+        code: segment_date[0],
+        date: segment_date[1],
+      };
+    });
+
+    const departureDate = req.query.departureDate.toISOString().split("T")[0];
+    const returnDate = req.query.returnDate ? req.query.returnDate.toISOString().split("T")[0] : undefined;
+
+    let result;
+    if (!segments || (segments.length === 0)) {
+      result = await amadeus.flightOffersSingleSearch(req.query.origin, req.query.destination, departureDate, returnDate, req.query.adults, req.query.children, req.query.infants);
+    } else {
+      result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants);
     }
 
-    response.success(res, { query: req.query, segments });
+    response.success(res, { query: req.query, segments, result });
   } catch (e) {
     response.exception(res, e);
   }
