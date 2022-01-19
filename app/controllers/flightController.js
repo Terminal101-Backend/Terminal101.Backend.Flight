@@ -3,6 +3,7 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
+const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
 
 // NOTE: Flight
@@ -55,9 +56,15 @@ module.exports.getPopularWaypoints = async (req, res) => {
     response.exception(res, e);
   }
 };
+
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
+    const convertTime = time => {
+      const re = /PT(\d+)H(?:(\d+)M)?/.exec(time);
+      return parseInt(re[1]) * 60 + parseInt(re[2] ?? 0);
+    };
+
     let segments = req.query.segments ?? [];
     if (!Array.isArray(segments)) {
       try {
@@ -84,7 +91,52 @@ module.exports.searchFlights = async (req, res) => {
       result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants);
     }
 
-    response.success(res, { query: req.query, segments, result });
+    const flightDetails = result.data.map(rec => ({
+      availableSeats: rec.numberOfBookableSeats,
+      currencyCode: rec.price.currency,
+      price: rec.price.total,
+      itineraries: rec.itineraries.map(itinerary => ({
+        duration: convertTime(itinerary.duration),
+        segments: itinerary.segments.map(segment => ({
+          duration: convertTime(segment.duration),
+          aircraftCode: segment.aircraft.code,
+          airlineCode: segment.carrierCode,
+          departure: {
+            airportCode: segment.departure.iataCode,
+            terminal: segment.departure.terminal,
+            at: segment.departure.at,
+          },
+          arrival: {
+            airportCode: segment.arrival.iataCode,
+            terminal: segment.arrival.terminal,
+            at: segment.arrival.at,
+          },
+        })),
+      })),
+    }));
+
+    let flightInfo = await flightInfoRepository.findOne({
+      originCode: req.query.origin,
+      destinationCode: req.query.destination,
+      time: req.query.departureDate,
+    });
+
+    if (!flightInfo) {
+      flightInfo = new FlightInfo({
+        originCode: req.query.origin,
+        destinationCode: req.query.destination,
+        time: req.query.departureDate,
+      });
+    }
+
+    flightInfo.searches.push({
+      code: "123",
+      flights: flightDetails,
+    });
+
+    await flightInfo.save();
+
+    response.success(res, { flightDetails, result });
   } catch (e) {
     response.exception(res, e);
   }

@@ -2,3 +2,4 @@ node_modules/
 .devcontainer
 package-lock.json
 .env
+.vscode

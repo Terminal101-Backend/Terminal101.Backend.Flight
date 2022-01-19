@@ -11,14 +11,10 @@ const flightInfo = new Schema({
         type: String,
         required: true,
     },
-    airlineCode: {
-        type: String,
+    time: {
+        type: Date,
         required: true,
     },
-    // time: {
-    //     type: Date,
-    //     required: true,
-    // },
     // searchedCount: {
     //     type: Number,
     //     default: 0,
