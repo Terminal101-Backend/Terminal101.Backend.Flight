@@ -30,7 +30,7 @@ app.use("/public", express.static(path.join(__dirname, 'static')));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { customJs: "/public/scripts/swagger.js" }));
 
 // NOTE: Routes
-apiRouter(app);
+apiRouter(app); 
 
 app.use(BaseValidator.errors());
 
