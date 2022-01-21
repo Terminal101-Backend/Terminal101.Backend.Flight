@@ -1,6 +1,7 @@
 const BaseRepository = require("../core/baseRepository");
 const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
+const { generateRandomString } = require("../helpers/stringHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -107,6 +108,44 @@ class FlightInfoRepository extends BaseRepository {
     result = await agrFlightInfo.exec();
 
     return result;
+  }
+
+  /**
+   * 
+   * @param {Number} length 
+   * @returns {Promise<String>}
+   */
+  async generateUniqueCode(length = 20) {
+    let code;
+    while (!code) {
+      code = generateRandomString(length, length, true, true, true);
+
+      const agrFlightInfo = FlightInfo.aggregate();
+      agrFlightInfo.append({ $unwind: "$searches" });
+      agrFlightInfo.append({ $match: { "searches.code": code } });
+      const searches = await agrFlightInfo.exec();
+      if (searches.length > 0) {
+        code = "";
+      }
+    }
+
+    return code;
+  }
+
+  /**
+   * 
+   * @param {String} code 
+   * @returns {Promise<FlightInfo>}
+   */
+  async getSearchByCode(code) {
+    const agrFlightInfo = FlightInfo.aggregate();
+    agrFlightInfo.append({ $unwind: "$searches" });
+    agrFlightInfo.append({ $match: { "searches.code": code } });
+    const searches = await agrFlightInfo.exec();
+
+    if (searches.length > 0) {
+      return searches[0];
+    }
   }
 };
 

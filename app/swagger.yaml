@@ -205,6 +205,25 @@ paths:
             items:
               $ref: '#/definitions/Flight'
 
+  /flight/search/{searchId}:
+# NOTE: Get popular flights
+    get:
+      tags:
+        - Flight
+      parameters:
+        - name: Search ID
+          in: path
+          required: true
+          type: string
+      description: Get popular flights.
+      responses:
+        '200':
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/FlightPopular'
+
   /flight/popular:
 # NOTE: Get popular flights
     get:

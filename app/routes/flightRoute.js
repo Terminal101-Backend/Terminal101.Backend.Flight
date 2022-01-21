@@ -13,9 +13,19 @@ router
     flightValidator.getPopularFlights.check(),
     flightController.getPopularFlights);
 
+// NOTE: Filter searched flight
+router
+  .get("/search/:searchId",
+    (req, res, next) => {
+      console.log("Filter flights", req.params, req.body, req.query);
+      next();
+    },
+    flightValidator.filterFlights.check(),
+    flightController.filterFlights);
+
 // NOTE: Search flight origin/destination
 router
-  .get("/",
+  .get("/search",
     (req, res, next) => {
       console.log("Search flight", req.params, req.body, req.query);
       next();

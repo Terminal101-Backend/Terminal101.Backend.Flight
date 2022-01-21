@@ -129,14 +129,38 @@ module.exports.searchFlights = async (req, res) => {
       });
     }
 
-    flightInfo.searches.push({
-      code: "123",
+    const searchIndex = flightInfo.searches.push({
+      code: await flightInfoRepository.generateUniqueCode(),
       flights: flightDetails,
-    });
+    }) - 1;
 
     await flightInfo.save();
 
-    response.success(res, { flightDetails, result });
+    response.success(res, {
+      code: flightInfo.searches[searchIndex].code,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flights: flightInfo.searches[searchIndex].flights,
+      AMADEUS_RESULT: result,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Filter flights
+module.exports.filterFlights = async (req, res) => {
+  try {
+    const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
+
+    response.success(res, {
+      code: flightInfo.searches.code,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flights: flightInfo.searches.flights,
+    });
   } catch (e) {
     response.exception(res, e);
   }

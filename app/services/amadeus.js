@@ -24,6 +24,8 @@ axiosApiInstance.interceptors.response.use((response) => {
 }, async function (error) {
   const originalRequest = error.config;
 
+  console.log(error);
+
   if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
     await getAccessToken();

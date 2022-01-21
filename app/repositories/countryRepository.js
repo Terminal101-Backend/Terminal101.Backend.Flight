@@ -338,5 +338,4 @@ class CountryRepository extends BaseRepository {
   }
 };
 
-
 module.exports = new CountryRepository();
