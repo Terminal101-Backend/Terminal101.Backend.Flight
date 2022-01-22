@@ -61,8 +61,10 @@ module.exports.getPopularWaypoints = async (req, res) => {
 module.exports.searchFlights = async (req, res) => {
   try {
     const convertTime = time => {
-      const re = /PT(\d+)H(?:(\d+)M)?/.exec(time);
-      return parseInt(re[1]) * 60 + parseInt(re[2] ?? 0);
+      // re = /PT(\d+)H(?:(\d+)M)?/.exec(time);
+      const reH = /PT(?:(\d+)H)?/.exec(time);
+      const reM = /(?:(\d+)M)?/.exec(time);
+      return parseInt(reH[1] ?? 0) * 60 + parseInt(reM[1] ?? 0);
     };
 
     let segments = req.query.segments ?? [];

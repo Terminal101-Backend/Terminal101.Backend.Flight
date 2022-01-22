@@ -7,8 +7,8 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
-# host: localhost:8005
+# host: test-terminal101-flight.herokuapp.com
+host: localhost:8005
 basePath: /
 
 tags:
@@ -140,7 +140,7 @@ paths:
               $ref: '#/definitions/WaypointPopular'
 
 # NOTE: Flight
-  /flight:
+  /flight/search:
 # NOTE: Search a fligh
     get:
       tags:
@@ -169,7 +169,7 @@ paths:
           in: query
           type: string
           required: false
-          value: '2022-01-25'
+          value: '2022-02-5'
           description: Flight return date.
         - name: adults
           in: query
@@ -192,8 +192,8 @@ paths:
           type: array
           required: false
           value:
-            - NYC
-            - IST
+            - NYC:2022-02-01
+            - IST:2022-02-03
           items:
             type: string
           description: Keyword for search.
@@ -337,8 +337,8 @@ definitions:
         example: Munchen
 
 schemes:
-  # - http
-  - https
+  - http
+  # - https
 consumes:
   - application/json
 produces:
