@@ -7,8 +7,8 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-# host: test-terminal101-flight.herokuapp.com
-host: localhost:8005
+host: test-terminal101-flight.herokuapp.com
+# host: localhost:8005
 basePath: /
 
 tags:
@@ -337,8 +337,8 @@ definitions:
         example: Munchen
 
 schemes:
-  - http
-  # - https
+  # - http
+  - https
 consumes:
   - application/json
 produces:
