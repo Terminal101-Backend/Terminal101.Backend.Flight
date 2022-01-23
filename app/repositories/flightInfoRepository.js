@@ -50,9 +50,36 @@ class FlightInfoRepository extends BaseRepository {
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
       const agrFlightInfo = FlightInfo.aggregate();
       agrFlightInfo.append({ $unwind: "$searches" });
+
+      agrFlightInfo.append({
+        $lookup: {
+          from: "countries",
+          let: {
+            code: "$" + waypointType.toLowerCase() + "Code",
+          },
+          pipeline: [
+            { $unwind: "$cities" },
+            { $unwind: "$cities.airports" },
+            {
+              $match: {
+                $expr: {
+                  $eq: ["$cities.airports.code", "$$code"]
+                }
+              }
+            },
+          ],
+          as: "waypoint",
+        }
+      });
+      agrFlightInfo.append({ $unwind: "$waypoint" });
+
       agrFlightInfo.append({
         $group: {
-          _id: "$" + waypointType.toLowerCase() + "Code",
+          _id: {
+            code: "$" + waypointType.toLowerCase() + "Code",
+            name: "$name",
+            waypoint: "$waypoint.cities.airports.name",
+          },
           count: {
             $sum: 1,
           }
@@ -62,11 +89,21 @@ class FlightInfoRepository extends BaseRepository {
       agrFlightInfo.append({ $limit: count });
       agrFlightInfo.append({
         $addFields: {
-          code: "$_id",
-          count: "$count"
+          code: "$_id.code",
+          count: "$count",
+          name: "$_id.name",
+          name: "$_id.waypoint"
         }
       });
-      agrFlightInfo.append({ $project: { code: 1, count: 1, _id: 0 } });
+      agrFlightInfo.append({
+        $project: {
+          name: 1,
+          code: 1,
+          count: 1,
+          name: 1,
+          _id: 0,
+        }
+      });
       result = await agrFlightInfo.exec();
     }
 
