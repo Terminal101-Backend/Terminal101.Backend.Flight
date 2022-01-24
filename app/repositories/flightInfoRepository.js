@@ -1,5 +1,5 @@
 const BaseRepository = require("../core/baseRepository");
-const { FlightInfo } = require("../models/documents");
+const { FlightInfo, Country } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 
@@ -47,38 +47,45 @@ class FlightInfoRepository extends BaseRepository {
 
   async getCachedPopularWaypoints(waypointType, count = 10) {
     let result = [];
+
+    const agrAirports = Country.aggregate();
+    agrAirports.append({ $unwind: "$cities" });
+    agrAirports.append({ $unwind: "$cities.airports" });
+    agrAirports.append({ $replaceRoot: { newRoot: "$cities.airports" } });
+    agrAirports.append({ $project: { code: 1, name: 1, description: 1, _id: 0 } });
+    const airports = await agrAirports.exec();
+
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
       const agrFlightInfo = FlightInfo.aggregate();
       agrFlightInfo.append({ $unwind: "$searches" });
 
-      agrFlightInfo.append({
-        $lookup: {
-          from: "countries",
-          let: {
-            code: "$" + waypointType.toLowerCase() + "Code",
-          },
-          pipeline: [
-            { $unwind: "$cities" },
-            { $unwind: "$cities.airports" },
-            {
-              $match: {
-                $expr: {
-                  $eq: ["$cities.airports.code", "$$code"]
-                }
-              }
-            },
-          ],
-          as: "waypoint",
-        }
-      });
-      agrFlightInfo.append({ $unwind: "$waypoint" });
+      // agrFlightInfo.append({
+      //   $lookup: {
+      //     from: "countries",
+      //     let: {
+      //       code: "$" + waypointType.toLowerCase() + "Code",
+      //     },
+      //     pipeline: [
+      //       { $unwind: "$cities" },
+      //       { $unwind: "$cities.airports" },
+      //       {
+      //         $match: {
+      //           $expr: {
+      //             $eq: ["$cities.airports.code", "$$code"]
+      //           }
+      //         }
+      //       },
+      //     ],
+      //     as: "waypoint",
+      //   }
+      // });
+      // agrFlightInfo.append({ $unwind: "$waypoint" });
 
       agrFlightInfo.append({
         $group: {
           _id: {
             code: "$" + waypointType.toLowerCase() + "Code",
-            name: "$name",
-            waypoint: "$waypoint.cities.airports.name",
+            // waypoint: "$waypoint.cities.airports.name",
           },
           count: {
             $sum: 1,
@@ -91,23 +98,30 @@ class FlightInfoRepository extends BaseRepository {
         $addFields: {
           code: "$_id.code",
           count: "$count",
-          name: "$_id.name",
-          name: "$_id.waypoint"
+          // name: "$_id.waypoint"
         }
       });
       agrFlightInfo.append({
         $project: {
-          name: 1,
           code: 1,
           count: 1,
-          name: 1,
+          // name: 1,
           _id: 0,
         }
       });
       result = await agrFlightInfo.exec();
     }
 
-    return result;
+    return result.map(flight => {
+      const airport = airports.find(airport => airport.code === flight.code);
+
+      return {
+        code: airport.code,
+        name: airport.name,
+        description: airport.description,
+        count: flight.count,
+      };
+    });
   }
 
   async cachePopularFlights() {
@@ -117,6 +131,13 @@ class FlightInfoRepository extends BaseRepository {
   async getCachedPopularFlights(count = 10) {
     let result = [];
 
+    const agrAirports = Country.aggregate();
+    agrAirports.append({ $unwind: "$cities" });
+    agrAirports.append({ $unwind: "$cities.airports" });
+    agrAirports.append({ $replaceRoot: { newRoot: "$cities.airports" } });
+    agrAirports.append({ $project: { code: 1, name: 1, description: 1, _id: 0 } });
+    const airports = await agrAirports.exec();
+
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
     agrFlightInfo.append({
@@ -124,7 +145,7 @@ class FlightInfoRepository extends BaseRepository {
         _id: {
           origin: "$originCode",
           destination: "$destinationCode",
-          time: "$searches.time",
+          time: "$time",
         },
         count: {
           $sum: 1,
@@ -144,7 +165,11 @@ class FlightInfoRepository extends BaseRepository {
     agrFlightInfo.append({ $project: { origin: 1, destination: 1, time: 1, count: 1, _id: 0 } });
     result = await agrFlightInfo.exec();
 
-    return result;
+    return result.map(flight => ({
+      origin: airports.find(airport => airport.code === flight.origin),
+      destination: airports.find(airport => airport.code === flight.destination),
+      time: flight.time,
+    }));
   }
 
   /**

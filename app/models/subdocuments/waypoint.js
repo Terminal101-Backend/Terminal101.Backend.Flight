@@ -8,6 +8,10 @@ const waypoint = new Schema({
     type: String,
     required: true,
   },
+  // airportName: {
+  //   type: String,
+  //   required: true,
+  // },
   terminal: {
     type: String,
     required: false,
