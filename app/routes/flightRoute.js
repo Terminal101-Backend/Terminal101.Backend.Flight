@@ -15,7 +15,7 @@ router
 
 // NOTE: Search flight origin/destination
 router
-  .get("/",
+  .get("/search",
     (req, res, next) => {
       console.log("Search flight", req.params, req.body, req.query);
       next();

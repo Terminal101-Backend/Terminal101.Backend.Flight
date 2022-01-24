@@ -48,6 +48,7 @@ class SearchFlights extends BaseValidator {
       adults: Joi.number().default(1),
       children: Joi.number(),
       infants: Joi.number(),
+      travelClass: Joi.string().default("ECONOMY"),
       segments: [
         Joi.string(),
         Joi.array().items(Joi.string()),

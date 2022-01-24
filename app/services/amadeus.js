@@ -79,7 +79,7 @@ const flightOffersSingleSearch = async (originLocationCode, destinationLocationC
       adults,
       children,
       infants,
-      // travelClass,
+      travelClass,
       // includedAirlineCodes,
       // excludedAirlineCodes,
       // nonStop,
