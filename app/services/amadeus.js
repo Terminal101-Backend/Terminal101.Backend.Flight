@@ -95,36 +95,27 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
   originDestinations.push({
     id: 0,
     originLocationCode,
-    destinationLocationCode: segments[0].code,
+    destinationLocationCode,
     departureDateTimeRange: {
       date: departureDate,
     },
   });
 
-  for (let index = 0; index < segments.length - 1; index++) {
+  for (let index = 0; index < segments.length; index++) {
     originDestinations.push({
       id: index + 1,
-      originLocationCode: segments[index].code,
-      destinationLocationCode: segments[index + 1].code,
+      originLocationCode: segments[index].originCode,
+      destinationLocationCode: segments[index].destinationCode,
       departureDateTimeRange: {
         date: segments[index].date,
       },
     });
   }
 
-  originDestinations.push({
-    id: segments.length,
-    originLocationCode: segments[segments.length - 1].code,
-    destinationLocationCode,
-    departureDateTimeRange: {
-      date: segments[segments.length - 1].date,
-    },
-  });
-
   if (!!returnDate) {
     originDestinations.push({
       id: segments.length + 1,
-      originLocationCode: destinationLocationCode,
+      originLocationCode: segments[segments.length - 1].destinationCode,
       destinationLocationCode: originLocationCode,
       departureDateTimeRange: {
         date: returnDate,

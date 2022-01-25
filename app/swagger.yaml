@@ -200,8 +200,8 @@ paths:
           type: array
           required: false
           value:
-            - NYC:2022-02-01
-            - IST:2022-02-03
+            - DUB:NYC:2022-02-01
+            - BKK:IST:2022-02-03
           items:
             type: string
           description: Keyword for search.
