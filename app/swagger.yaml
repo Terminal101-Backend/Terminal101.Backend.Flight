@@ -137,7 +137,9 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/definitions/WaypointPopular'
+              type: object
+              $ref: '#/definitions/WaypointCount'
+
 
 # NOTE: Flight
   /flight/search:
@@ -187,13 +189,19 @@ paths:
           type: number
           required: false
           description: Travelers infants count (Default equals 0).
+        - name: travelClass
+          in: query
+          type: string
+          enum: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
+          required: false
+          description: Default is ECONOMY class.
         - name: segments
           in: query
           type: array
           required: false
           value:
-            - NYC:2022-02-01
-            - IST:2022-02-03
+            - DUB:NYC:2022-02-01
+            - BKK:IST:2022-02-03
           items:
             type: string
           description: Keyword for search.
@@ -264,11 +272,9 @@ definitions:
       - count
     properties:
       origin:
-        type: string
-        example: MUC
+        $ref: '#/definitions/Waypoint'
       destination:
-        type: string
-        example: NYC
+        $ref: '#/definitions/Waypoint'
       time:
         type: string
         example: "2022-01-13T12:15:00.000Z"
@@ -276,14 +282,22 @@ definitions:
         type: number
         example: 13
 
-  WaypointPopular:
+  WaypointCount:
     required:
       - code
+      - name
+      - description
       - count
     properties:
       code:
         type: string
         example: MUC
+      name:
+        type: string
+        example: Munchen
+      description:
+        type: string
+        example: Munchen airport
       count:
         type: number
         example: 10
@@ -292,6 +306,7 @@ definitions:
     required:
       - code
       - name
+      - description
     properties:
       code:
         type: string
@@ -299,6 +314,9 @@ definitions:
       name:
         type: string
         example: Munchen
+      description:
+        type: string
+        example: Munchen airport
 
   Airport:
     required:
