@@ -9,6 +9,8 @@ const { Country } = require("../models/documents");
 const data = require("./initData");
 
 const addCountriesCitiesAirports = async () => {
+  await countryRepository.deleteMany();
+
   const countries = data.countries.filter(country => !!country.DialingCode).map(country => ({
     code: country.CountryCode,
     name: country.CountryName,
