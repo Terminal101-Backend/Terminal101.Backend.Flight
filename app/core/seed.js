@@ -32,7 +32,16 @@ const addCountriesCitiesAirports = async () => {
 };
 
 const addSampleFlightInfos = async () => {
-  const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
+  await flightInfoRepository.deleteMany();
+
+  // const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
+  // const waypoints = data.airports.map(airport => airport.AirportCode);
+
+  const agrCountry = Country.aggregate();
+  agrCountry.append({ $unwind: "$cities" });
+  agrCountry.append({ $unwind: "$cities.airports" });
+  agrCountry.append({ $replaceRoot: { newRoot: "$cities.airports" } });
+  const waypoints = (await agrCountry.exec()).map(country => country.code);
   const airlines = data.airlines.map(airline => airline.AirLineCode);
 
   const count = 30;
