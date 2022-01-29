@@ -156,12 +156,58 @@ module.exports.filterFlights = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
+    const flights = flightInfo.searches.flights.map(flight => {
+      let itineraries = [];
+      if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
+        itineraries = flight.itineraries.map(itinerary => {
+          let segments = itinerary.segments.some(segment => {
+            let result = true;
+
+            result = result && (!req.query.airlineCode || req.query.airlineCode.includes(segment.airlineCode));
+
+            result = result && (!req.query.airports || req.query.airports.includes(segment.departure.airportCode) || req.query.airports.includes(segment.arrival.airportCode));
+
+            return result;
+          });
+
+          return {
+            duration: itinerary.duration,
+            segments: !!segments ? itinerary.segments : [],
+          };
+        }).filter(itinerary => {
+          let result = itinerary.segments.length > 0;
+
+          const departureTime = itinerary.segments[0].departure.at.getHours() * 60 + itinerary.segments[0].departure.at.getMinutes();
+
+          result = result && (!req.query.departureTimeFrom || (departureTime >= req.query.departureTimeFrom));
+          result = result && (!req.query.departureTimeTo || (departureTime <= req.query.departureTimeTo));
+
+          const arrivalTime = itinerary.segments[0].arrival.at.getHours() * 60 + itinerary.segments[0].arrival.at.getMinutes();
+
+          result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
+          result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
+
+          result = result && (!req.query.durationFrom || (itinerary.duration >= req.query.durationFrom));
+          result = result && (!req.query.durationTo || (itinerary.duration <= req.query.durationTo));
+
+          return result;
+        });
+      }
+
+      return {
+        availableSeats: flight.availableSeats,
+        currencyCode: flight.currencyCode,
+        price: flight.price,
+        itineraries,
+      };
+    }).filter(flight => flight.itineraries.length > 0);
+
     response.success(res, {
       code: flightInfo.searches.code,
       originCode: flightInfo.originCode,
       destinationCode: flightInfo.destinationCode,
       time: flightInfo.time,
-      flights: flightInfo.searches.flights,
+      flights,
     });
   } catch (e) {
     response.exception(res, e);

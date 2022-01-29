@@ -70,6 +70,23 @@ class FilterFlights extends BaseValidator {
     };
 
     const query = {
+      stops: Joi.number(),
+      airports: [
+        Joi.string(),
+        Joi.array().items(Joi.string()),
+      ],
+      airlines: [
+        Joi.string(),
+        Joi.array().items(Joi.string()),
+      ],
+      priceFrom: Joi.number(),
+      priceTo: Joi.number(),
+      departureTimeFrom: Joi.number().default(0),
+      departureTimeTo: Joi.number().default(23 * 60 + 59),
+      arrivalTimeFrom: Joi.number().default(0),
+      arrivalTimeTo: Joi.number().default(23 * 60 + 59),
+      durationFrom: Joi.number(),
+      durationTo: Joi.number(),
     };
 
     super(body);
