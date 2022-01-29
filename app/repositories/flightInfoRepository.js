@@ -13,32 +13,18 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} originCode 
    * @param {String} destinationCode 
    * @param {String} airlineCode 
+   * @param {Date} time 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(originCode, destinationCode, airlineCode) {
+  async createFlightInfo(originCode, destinationCode, airlineCode, time) {
     let flightInfo = await this.findOne({ originCode, destinationCode, airlineCode });
 
     if (!flightInfo) {
-      flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode });
+      flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode, time });
       await flightInfo.save();
     }
 
     return flightInfo;
-  }
-
-  /**
-   * @param {String} flightId
-   * @param {Date} time 
-   * @param {Number} price 
-   * @returns {Promise<SearchedFlight>}
-   */
-  async searchAFlight(flightId, time, price) {
-    let flightInfo = await this.findById(flightId);
-
-    const searchedIndex = flightInfo.searches.push({ time, price });
-    await flightInfo.save();
-
-    return flightInfo.searches[searchedIndex - 1];
   }
 
   async cachePopularWaypoints() {

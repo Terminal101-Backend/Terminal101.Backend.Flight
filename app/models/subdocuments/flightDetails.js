@@ -10,7 +10,7 @@ const flightDetails = new Schema({
   },
   currencyCode: {
     type: String,
-    default: "EUR",
+    default: "USD",
   },
   price: {
     type: Number,

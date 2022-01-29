@@ -44,17 +44,44 @@ const addSampleFlightInfos = async () => {
     const randomDestination = waypoints[Math.ceil(Math.random() * waypoints.length)];
     const randomAirline = airlines[Math.ceil(Math.random() * airlines.length)];
 
-    const flight = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline);
+    const time = new Date();
+    time.setDate(time.getDate() + Math.floor(Math.random() * daysAfterToday));
+    time.setHours(12);
+    time.setMinutes(15);
+    time.setSeconds(0);
+    time.setMilliseconds(0);
+    const flightInfo = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline, time);
 
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
-      const time = new Date();
-      time.setDate(time.getDate() + Math.floor(Math.random() * daysAfterToday));
-      time.setHours(12);
-      time.setMinutes(15);
-      time.setSeconds(0);
-      time.setMilliseconds(0);
-      await flightInfoRepository.searchAFlight(flight._id, time, Math.floor(Math.random() * 30000 + 50) / 100);
+      let code = await flightInfoRepository.generateUniqueCode();
+
+      const searchedIndex = flightInfo.searches.push({ code }) - 1;
+      const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.push({
+        availableSeats: Math.ceil(Math.random() * 8 + 1),
+        price: Math.floor(Math.random() * 30000 + 50) / 100,
+      }) - 1;
+
+      const itineraryIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries.push({
+        duration: Math.ceil(Math.random() * 600),
+      }) - 1;
+
+      const segmentIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].segments.push({
+        duration: Math.min(Math.ceil(Math.random() * 600), flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].duration),
+        aircraftCode: "B",
+        airlineCode: randomAirline,
+        departure: {
+          airportCode: randomOrigin,
+          terminal: "1",
+          at: time,
+        },
+        arrival: {
+          airportCode: randomDestination,
+          terminal: "1",
+          at: time,
+        },
+      }) - 1;
     }
+    await flightInfo.save();
   }
 };
 
