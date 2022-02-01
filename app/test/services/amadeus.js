@@ -88,3 +88,24 @@ module.exports.flightOffersSearch = async done => {
   }
 };
 
+module.exports.covid19AreaReport = async done => {
+  try {
+    const response = await amadeus.covid19AreaReport("US");
+
+    expect(response.data).toEqual(
+      expect.objectContaining({
+        type: "covid19-area-report",
+        area: expect.objectContaining({
+          name: "United States of America",
+          areaType: "Country",
+          iataCode: "US",
+        })
+      })
+    );
+
+    done();
+  } catch (err) {
+    done(err);
+  }
+};
+

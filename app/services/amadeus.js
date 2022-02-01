@@ -155,10 +155,22 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
   return response;
 };
 
+const covid19AreaReport = async (countryCode, cityCode) => {
+  const { data: response } = await axiosApiInstance.get("/v1/duty-of-care/diseases/covid19-area-report", {
+    params: {
+      countryCode,
+      cityCode,
+    },
+  });
+
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
   searchAirportAndCity,
   flightOffersSingleSearch,
   flightOffersMultiSearch,
+  covid19AreaReport,
 };

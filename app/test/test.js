@@ -91,6 +91,10 @@ describe("Service", () => {
     it("Search flight", done => {
       check(done, serviceTests.flightOffersSearch);
     });
+
+    it("Covid 19", done => {
+      check(done, serviceTests.covid19AreaReport);
+    });
   });
 
   describe("Ip", () => {
