@@ -6,11 +6,11 @@ const Waypoint = require("./waypoint");
 const segment = new Schema({
   departure: {
     type: Waypoint,
-    default: [],
+    require: true,
   },
   arrival: {
     type: Waypoint,
-    default: [],
+    require: true,
   },
   duration: {
     type: Number,

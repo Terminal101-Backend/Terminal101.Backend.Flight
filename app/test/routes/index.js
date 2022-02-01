@@ -1,3 +1,4 @@
 module.exports = {
-  // ...require("./setting"),
+  ...require("./flight"),
+  ...require("./waypoint"),
 };

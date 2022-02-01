@@ -182,13 +182,43 @@ class FlightInfoRepository extends BaseRepository {
 
   /**
    * 
-   * @param {String} code 
+   * @param {String} searchCode 
    * @returns {Promise<FlightInfo>}
    */
-  async getSearchByCode(code) {
+  async getSearchByCode(searchCode) {
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
-    agrFlightInfo.append({ $match: { "searches.code": code } });
+    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    const searches = await agrFlightInfo.exec();
+
+    if (searches.length > 0) {
+      return searches[0];
+    }
+  }
+
+  /**
+   * 
+   * @param {String} searchCode 
+   * @param {String} flightIndex 
+   * @returns {Promise<FlightInfo>}
+   */
+  async getFlight(searchCode, flightIndex) {
+    const agrFlightInfo = FlightInfo.aggregate();
+    agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $unwind: "$searches.flights" });
+    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    agrFlightInfo.append({
+      $addFields: {
+        "flight": {
+          $arrayElemAt: ["$searches.flights", flightIndex]
+        },
+      }
+    });
+    agrFlightInfo.append({
+      $project: {
+        searches: 0,
+      }
+    });
     const searches = await agrFlightInfo.exec();
 
     if (searches.length > 0) {

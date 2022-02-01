@@ -6,7 +6,7 @@ module.exports.generateRandomString = (minLength = 3, maxLength = 10, useNumbers
 
   const length = minLength + Math.ceil(Math.random() * (maxLength - minLength));
 
-  const possibles = ((useNumbers ? 10 : 0) + (useLowerCases ? 26 : 0) + (useUpperCases ? 26 : 0));
+  const possibles = ((useNumbers ? 10 : 0) + (useLowerCases ? 26 : 0) + (useUpperCases ? 26 : 0)) - 1;
 
   let chars = "";
   if (!!useNumbers) {
@@ -21,7 +21,8 @@ module.exports.generateRandomString = (minLength = 3, maxLength = 10, useNumbers
 
   if (!!useNumbers || !!useLowerCases || !!useUpperCases) {
     for (let i = 0; i < length; i++) {
-      const charIndex = Math.ceil(Math.random() * possibles - (!!useNumbers ? 1 : 0) - (!!useLowerCases ? 1 : 0) - (!!useUpperCases ? 1 : 0));
+      const charIndex = Math.floor(Math.random() * possibles);
+      // const charIndex = Math.ceil(Math.random() * possibles - (!!useNumbers ? 1 : 0) - (!!useLowerCases ? 1 : 0) - (!!useUpperCases ? 1 : 0));
 
       result += chars[charIndex];
     }

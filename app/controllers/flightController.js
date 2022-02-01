@@ -120,7 +120,7 @@ module.exports.searchFlights = async (req, res) => {
     let flightInfo = await flightInfoRepository.findOne({
       originCode: req.query.origin,
       destinationCode: req.query.destination,
-      time: req.query.departureDate,
+      time: req.query.departureDate.toISOString(),
     });
 
     if (!flightInfo) {
@@ -144,7 +144,7 @@ module.exports.searchFlights = async (req, res) => {
       destinationCode: flightInfo.destinationCode,
       time: flightInfo.time,
       flights: flightInfo.searches[searchIndex].flights,
-      AMADEUS_RESULT: result,
+      // AMADEUS_RESULT: result,
     });
   } catch (e) {
     response.exception(res, e);
@@ -208,6 +208,23 @@ module.exports.filterFlights = async (req, res) => {
       destinationCode: flightInfo.destinationCode,
       time: flightInfo.time,
       flights,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get specific flight
+module.exports.getFlight = async (req, res) => {
+  try {
+    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightIndex);
+
+    response.success(res, {
+      code: req.params.searchId,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flight: flightInfo.flight,
     });
   } catch (e) {
     response.exception(res, e);
