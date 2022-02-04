@@ -144,7 +144,7 @@ module.exports.searchFlights = async (req, res) => {
       destinationCode: flightInfo.destinationCode,
       time: flightInfo.time,
       flights: flightInfo.searches[searchIndex].flights,
-      // AMADEUS_RESULT: result,
+      AMADEUS_RESULT: result,
     });
   } catch (e) {
     response.exception(res, e);
@@ -271,6 +271,17 @@ module.exports.getAirports = async (req, res) => {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
     response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get covid 19 area report
+module.exports.restrictionCovid19 = async (req, res) => {
+  try {
+    const report = await amadeus.covid19AreaReport(req.params.countryCode, req.params.cityCode);
+
+    response.success(res, report);
   } catch (e) {
     response.exception(res, e);
   }

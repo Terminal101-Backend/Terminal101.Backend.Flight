@@ -157,6 +157,21 @@ class GetAirports extends BaseValidator {
   }
 };
 
+class RestrictionCovid19 extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      countryCode: Joi.string().required(),
+      cityCode: Joi.string(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
@@ -167,4 +182,5 @@ module.exports = {
   getCountries: new GetCountries(),
   getCities: new GetCities(),
   getAirports: new GetAirports(),
+  restrictionCovid19: new RestrictionCovid19(),
 };

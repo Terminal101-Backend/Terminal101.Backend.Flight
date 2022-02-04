@@ -164,6 +164,7 @@ class FlightInfoRepository extends BaseRepository {
    * @returns {Promise<String>}
    */
   async generateUniqueCode(length = 20) {
+    RRRRE
     let code;
     while (!code) {
       code = generateRandomString(length, length, true, true, true);
