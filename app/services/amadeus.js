@@ -38,6 +38,7 @@ const getAccessToken = async () => {
   params.append("grant_type", "client_credentials");
   params.append("client_id", process.env.AMADEUS_API_KEY);
   params.append("client_secret", process.env.AMADEUS_API_SECRET);
+  delete axios.defaults.headers.common['Authorization'];
 
   const { data: response } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
