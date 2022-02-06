@@ -93,7 +93,7 @@ module.exports.searchFlights = async (req, res) => {
       result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
     }
 
-    const flightDetails = result.data.map(rec => ({
+    const flightDetails = result.data.map((rec, index) => ({
       availableSeats: rec.numberOfBookableSeats,
       currencyCode: rec.price.currency,
       price: rec.price.total,
@@ -102,8 +102,11 @@ module.exports.searchFlights = async (req, res) => {
         segments: itinerary.segments.map(segment => ({
           duration: convertTime(segment.duration),
           flightNumber: segment.number,
-          aircraftCode: segment.aircraft.code,
-          airlineCode: segment.carrierCode,
+          aircraft: result.dictionaries.aircraft[segment.aircraft.code],
+          airline: {
+            code: segment.carrierCode,
+            name: result.dictionaries.carriers[segment.carrierCode],
+          },
           departure: {
             airportCode: segment.departure.iataCode,
             terminal: segment.departure.terminal,
@@ -144,8 +147,8 @@ module.exports.searchFlights = async (req, res) => {
       originCode: flightInfo.originCode,
       destinationCode: flightInfo.destinationCode,
       time: flightInfo.time,
-      flights: flightInfo.searches[searchIndex].flights,
-      AMADEUS_RESULT: result,
+      flights: flightDetails,
+      // AMADEUS_RESULT: result,
     });
   } catch (e) {
     response.exception(res, e);

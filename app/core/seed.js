@@ -44,7 +44,7 @@ const addSampleFlightInfos = async () => {
   agrCountry.append({ $unwind: "$cities.airports" });
   agrCountry.append({ $replaceRoot: { newRoot: "$cities.airports" } });
   const waypoints = (await agrCountry.exec()).map(country => country.code);
-  const airlines = data.airlines.map(airline => airline.AirLineCode);
+  const airlines = data.airlines.map(airline => ({ code: airline.AirLineCode, name: airline.AirLineName }));
 
   const count = 30;
   const maxSearchCount = 200;
@@ -79,8 +79,8 @@ const addSampleFlightInfos = async () => {
       const segmentIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].segments.push({
         duration: Math.min(Math.ceil(Math.random() * 600), flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].duration),
         flightNumber: "963",
-        aircraftCode: "B",
-        airlineCode: randomAirline,
+        aircraft: "BOEING 777-300ER",
+        airline: randomAirline,
         departure: {
           airportCode: randomOrigin,
           terminal: "1",
