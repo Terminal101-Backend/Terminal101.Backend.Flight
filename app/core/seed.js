@@ -61,7 +61,7 @@ const addSampleFlightInfos = async () => {
     time.setMinutes(15);
     time.setSeconds(0);
     time.setMilliseconds(0);
-    const flightInfo = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline, time);
+    const flightInfo = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, time);
 
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
       let code = await flightInfoRepository.generateUniqueCode();
@@ -78,6 +78,7 @@ const addSampleFlightInfos = async () => {
 
       const segmentIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].segments.push({
         duration: Math.min(Math.ceil(Math.random() * 600), flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].duration),
+        flightNumber: "963",
         aircraftCode: "B",
         airlineCode: randomAirline,
         departure: {
