@@ -101,6 +101,7 @@ module.exports.searchFlights = async (req, res) => {
         duration: convertTime(itinerary.duration),
         segments: itinerary.segments.map(segment => ({
           duration: convertTime(segment.duration),
+          flightNumber: segment.number,
           aircraftCode: segment.aircraft.code,
           airlineCode: segment.carrierCode,
           departure: {

@@ -14,11 +14,11 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} airlineCode 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(originCode, destinationCode, airlineCode) {
-    let flightInfo = await this.findOne({ originCode, destinationCode, airlineCode });
+  async createFlightInfo(originCode, destinationCode) {
+    let flightInfo = await this.findOne({ originCode, destinationCode });
 
     if (!flightInfo) {
-      flightInfo = new FlightInfo({ originCode, destinationCode, airlineCode });
+      flightInfo = new FlightInfo({ time, originCode, destinationCode });
       await flightInfo.save();
     }
 
@@ -31,10 +31,10 @@ class FlightInfoRepository extends BaseRepository {
    * @param {Number} price 
    * @returns {Promise<SearchedFlight>}
    */
-  async searchAFlight(flightId, time, price) {
+  async searchAFlight(flightId, price) {
     let flightInfo = await this.findById(flightId);
 
-    const searchedIndex = flightInfo.searches.push({ time, price });
+    const searchedIndex = flightInfo.searches.push({ price });
     await flightInfo.save();
 
     return flightInfo.searches[searchedIndex - 1];

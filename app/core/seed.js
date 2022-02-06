@@ -44,7 +44,7 @@ const addSampleFlightInfos = async () => {
     const randomDestination = waypoints[Math.ceil(Math.random() * waypoints.length)];
     const randomAirline = airlines[Math.ceil(Math.random() * airlines.length)];
 
-    const flight = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline);
+    const flight = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination);
 
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
       const time = new Date();
