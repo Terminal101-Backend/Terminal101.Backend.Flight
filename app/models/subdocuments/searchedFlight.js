@@ -4,6 +4,10 @@ const Schema = mongoose.Schema;
 const FlightDetails = require("./flightDetails");
 
 const searchedFlight = new Schema({
+  _id: {
+    type: mongoose.Types.ObjectId,
+    select: false,
+  },
   flights: {
     type: [FlightDetails],
     default: [],

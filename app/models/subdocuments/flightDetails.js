@@ -4,13 +4,17 @@ const Schema = mongoose.Schema;
 const Itinerary = require("./itinerary");
 
 const flightDetails = new Schema({
+  _id: {
+    type: mongoose.Types.ObjectId,
+    select: false,
+  },
   itineraries: {
     type: [Itinerary],
     default: [],
   },
   currencyCode: {
     type: String,
-    default: "EUR",
+    default: "USD",
   },
   price: {
     type: Number,

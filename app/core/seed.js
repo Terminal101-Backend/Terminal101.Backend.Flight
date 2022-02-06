@@ -9,6 +9,8 @@ const { Country } = require("../models/documents");
 const data = require("./initData");
 
 const addCountriesCitiesAirports = async () => {
+  await countryRepository.deleteMany();
+
   const countries = data.countries.filter(country => !!country.DialingCode).map(country => ({
     code: country.CountryCode,
     name: country.CountryName,
@@ -32,7 +34,16 @@ const addCountriesCitiesAirports = async () => {
 };
 
 const addSampleFlightInfos = async () => {
-  const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
+  await flightInfoRepository.deleteMany();
+
+  // const waypoints = [...data.cities.map(city => city.CityCode), ...data.airports.map(airport => airport.AirportCode)];
+  // const waypoints = data.airports.map(airport => airport.AirportCode);
+
+  const agrCountry = Country.aggregate();
+  agrCountry.append({ $unwind: "$cities" });
+  agrCountry.append({ $unwind: "$cities.airports" });
+  agrCountry.append({ $replaceRoot: { newRoot: "$cities.airports" } });
+  const waypoints = (await agrCountry.exec()).map(country => country.code);
   const airlines = data.airlines.map(airline => airline.AirLineCode);
 
   const count = 30;
@@ -44,17 +55,44 @@ const addSampleFlightInfos = async () => {
     const randomDestination = waypoints[Math.ceil(Math.random() * waypoints.length)];
     const randomAirline = airlines[Math.ceil(Math.random() * airlines.length)];
 
-    const flight = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination);
+    const time = new Date();
+    time.setDate(time.getDate() + Math.floor(Math.random() * daysAfterToday));
+    time.setHours(12);
+    time.setMinutes(15);
+    time.setSeconds(0);
+    time.setMilliseconds(0);
+    const flightInfo = await flightInfoRepository.createFlightInfo(randomOrigin, randomDestination, randomAirline, time);
 
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
-      const time = new Date();
-      time.setDate(time.getDate() + Math.floor(Math.random() * daysAfterToday));
-      time.setHours(12);
-      time.setMinutes(15);
-      time.setSeconds(0);
-      time.setMilliseconds(0);
-      await flightInfoRepository.searchAFlight(flight._id, time, Math.floor(Math.random() * 30000 + 50) / 100);
+      let code = await flightInfoRepository.generateUniqueCode();
+
+      const searchedIndex = flightInfo.searches.push({ code }) - 1;
+      const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.push({
+        availableSeats: Math.ceil(Math.random() * 8 + 1),
+        price: Math.floor(Math.random() * 30000 + 50) / 100,
+      }) - 1;
+
+      const itineraryIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries.push({
+        duration: Math.ceil(Math.random() * 600),
+      }) - 1;
+
+      const segmentIndex = flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].segments.push({
+        duration: Math.min(Math.ceil(Math.random() * 600), flightInfo.searches[searchedIndex].flights[flightDetailsIndex].itineraries[itineraryIndex].duration),
+        aircraftCode: "B",
+        airlineCode: randomAirline,
+        departure: {
+          airportCode: randomOrigin,
+          terminal: "1",
+          at: time,
+        },
+        arrival: {
+          airportCode: randomDestination,
+          terminal: "1",
+          at: time,
+        },
+      }) - 1;
     }
+    await flightInfo.save();
   }
 };
 

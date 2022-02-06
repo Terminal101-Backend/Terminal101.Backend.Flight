@@ -24,6 +24,7 @@ const { Country } = require("../models/documents");
 class CountryRepository extends BaseRepository {
   async #getCountries(keyword, limit = 10) {
     const agrCountry = Country.aggregate();
+    agrCountry.option({ allowDiskUse: true });
     agrCountry.append({
       $unwind: {
         path: "$cities",
@@ -108,6 +109,7 @@ class CountryRepository extends BaseRepository {
 
   async #getCities(keyword, limit = 10) {
     const agrCountry = Country.aggregate();
+    agrCountry.option({ allowDiskUse: true });
     agrCountry.append({
       $unwind: {
         path: "$cities",
@@ -170,6 +172,7 @@ class CountryRepository extends BaseRepository {
 
   async #getAirports(keyword, limit = 10) {
     const agrCountry = Country.aggregate();
+    agrCountry.option({ allowDiskUse: true });
     agrCountry.append({
       $unwind: {
         path: "$cities",
@@ -337,6 +340,5 @@ class CountryRepository extends BaseRepository {
     return agrResult[0];
   }
 };
-
 
 module.exports = new CountryRepository();

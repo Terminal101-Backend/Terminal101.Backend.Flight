@@ -38,6 +38,7 @@ const getAccessToken = async () => {
   params.append("grant_type", "client_credentials");
   params.append("client_id", process.env.AMADEUS_API_KEY);
   params.append("client_secret", process.env.AMADEUS_API_SECRET);
+  delete axios.defaults.headers.common['Authorization'];
 
   const { data: response } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -155,10 +156,22 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
   return response;
 };
 
+const covid19AreaReport = async (countryCode, cityCode) => {
+  const { data: response } = await axiosApiInstance.get("/v1/duty-of-care/diseases/covid19-area-report", {
+    params: {
+      countryCode,
+      cityCode,
+    },
+  });
+
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
   searchAirportAndCity,
   flightOffersSingleSearch,
   flightOffersMultiSearch,
+  covid19AreaReport,
 };

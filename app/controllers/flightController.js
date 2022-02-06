@@ -121,7 +121,7 @@ module.exports.searchFlights = async (req, res) => {
     let flightInfo = await flightInfoRepository.findOne({
       originCode: req.query.origin,
       destinationCode: req.query.destination,
-      time: req.query.departureDate,
+      time: req.query.departureDate.toISOString(),
     });
 
     if (!flightInfo) {
@@ -132,14 +132,101 @@ module.exports.searchFlights = async (req, res) => {
       });
     }
 
-    flightInfo.searches.push({
-      code: "123",
+    const searchIndex = flightInfo.searches.push({
+      code: await flightInfoRepository.generateUniqueCode(),
       flights: flightDetails,
-    });
+    }) - 1;
 
     await flightInfo.save();
 
-    response.success(res, { flightDetails, result });
+    response.success(res, {
+      code: flightInfo.searches[searchIndex].code,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flights: flightInfo.searches[searchIndex].flights,
+      AMADEUS_RESULT: result,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Filter flights
+module.exports.filterFlights = async (req, res) => {
+  try {
+    const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
+
+    const flights = flightInfo.searches.flights.map(flight => {
+      let itineraries = [];
+      if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
+        itineraries = flight.itineraries.map(itinerary => {
+          let segments = itinerary.segments.some(segment => {
+            let result = true;
+
+            result = result && (!req.query.airlineCode || req.query.airlineCode.includes(segment.airlineCode));
+
+            result = result && (!req.query.airports || req.query.airports.includes(segment.departure.airportCode) || req.query.airports.includes(segment.arrival.airportCode));
+
+            return result;
+          });
+
+          return {
+            duration: itinerary.duration,
+            segments: !!segments ? itinerary.segments : [],
+          };
+        }).filter(itinerary => {
+          let result = itinerary.segments.length > 0;
+
+          const departureTime = itinerary.segments[0].departure.at.getHours() * 60 + itinerary.segments[0].departure.at.getMinutes();
+
+          result = result && (!req.query.departureTimeFrom || (departureTime >= req.query.departureTimeFrom));
+          result = result && (!req.query.departureTimeTo || (departureTime <= req.query.departureTimeTo));
+
+          const arrivalTime = itinerary.segments[0].arrival.at.getHours() * 60 + itinerary.segments[0].arrival.at.getMinutes();
+
+          result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
+          result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
+
+          result = result && (!req.query.durationFrom || (itinerary.duration >= req.query.durationFrom));
+          result = result && (!req.query.durationTo || (itinerary.duration <= req.query.durationTo));
+
+          return result;
+        });
+      }
+
+      return {
+        availableSeats: flight.availableSeats,
+        currencyCode: flight.currencyCode,
+        price: flight.price,
+        itineraries,
+      };
+    }).filter(flight => flight.itineraries.length > 0);
+
+    response.success(res, {
+      code: flightInfo.searches.code,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flights,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get specific flight
+module.exports.getFlight = async (req, res) => {
+  try {
+    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightIndex);
+
+    response.success(res, {
+      code: req.params.searchId,
+      originCode: flightInfo.originCode,
+      destinationCode: flightInfo.destinationCode,
+      time: flightInfo.time,
+      flight: flightInfo.flight,
+    });
   } catch (e) {
     response.exception(res, e);
   }
@@ -185,6 +272,17 @@ module.exports.getAirports = async (req, res) => {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
     response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get covid 19 area report
+module.exports.restrictionCovid19 = async (req, res) => {
+  try {
+    const report = await amadeus.covid19AreaReport(req.params.countryCode, req.params.cityCode);
+
+    response.success(res, report);
   } catch (e) {
     response.exception(res, e);
   }
