@@ -110,12 +110,12 @@ module.exports.searchFlights = async (req, res) => {
           departure: {
             airportCode: segment.departure.iataCode,
             terminal: segment.departure.terminal,
-            at: segment.departure.at,
+            at: new Date(segment.departure.at) / 1000,
           },
           arrival: {
             airportCode: segment.arrival.iataCode,
             terminal: segment.arrival.terminal,
-            at: segment.arrival.at,
+            at: new Date(segment.arrival.at) / 1000,
           },
         })),
       })),
@@ -146,7 +146,7 @@ module.exports.searchFlights = async (req, res) => {
       code: flightInfo.searches[searchIndex].code,
       originCode: flightInfo.originCode,
       destinationCode: flightInfo.destinationCode,
-      time: flightInfo.time,
+      time: new Date(flightInfo.time) / 1000,
       flights: flightDetails,
       // AMADEUS_RESULT: result,
     });
