@@ -1,7 +1,7 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   version: v1.0.0
-  title: 'Terminal 101: Flight'
+  title: "Terminal 101: Flight"
   description: Terminal 101 - Flight service
   license:
     name: MIT
@@ -23,11 +23,10 @@ tags:
   - name: Waypoint
     description: Flight origin/destination points
 
-    
 paths:
-# NOTE: Airport
+  # NOTE: Airport
   /country/{countryCode}/city/{cityCode}/airport:
-# NOTE: Get all airports of city of country
+    # NOTE: Get all airports of city of country
     get:
       tags:
         - Airport
@@ -46,16 +45,16 @@ paths:
           value: MUC
           description: City standard code
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Airport'
+              $ref: "#/definitions/Airport"
 
-# NOTE: City
+  # NOTE: City
   /country/{countryCode}/city:
-# NOTE: Get all cities of country
+    # NOTE: Get all cities of country
     get:
       tags:
         - City
@@ -68,31 +67,31 @@ paths:
           value: DE
           description: Country standard code
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/City'
+              $ref: "#/definitions/City"
 
-# NOTE: Country
+  # NOTE: Country
   /country:
-# NOTE: Get all countries
+    # NOTE: Get all countries
     get:
       tags:
         - Country
       description: Get all countries.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Country'
+              $ref: "#/definitions/Country"
 
-# NOTE: Waypoint
+  # NOTE: Waypoint
   /waypoint/{waypointType}:
-# NOTE: Get waypoints for origin/destination
+    # NOTE: Get waypoints for origin/destination
     get:
       tags:
         - Waypoint
@@ -111,15 +110,15 @@ paths:
           value: MUC
           description: Keyword for search.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Waypoint'
+              $ref: "#/definitions/Waypoint"
 
   /waypoint/{waypointType}/popular:
-# NOTE: Get popular waypoints
+    # NOTE: Get popular waypoints
     get:
       tags:
         - Waypoint
@@ -132,18 +131,17 @@ paths:
           required: true
           value: ORIGIN
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
               type: object
-              $ref: '#/definitions/WaypointCount'
+              $ref: "#/definitions/WaypointCount"
 
-
-# NOTE: Flight
+  # NOTE: Flight
   /flight/search:
-# NOTE: Search a fligh
+    # NOTE: Search a fligh
     get:
       tags:
         - Flight
@@ -165,13 +163,13 @@ paths:
           in: query
           type: string
           required: true
-          value: '2022-01-20'
+          value: "2022-01-20"
           description: Flight departure date.
         - name: returnDate
           in: query
           type: string
           required: false
-          value: '2022-02-5'
+          value: "2022-02-5"
           description: Flight return date.
         - name: adults
           in: query
@@ -206,46 +204,45 @@ paths:
             type: string
           description: Keyword for search.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/Flight'
+              $ref: "#/definitions/Flight"
 
   /flight/search/{searchId}:
-# NOTE: Get popular flights
+    # NOTE: Get popular flights
     get:
       tags:
         - Flight
       parameters:
-        - name: Search ID
+        - name: searchId
           in: path
           required: true
           type: string
       description: Get popular flights.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/FlightPopular'
+              $ref: "#/definitions/FlightPopular"
 
   /flight/popular:
-# NOTE: Get popular flights
+    # NOTE: Get popular flights
     get:
       tags:
         - Flight
       description: Get popular flights.
       responses:
-        '200':
+        "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: '#/definitions/FlightPopular'
-
+              $ref: "#/definitions/FlightPopular"
 
 definitions:
   Flight:
@@ -272,9 +269,9 @@ definitions:
       - count
     properties:
       origin:
-        $ref: '#/definitions/Waypoint'
+        $ref: "#/definitions/Waypoint"
       destination:
-        $ref: '#/definitions/Waypoint'
+        $ref: "#/definitions/Waypoint"
       time:
         type: string
         example: "2022-01-13T12:15:00.000Z"

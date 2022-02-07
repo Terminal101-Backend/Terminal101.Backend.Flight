@@ -254,8 +254,16 @@ module.exports.filterFlights = async (req, res) => {
 
     response.success(res, {
       code: flightInfo.searches.code,
-      origin: flightInfo.origin,
-      destination: flightInfo.destination,
+      origin: {
+        code: flightInfo.origin.code,
+        name: flightInfo.origin.name,
+        description: flightInfo.origin.description,
+      },
+      destination: {
+        code: flightInfo.destination.code,
+        name: flightInfo.destination.name,
+        description: flightInfo.destination.description,
+      },
       time: flightInfo.time,
       flights,
     });
