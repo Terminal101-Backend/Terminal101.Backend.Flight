@@ -221,7 +221,30 @@ paths:
           in: path
           required: true
           type: string
-      description: Get popular flights.
+      description: Get search by code.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/FlightPopular"
+
+  /flight/search/{searchId}/details/{flightIndex}:
+    # NOTE: Get popular flights
+    get:
+      tags:
+        - Flight
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          type: string
+        - name: flightIndex
+          in: path
+          required: true
+          type: string
+      description: Get specific flight.
       responses:
         "200":
           description: OK
