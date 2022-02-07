@@ -28,7 +28,6 @@ module.exports.popularFlight = done => {
               description: expect.any(String),
             }),
             time: expect.any(String),
-            "time.timestamps": expect.any(Number),
           })
         ])
       );

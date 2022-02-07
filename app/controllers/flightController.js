@@ -41,12 +41,12 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
     departure: {
       airport: airports[segment.departure.iataCode],
       terminal: segment.departure.terminal,
-      at: new Date(segment.departure.at) / 1000,
+      at: segment.departure.at,
     },
     arrival: {
       airport: airports[segment.arrival.iataCode],
       terminal: segment.arrival.terminal,
-      at: new Date(segment.arrival.at) / 1000,
+      at: segment.arrival.at,
     },
   });
 };
@@ -165,7 +165,7 @@ module.exports.searchFlights = async (req, res) => {
         name: flightInfo.destination.name,
         description: flightInfo.destination.description,
       },
-      time: new Date(flightInfo.time) / 1000,
+      time: flightInfo.time,
       flights: flightDetails,
       // AMADEUS_RESULT: result,
     });
@@ -195,7 +195,34 @@ module.exports.filterFlights = async (req, res) => {
 
           return {
             duration: itinerary.duration,
-            segments: !!segments ? itinerary.segments : [],
+            segments: !!segments ? itinerary.segments.map(segment => ({
+              duration: segment.duration,
+              flightNumber: segment.flightNumber,
+              aircraft: segment.aircraft,
+              airline: {
+                code: segment.airline.code,
+                name: segment.airline.name,
+                description: segment.airline.description,
+              },
+              departure: {
+                airport: {
+                  code: segment.departure.airport.code,
+                  name: segment.departure.airport.name,
+                  description: segment.departure.airport.description,
+                },
+                terminal: segment.departure.terminal,
+                at: segment.departure.at,
+              },
+              arrival: {
+                airport: {
+                  code: segment.arrival.airport.code,
+                  name: segment.arrival.airport.name,
+                  description: segment.arrival.airport.description,
+                },
+                terminal: segment.arrival.terminal,
+                at: segment.departure.at,
+              },
+            })) : [],
           };
         }).filter(itinerary => {
           let result = itinerary.segments.length > 0;
@@ -227,8 +254,8 @@ module.exports.filterFlights = async (req, res) => {
 
     response.success(res, {
       code: flightInfo.searches.code,
-      originCode: flightInfo.originCode,
-      destinationCode: flightInfo.destinationCode,
+      origin: flightInfo.origin,
+      destination: flightInfo.destination,
       time: flightInfo.time,
       flights,
     });
@@ -244,10 +271,54 @@ module.exports.getFlight = async (req, res) => {
 
     response.success(res, {
       code: req.params.searchId,
-      originCode: flightInfo.originCode,
-      destinationCode: flightInfo.destinationCode,
+      origin: {
+        code: flightInfo.origin.code,
+        name: flightInfo.origin.name,
+        description: flightInfo.origin.description,
+      },
+      destination: {
+        code: flightInfo.destination.code,
+        name: flightInfo.destination.name,
+        description: flightInfo.destination.description,
+      },
       time: flightInfo.time,
-      flight: flightInfo.flight,
+      flight: {
+        code: flightInfo.flight.code,
+        availableSeats: flightInfo.flight.availableSeats,
+        currencyCode: flightInfo.flight.currencyCode,
+        price: flightInfo.flight.price,
+        itineraries: flightInfo.flight.itineraries.map(itinerary => ({
+          duration: itinerary.duration,
+          segments: itinerary.segments.map(segment => ({
+            duration: segment.duration,
+            flightNumber: segment.flightNumber,
+            aircraft: segment.aircraft,
+            airline: {
+              code: segment.airline.code,
+              name: segment.airline.name,
+              description: segment.airline.description,
+            },
+            departure: {
+              airport: {
+                code: segment.departure.airport.code,
+                name: segment.departure.airport.name,
+                description: segment.departure.airport.description,
+              },
+              terminal: segment.departure.terminal,
+              at: segment.departure.at,
+            },
+            arrival: {
+              airport: {
+                code: segment.arrival.airport.code,
+                name: segment.arrival.airport.name,
+                description: segment.arrival.airport.description,
+              },
+              terminal: segment.arrival.terminal,
+              at: segment.departure.at,
+            },
+          })),
+        })),
+      }
     });
   } catch (e) {
     response.exception(res, e);
@@ -259,10 +330,7 @@ module.exports.getPopularFlights = async (req, res) => {
   try {
     const list = await flightInfoRepository.getCachedPopularFlights(req.params.waypointType);
 
-    response.success(res, list.map(flight => ({
-      ...flight,
-      "time.timestamps": new Date(flight.time).getTime(),
-    })));
+    response.success(res, list);
   } catch (e) {
     response.exception(res, e);
   }

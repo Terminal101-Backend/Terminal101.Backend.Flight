@@ -33,43 +33,14 @@ class FlightInfoRepository extends BaseRepository {
   async getCachedPopularWaypoints(waypointType, count = 10) {
     let result = [];
 
-    const agrAirports = Country.aggregate();
-    agrAirports.append({ $unwind: "$cities" });
-    agrAirports.append({ $unwind: "$cities.airports" });
-    agrAirports.append({ $replaceRoot: { newRoot: "$cities.airports" } });
-    agrAirports.append({ $project: { code: 1, name: 1, description: 1, _id: 0 } });
-    const airports = await agrAirports.exec();
-
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
       const agrFlightInfo = FlightInfo.aggregate();
       agrFlightInfo.append({ $unwind: "$searches" });
 
-      // agrFlightInfo.append({
-      //   $lookup: {
-      //     from: "countries",
-      //     let: {
-      //       code: "$" + waypointType.toLowerCase() + "Code",
-      //     },
-      //     pipeline: [
-      //       { $unwind: "$cities" },
-      //       { $unwind: "$cities.airports" },
-      //       {
-      //         $match: {
-      //           $expr: {
-      //             $eq: ["$cities.airports.code", "$$code"]
-      //           }
-      //         }
-      //       },
-      //     ],
-      //     as: "waypoint",
-      //   }
-      // });
-      // agrFlightInfo.append({ $unwind: "$waypoint" });
-
       agrFlightInfo.append({
         $group: {
           _id: {
-            code: "$" + waypointType.toLowerCase() + "Code",
+            airport: "$" + waypointType.toLowerCase(),
             // waypoint: "$waypoint.cities.airports.name",
           },
           count: {
@@ -81,14 +52,14 @@ class FlightInfoRepository extends BaseRepository {
       agrFlightInfo.append({ $limit: count });
       agrFlightInfo.append({
         $addFields: {
-          code: "$_id.code",
+          airport: "$_id.airport",
           count: "$count",
           // name: "$_id.waypoint"
         }
       });
       agrFlightInfo.append({
         $project: {
-          code: 1,
+          airport: 1,
           count: 1,
           // name: 1,
           _id: 0,
@@ -97,16 +68,12 @@ class FlightInfoRepository extends BaseRepository {
       result = await agrFlightInfo.exec();
     }
 
-    return result.map(flight => {
-      const airport = airports.find(airport => airport.code === flight.code);
-
-      return {
-        code: airport.code,
-        name: airport.name,
-        description: airport.description,
-        count: flight.count,
-      };
-    });
+    return result.map(flight => ({
+      code: flight.airport.code,
+      name: flight.airport.name,
+      description: flight.airport.description,
+      count: flight.count,
+    }));
   }
 
   async cachePopularFlights() {
@@ -116,20 +83,13 @@ class FlightInfoRepository extends BaseRepository {
   async getCachedPopularFlights(count = 10) {
     let result = [];
 
-    const agrAirports = Country.aggregate();
-    agrAirports.append({ $unwind: "$cities" });
-    agrAirports.append({ $unwind: "$cities.airports" });
-    agrAirports.append({ $replaceRoot: { newRoot: "$cities.airports" } });
-    agrAirports.append({ $project: { code: 1, name: 1, description: 1, _id: 0 } });
-    const airports = await agrAirports.exec();
-
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
     agrFlightInfo.append({
       $group: {
         _id: {
-          origin: "$originCode",
-          destination: "$destinationCode",
+          origin: "$origin",
+          destination: "$destination",
           time: "$time",
         },
         count: {
@@ -151,8 +111,16 @@ class FlightInfoRepository extends BaseRepository {
     result = await agrFlightInfo.exec();
 
     return result.map(flight => ({
-      origin: airports.find(airport => airport.code === flight.origin),
-      destination: airports.find(airport => airport.code === flight.destination),
+      origin: {
+        code: flight.origin.code,
+        name: flight.origin.name,
+        description: flight.origin.description,
+      },
+      destination: {
+        code: flight.destination.code,
+        name: flight.destination.name,
+        description: flight.destination.description,
+      },
       time: flight.time,
     }));
   }
