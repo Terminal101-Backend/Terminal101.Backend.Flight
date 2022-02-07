@@ -8,6 +8,10 @@ const flightDetails = new Schema({
     type: mongoose.Types.ObjectId,
     select: false,
   },
+  code: {
+    type: Number,
+    required: true,
+  },
   itineraries: {
     type: [Itinerary],
     default: [],

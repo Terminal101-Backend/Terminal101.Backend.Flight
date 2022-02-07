@@ -10,17 +10,16 @@ class FlightInfoRepository extends BaseRepository {
 
   /**
    * 
-   * @param {String} originCode 
-   * @param {String} destinationCode 
-   * @param {String} airlineCode 
+   * @param {String} origin 
+   * @param {String} destination 
    * @param {Date} time 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(originCode, destinationCode, time) {
-    let flightInfo = await this.findOne({ originCode, destinationCode, time });
+  async createFlightInfo(origin, destination, time) {
+    let flightInfo = await this.findOne({ origin, destination, time });
 
     if (!flightInfo) {
-      flightInfo = new FlightInfo({ originCode, destinationCode, time });
+      flightInfo = new FlightInfo({ origin, destination, time });
       await flightInfo.save();
     }
 

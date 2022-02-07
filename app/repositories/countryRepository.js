@@ -339,6 +339,104 @@ class CountryRepository extends BaseRepository {
 
     return agrResult[0];
   }
+
+  async getAirportsByCode(airportCodes) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({ $unwind: "$cities" });
+    agrCountry.append({ $unwind: "$cities.airports" });
+    // agrCountry.append({
+    //   $match: {
+    //     code: {
+    //       $in: Object.values(airportCodes).map(info => info.countryCode)
+    //     }
+    //   }
+    // });
+    // agrCountry.append({
+    //   $match: {
+    //     "cities.code": {
+    //       $in: Object.values(airportCodes).map(info => info.cityCode)
+    //     }
+    //   }
+    // });
+    agrCountry.append({
+      $match: {
+        "cities.airports.code": {
+          $in: Object.keys(airportCodes)
+        }
+      }
+    });
+    // agrCountry.append({
+    //   $group: {
+    //     _id: {
+    //       country: {
+    //         code: "$code",
+    //         name: "$name",
+    //       },
+    //       city: {
+    //         code: "$cities.code",
+    //         name: "$cities.name",
+    //       }
+    //     },
+    //     airports: {
+    //       $push: {
+    //         code: "$cities.airports.code",
+    //         name: "$cities.airports.name",
+    //         description: "$cities.airports.description",
+    //       }
+    //     }
+    //   }
+    // });
+    // agrCountry.append({
+    //   $group: {
+    //     _id: {
+    //       code: "$_id.country.code",
+    //       name: "$_id.country.name",
+    //     },
+    //     cities: {
+    //       $push: {
+    //         code: "$_id.city.code",
+    //         name: "$_id.city.name",
+    //         airports: "$airports",
+    //       },
+    //     },
+    //   }
+    // });
+    const agrResult = await agrCountry.exec();
+
+    return agrResult.reduce((airports, country) => {
+      airports[country.cities.airports.code] = {
+        code: country.cities.airports.code,
+        name: country.cities.airports.name,
+        description: country.cities.airports.description,
+      };
+
+      return airports;
+    }, {});
+
+    //   return agrResult.reduce((countries, country) => {
+    //     countries[country._id.code] = {
+    //       name: country._id.name,
+    //       cities: country.cities.reduce((cities, city) => {
+    //         cities[city.code] = {
+    //           name: city.name,
+    //           // airports: city.airports,
+    //           airports: city.airports.reduce((airports, airport) => {
+    //             airports[airport.code] = {
+    //               name: airport.name,
+    //               description: airport.description,
+    //             };
+
+    //             return airports;
+    //           }, {}),
+    //         };
+
+    //         return cities;
+    //       }, {}),
+    //     };
+
+    //     return countries;
+    //   }, {});
+  }
 };
 
 module.exports = new CountryRepository();

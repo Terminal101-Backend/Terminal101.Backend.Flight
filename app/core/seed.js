@@ -43,8 +43,8 @@ const addSampleFlightInfos = async () => {
   agrCountry.append({ $unwind: "$cities" });
   agrCountry.append({ $unwind: "$cities.airports" });
   agrCountry.append({ $replaceRoot: { newRoot: "$cities.airports" } });
-  const waypoints = (await agrCountry.exec()).map(country => country.code);
-  const airlines = data.airlines.map(airline => ({ code: airline.AirLineCode, name: airline.AirLineName }));
+  const waypoints = (await agrCountry.exec()).map(airport => ({ code: airport.code, name: airport.name, description: airport.description }));
+  const airlines = data.airlines.map(airline => ({ code: airline.AirLineCode, name: airline.AirLineName, description: airline.Fulltext }));
 
   const count = 30;
   const maxSearchCount = 200;
@@ -67,7 +67,9 @@ const addSampleFlightInfos = async () => {
       let code = await flightInfoRepository.generateUniqueCode();
 
       const searchedIndex = flightInfo.searches.push({ code }) - 1;
-      const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.push({
+      const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.length;
+      flightInfo.searches[searchedIndex].flights.push({
+        code: flightDetailsIndex,
         availableSeats: Math.ceil(Math.random() * 8 + 1),
         price: Math.floor(Math.random() * 30000 + 50) / 100,
       }) - 1;
@@ -82,12 +84,12 @@ const addSampleFlightInfos = async () => {
         aircraft: "BOEING 777-300ER",
         airline: randomAirline,
         departure: {
-          airportCode: randomOrigin,
+          airport: randomOrigin,
           terminal: "1",
           at: time,
         },
         arrival: {
-          airportCode: randomDestination,
+          airport: randomDestination,
           terminal: "1",
           at: time,
         },

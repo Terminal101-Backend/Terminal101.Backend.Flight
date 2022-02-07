@@ -14,7 +14,7 @@ const airport = new Schema({
 	},
 	description: {
 		type: String,
-		required: true,
+		required: false,
 	},
 	// searchedCount: {
 	// 	type: Number,
@@ -26,7 +26,7 @@ const airport = new Schema({
 	// },
 	location: {
 		type: Location,
-		required: true,
+		required: false,
 	},
 }, {
 	timestamps: true

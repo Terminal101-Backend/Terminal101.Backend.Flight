@@ -1,14 +1,15 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const SearchedFlight = require("../subdocuments/searchedFlight");
+const Airport = require("../subdocuments/airport");
 
 const flightInfo = new Schema({
-    originCode: {
-        type: String,
+    origin: {
+        type: Airport,
         required: true,
     },
-    destinationCode: {
-        type: String,
+    destination: {
+        type: Airport,
         required: true,
     },
     time: {

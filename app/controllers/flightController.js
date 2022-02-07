@@ -1,12 +1,69 @@
 const { EFlightWaypoint } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
+const dateTime = require("../helpers/dateTimeHelper");
 const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
 const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
 
 // NOTE: Flight
+const makeSegmentsArray = segments => {
+  segments = segments ?? [];
+  if (!Array.isArray(segments)) {
+    try {
+      segments = segments.split(",");
+    } catch (e) {
+      segments = [segments];
+    }
+  };
+  segments = segments.map(segment => {
+    const segment_date = segment.trim().split(":");
+    return {
+      originCode: segment_date[0],
+      destinationCode: segment_date[1],
+      date: segment_date[2],
+    };
+  });
+
+  return segments;
+};
+
+const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
+  return segment => ({
+    duration: dateTime.convertAmadeusTime(segment.duration),
+    flightNumber: segment.number,
+    aircraft: aircrafts[segment.aircraft.code],
+    airline: {
+      code: segment.carrierCode,
+      name: airlines[segment.carrierCode],
+    },
+    departure: {
+      airport: airports[segment.departure.iataCode],
+      terminal: segment.departure.terminal,
+      at: new Date(segment.departure.at) / 1000,
+    },
+    arrival: {
+      airport: airports[segment.arrival.iataCode],
+      terminal: segment.arrival.terminal,
+      at: new Date(segment.arrival.at) / 1000,
+    },
+  });
+};
+
+const makeFlightDetailsArray = (aircrafts, airlines, airports) => {
+  return (rec, index) => ({
+    code: index,
+    availableSeats: rec.numberOfBookableSeats,
+    currencyCode: rec.price.currency,
+    price: rec.price.total,
+    itineraries: rec.itineraries.map(itinerary => ({
+      duration: dateTime.convertAmadeusTime(itinerary.duration),
+      segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+    })),
+  });
+};
+
 // NOTE: Search origin or destination
 module.exports.searchOriginDestination = async (req, res) => {
   try {
@@ -60,31 +117,10 @@ module.exports.getPopularWaypoints = async (req, res) => {
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
-    const convertTime = time => {
-      const reH = /^PT(?:(\d+)H)?/.exec(time);
-      const reM = /(?:(\d+)M)?$/.exec(time);
-      return parseInt(reH[1] ?? 0) * 60 + parseInt(reM[1] ?? 0);
-    };
+    let segments = makeSegmentsArray(req.query.segments);
 
-    let segments = req.query.segments ?? [];
-    if (!Array.isArray(segments)) {
-      try {
-        segments = segments.split(",");
-      } catch (e) {
-        segments = [segments];
-      }
-    };
-    segments = segments.map(segment => {
-      const segment_date = segment.trim().split(":");
-      return {
-        originCode: segment_date[0],
-        destinationCode: segment_date[1],
-        date: segment_date[2],
-      };
-    });
-
-    const departureDate = req.query.departureDate.toISOString().split("T")[0];
-    const returnDate = req.query.returnDate ? req.query.returnDate.toISOString().split("T")[0] : undefined;
+    const departureDate = dateTime.excludeDateFromIsoString(req.query.departureDate.toISOString());
+    const returnDate = dateTime.excludeDateFromIsoString(req.query.returnDate ? req.query.returnDate.toISOString() : "");
 
     let result;
     if (!segments || (segments.length === 0)) {
@@ -93,44 +129,19 @@ module.exports.searchFlights = async (req, res) => {
       result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
     }
 
-    const flightDetails = result.data.map((rec, index) => ({
-      availableSeats: rec.numberOfBookableSeats,
-      currencyCode: rec.price.currency,
-      price: rec.price.total,
-      itineraries: rec.itineraries.map(itinerary => ({
-        duration: convertTime(itinerary.duration),
-        segments: itinerary.segments.map(segment => ({
-          duration: convertTime(segment.duration),
-          flightNumber: segment.number,
-          aircraft: result.dictionaries.aircraft[segment.aircraft.code],
-          airline: {
-            code: segment.carrierCode,
-            name: result.dictionaries.carriers[segment.carrierCode],
-          },
-          departure: {
-            airportCode: segment.departure.iataCode,
-            terminal: segment.departure.terminal,
-            at: new Date(segment.departure.at) / 1000,
-          },
-          arrival: {
-            airportCode: segment.arrival.iataCode,
-            terminal: segment.arrival.terminal,
-            at: new Date(segment.arrival.at) / 1000,
-          },
-        })),
-      })),
-    }));
+    const airports = await countryRepository.getAirportsByCode(result.dictionaries.locations);
+    const flightDetails = result.data.map(makeFlightDetailsArray(result.dictionaries.aircraft, result.dictionaries.carriers, airports));
 
     let flightInfo = await flightInfoRepository.findOne({
-      originCode: req.query.origin,
-      destinationCode: req.query.destination,
+      origin: airports[req.query.origin],
+      destination: airports[req.query.destination],
       time: req.query.departureDate.toISOString(),
     });
 
     if (!flightInfo) {
       flightInfo = new FlightInfo({
-        originCode: req.query.origin,
-        destinationCode: req.query.destination,
+        origin: airports[req.query.origin],
+        destination: airports[req.query.destination],
         time: req.query.departureDate,
       });
     }
@@ -144,8 +155,16 @@ module.exports.searchFlights = async (req, res) => {
 
     response.success(res, {
       code: flightInfo.searches[searchIndex].code,
-      originCode: flightInfo.originCode,
-      destinationCode: flightInfo.destinationCode,
+      origin: {
+        code: flightInfo.origin.code,
+        name: flightInfo.origin.name,
+        description: flightInfo.origin.description,
+      },
+      destination: {
+        code: flightInfo.destination.code,
+        name: flightInfo.destination.name,
+        description: flightInfo.destination.description,
+      },
       time: new Date(flightInfo.time) / 1000,
       flights: flightDetails,
       // AMADEUS_RESULT: result,
