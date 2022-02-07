@@ -129,46 +129,52 @@ module.exports.searchFlights = async (req, res) => {
       result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
     }
 
-    const airports = await countryRepository.getAirportsByCode(result.dictionaries.locations);
-    const flightDetails = result.data.map(makeFlightDetailsArray(result.dictionaries.aircraft, result.dictionaries.carriers, airports));
+    if (!!result.data && (result.data.length > 0)) {
+      const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode(result.dictionaries.locations) : [];
+      const aircrafts = !!result.dictionaries ? result.dictionaries.aircraft : [];
+      const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
+      const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports));
 
-    let flightInfo = await flightInfoRepository.findOne({
-      origin: airports[req.query.origin],
-      destination: airports[req.query.destination],
-      time: req.query.departureDate.toISOString(),
-    });
-
-    if (!flightInfo) {
-      flightInfo = new FlightInfo({
+      let flightInfo = await flightInfoRepository.findOne({
         origin: airports[req.query.origin],
         destination: airports[req.query.destination],
-        time: req.query.departureDate,
+        time: req.query.departureDate.toISOString(),
       });
+
+      if (!flightInfo) {
+        flightInfo = new FlightInfo({
+          origin: airports[req.query.origin],
+          destination: airports[req.query.destination],
+          time: req.query.departureDate,
+        });
+      }
+
+      const searchIndex = flightInfo.searches.push({
+        code: await flightInfoRepository.generateUniqueCode(),
+        flights: flightDetails,
+      }) - 1;
+
+      await flightInfo.save();
+
+      response.success(res, {
+        code: flightInfo.searches[searchIndex].code,
+        origin: {
+          code: flightInfo.origin.code,
+          name: flightInfo.origin.name,
+          description: flightInfo.origin.description,
+        },
+        destination: {
+          code: flightInfo.destination.code,
+          name: flightInfo.destination.name,
+          description: flightInfo.destination.description,
+        },
+        time: flightInfo.time,
+        flights: flightDetails,
+        // AMADEUS_RESULT: result,
+      });
+    } else {
+      response.success(res, {});
     }
-
-    const searchIndex = flightInfo.searches.push({
-      code: await flightInfoRepository.generateUniqueCode(),
-      flights: flightDetails,
-    }) - 1;
-
-    await flightInfo.save();
-
-    response.success(res, {
-      code: flightInfo.searches[searchIndex].code,
-      origin: {
-        code: flightInfo.origin.code,
-        name: flightInfo.origin.name,
-        description: flightInfo.origin.description,
-      },
-      destination: {
-        code: flightInfo.destination.code,
-        name: flightInfo.destination.name,
-        description: flightInfo.destination.description,
-      },
-      time: flightInfo.time,
-      flights: flightDetails,
-      // AMADEUS_RESULT: result,
-    });
   } catch (e) {
     response.exception(res, e);
   }
