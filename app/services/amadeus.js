@@ -70,7 +70,7 @@ const searchAirportAndCity = async keyword => {
   return response;
 };
 
-const flightOffersSingleSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode) => {
+const flightOffersSingleSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
   const { data: response } = await axiosApiInstance.get("/v2/shopping/flight-offers", {
     params: {
       originLocationCode,
@@ -84,14 +84,14 @@ const flightOffersSingleSearch = async (originLocationCode, destinationLocationC
       // includedAirlineCodes,
       // excludedAirlineCodes,
       // nonStop,
-      // currencyCode,
+      currencyCode,
     },
   });
 
   return response;
 };
 
-const flightOffersMultiSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode) => {
+const flightOffersMultiSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
   const originDestinations = [];
   originDestinations.push({
     id: 0,
@@ -148,6 +148,7 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
   // console.log({ travelers, originDestinations });
 
   const { data: response } = await axiosApiInstance.post("/v2/shopping/flight-offers", {
+    currencyCode,
     originDestinations,
     travelers,
     sources: ["GDS"],
