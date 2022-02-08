@@ -370,49 +370,19 @@ class CountryRepository extends BaseRepository {
         }
       }
     });
-    // agrCountry.append({
-    //   $group: {
-    //     _id: {
-    //       country: {
-    //         code: "$code",
-    //         name: "$name",
-    //       },
-    //       city: {
-    //         code: "$cities.code",
-    //         name: "$cities.name",
-    //       }
-    //     },
-    //     airports: {
-    //       $push: {
-    //         code: "$cities.airports.code",
-    //         name: "$cities.airports.name",
-    //         description: "$cities.airports.description",
-    //       }
-    //     }
-    //   }
-    // });
-    // agrCountry.append({
-    //   $group: {
-    //     _id: {
-    //       code: "$_id.country.code",
-    //       name: "$_id.country.name",
-    //     },
-    //     cities: {
-    //       $push: {
-    //         code: "$_id.city.code",
-    //         name: "$_id.city.name",
-    //         airports: "$airports",
-    //       },
-    //     },
-    //   }
-    // });
     const agrResult = await agrCountry.exec();
 
     return agrResult.reduce((airports, country) => {
       airports[country.cities.airports.code] = {
-        code: country.cities.airports.code,
-        name: country.cities.airports.name,
-        description: country.cities.airports.description,
+        airport: {
+          code: country.cities.airports.code,
+          name: country.cities.airports.name,
+          description: country.cities.airports.description,
+        },
+        city: {
+          code: country.cities.code,
+          name: country.cities.name,
+        },
       };
 
       return airports;

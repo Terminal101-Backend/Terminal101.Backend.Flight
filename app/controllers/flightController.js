@@ -39,12 +39,14 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
       name: airlines[segment.carrierCode],
     },
     departure: {
-      airport: airports[segment.departure.iataCode],
+      airport: airports[segment.departure.iataCode].airport,
+      city: airports[segment.departure.iataCode].city,
       terminal: segment.departure.terminal,
       at: segment.departure.at,
     },
     arrival: {
-      airport: airports[segment.arrival.iataCode],
+      airport: airports[segment.arrival.iataCode].airport,
+      city: airports[segment.arrival.iataCode].city,
       terminal: segment.arrival.terminal,
       at: segment.arrival.at,
     },
@@ -141,11 +143,11 @@ module.exports.searchFlights = async (req, res) => {
       destination = await countryRepository.getCityByCode(req.query.destination);
 
       if (!origin) {
-        origin = airports[req.query.origin];
+        origin = airports[req.query.origin].city;
       }
 
       if (!destination) {
-        destination = airports[req.query.destination];
+        destination = airports[req.query.destination].city;
       }
 
       let flightInfo = await flightInfoRepository.findOne({
