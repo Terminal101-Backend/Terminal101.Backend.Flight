@@ -459,10 +459,10 @@ class CountryRepository extends BaseRepository {
     agrCountry.append({ $replaceRoot: { newRoot: "$cities" } });
     const city = await agrCountry.exec();
 
-    return {
+    return !!city[0] ? {
       code: city[0].code,
       name: city[0].name,
-    };
+    } : undefined;
   }
 };
 

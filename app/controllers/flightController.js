@@ -135,15 +135,17 @@ module.exports.searchFlights = async (req, res) => {
       const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
       const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports));
 
-      let origin = airports[req.query.origin];
-      let destination = airports[req.query.destination];
+      let origin;
+      let destination;
+      origin = await countryRepository.getCityByCode(req.query.origin);
+      destination = await countryRepository.getCityByCode(req.query.destination);
 
       if (!origin) {
-        origin = await countryRepository.getCityByCode(req.query.origin);
+        origin = airports[req.query.origin];
       }
 
       if (!destination) {
-        destination = await countryRepository.getCityByCode(req.query.destination);
+        destination = airports[req.query.destination];
       }
 
       let flightInfo = await flightInfoRepository.findOne({
