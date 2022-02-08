@@ -135,16 +135,27 @@ module.exports.searchFlights = async (req, res) => {
       const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
       const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports));
 
+      let origin = airports[req.query.origin];
+      let destination = airports[req.query.destination];
+
+      if (!origin) {
+        origin = await countryRepository.getCityByCode(req.query.origin);
+      }
+
+      if (!destination) {
+        destination = await countryRepository.getCityByCode(req.query.destination);
+      }
+
       let flightInfo = await flightInfoRepository.findOne({
-        origin: airports[req.query.origin],
-        destination: airports[req.query.destination],
+        origin,
+        destination,
         time: req.query.departureDate.toISOString(),
       });
 
       if (!flightInfo) {
         flightInfo = new FlightInfo({
-          origin: airports[req.query.origin],
-          destination: airports[req.query.destination],
+          origin,
+          destination,
           time: req.query.departureDate,
         });
       }

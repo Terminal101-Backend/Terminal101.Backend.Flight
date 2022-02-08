@@ -340,6 +340,11 @@ class CountryRepository extends BaseRepository {
     return agrResult[0];
   }
 
+  /**
+   * 
+   * @param {String} airportCodes 
+   * @returns {Promise<Airport>}
+   */
   async getAirportsByCode(airportCodes) {
     const agrCountry = Country.aggregate();
     agrCountry.append({ $unwind: "$cities" });
@@ -436,6 +441,28 @@ class CountryRepository extends BaseRepository {
 
     //     return countries;
     //   }, {});
+  }
+
+  /**
+   * 
+   * @param {String} cityCode 
+   * @returns {Promise<City>}
+   */
+  async getCityByCode(cityCode) {
+    const agrCountry = Country.aggregate();
+    agrCountry.append({ $unwind: "$cities" });
+    agrCountry.append({
+      $match: {
+        "cities.code": cityCode,
+      }
+    });
+    agrCountry.append({ $replaceRoot: { newRoot: "$cities" } });
+    const city = await agrCountry.exec();
+
+    return {
+      code: city[0].code,
+      name: city[0].name,
+    };
   }
 };
 
