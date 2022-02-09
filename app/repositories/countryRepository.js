@@ -366,7 +366,7 @@ class CountryRepository extends BaseRepository {
     agrCountry.append({
       $match: {
         "cities.airports.code": {
-          $in: Object.keys(airportCodes)
+          $in: airportCodes
         }
       }
     });

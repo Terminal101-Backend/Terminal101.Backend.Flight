@@ -1,4 +1,4 @@
-const { EFlightWaypoint } = require("../constants");
+const { EFlightWaypoint, ETravelClass } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const dateTime = require("../helpers/dateTimeHelper");
@@ -29,6 +29,17 @@ const makeSegmentsArray = segments => {
   return segments;
 };
 
+const makeSegmentStopsArray = airports => {
+  return stop => ({
+    description: stop.description,
+    duration: dateTime.convertAmadeusTime(stop.duration),
+    arrivalAt: stop.arrivalAt,
+    departureAt: stop.departureAt,
+    airport: airports[stop.iataCode].airport,
+    city: airports[stop.iataCode].city,
+  });
+};
+
 const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   return segment => ({
     duration: dateTime.convertAmadeusTime(segment.duration),
@@ -38,6 +49,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
       code: segment.carrierCode,
       name: airlines[segment.carrierCode],
     },
+    stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
     departure: {
       airport: airports[segment.departure.iataCode].airport,
       city: airports[segment.departure.iataCode].city,
@@ -53,11 +65,12 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   });
 };
 
-const makeFlightDetailsArray = (aircrafts, airlines, airports) => {
+const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
   return (rec, index) => ({
     code: index,
     availableSeats: rec.numberOfBookableSeats,
     currencyCode: rec.price.currency,
+    travelClass,
     price: rec.price.total,
     itineraries: rec.itineraries.map(itinerary => ({
       duration: dateTime.convertAmadeusTime(itinerary.duration),
@@ -132,10 +145,17 @@ module.exports.searchFlights = async (req, res) => {
     }
 
     if (!!result.data && (result.data.length > 0)) {
-      const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode(result.dictionaries.locations) : [];
+      const stops = result.data
+        .reduce((res, cur) => [...res, ...cur.itineraries], [])
+        .reduce((res, cur) => [...res, ...cur.segments], [])
+        .filter(segment => !!segment.stops)
+        .reduce((res, cur) => [...res, ...cur.stops], [])
+        .map(stop => stop.iataCode);
+
+      const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode([...Object.keys(result.dictionaries.locations), ...stops]) : [];
       const aircrafts = !!result.dictionaries ? result.dictionaries.aircraft : [];
       const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
-      const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports));
+      const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports, req.query.travelClass));
 
       let origin;
       let destination;
@@ -241,8 +261,23 @@ module.exports.filterFlights = async (req, res) => {
                   description: segment.arrival.airport.description,
                 },
                 terminal: segment.arrival.terminal,
-                at: segment.departure.at,
+                at: segment.arrival.at,
               },
+              stops: segment.stops.map(stop => ({
+                duration: stop.duration,
+                arrivalAt: stop.arrivalAt,
+                departureAt: stop.departureAt,
+                airport: {
+                  code: stop.airport.code,
+                  name: stop.airport.name,
+                  description: stop.airport.description,
+                },
+                city: {
+                  code: stop.city.code,
+                  name: stop.city.name,
+                  description: stop.city.description,
+                },
+              })),
             })) : [],
           };
         }).filter(itinerary => {
@@ -266,7 +301,9 @@ module.exports.filterFlights = async (req, res) => {
       }
 
       return {
+        code: flight.code,
         availableSeats: flight.availableSeats,
+        travelClass: ETravelClass.find(flight.travelClass),
         currencyCode: flight.currencyCode,
         price: flight.price,
         itineraries,
@@ -343,8 +380,23 @@ module.exports.getFlight = async (req, res) => {
                 description: segment.arrival.airport.description,
               },
               terminal: segment.arrival.terminal,
-              at: segment.departure.at,
+              at: segment.arrival.at,
             },
+            stops: segment.stops.map(stop => ({
+              duration: stop.duration,
+              arrivalAt: stop.arrivalAt,
+              departureAt: stop.departureAt,
+              airport: {
+                code: stop.airport.code,
+                name: stop.airport.name,
+                description: stop.airport.description,
+              },
+              city: {
+                code: stop.city.code,
+                name: stop.city.name,
+                description: stop.city.description,
+              },
+            })),
           })),
         })),
       }
@@ -369,7 +421,7 @@ module.exports.getPopularFlights = async (req, res) => {
 module.exports.getCountries = async (req, res) => {
   try {
     const countries = await countryRepository.findMany();
-    response.success(res, countries.map(country => ({ code: country.code, name: country.name })));
+    response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
   } catch (e) {
     response.exception(res, e);
   }

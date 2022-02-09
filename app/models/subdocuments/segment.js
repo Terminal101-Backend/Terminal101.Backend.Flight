@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const Waypoint = require("./waypoint");
 const Airline = require("./airline");
+const Stop = require("./stop");
 
 const segment = new Schema({
   departure: {
@@ -28,6 +29,10 @@ const segment = new Schema({
   airline: {
     type: Airline,
     required: true,
+  },
+  stops: {
+    type: [Stop],
+    default: [],
   },
 }, {
   timestamps: true

@@ -7,6 +7,7 @@ const { countryRepository, flightInfoRepository } = require("../repositories");
 const { Country } = require("../models/documents");
 
 const data = require("./initData");
+const { ETravelClass } = require("../constants");
 
 const addCountriesCitiesAirports = async () => {
   await countryRepository.deleteMany();
@@ -80,6 +81,7 @@ const addSampleFlightInfos = async () => {
       const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.length;
       flightInfo.searches[searchedIndex].flights.push({
         code: flightDetailsIndex,
+        travelClass: ETravelClass.get("BUSINESS"),
         availableSeats: Math.ceil(Math.random() * 8 + 1),
         price: Math.floor(Math.random() * 30000 + 50) / 100,
       }) - 1;

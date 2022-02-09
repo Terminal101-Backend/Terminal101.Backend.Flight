@@ -101,7 +101,7 @@ class Enum {
   find(value) {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:
-        let found = Object.entries(this.#list).find(item => item[1] === value);
+        let found = Object.entries(this.#list).find(item => (item[1] === value) || (item[0] === value));
         return !!found ? found[0] : undefined;
 
       case EEnumType.NUMERIC:
