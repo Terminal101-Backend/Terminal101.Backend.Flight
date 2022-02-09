@@ -373,6 +373,9 @@ definitions:
       name:
         type: string
         example: Munchen
+      dialingCode:
+        type: number
+        example: 123
 
 schemes:
   # - http

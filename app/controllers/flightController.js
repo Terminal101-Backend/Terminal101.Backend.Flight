@@ -35,8 +35,8 @@ const makeSegmentStopsArray = airports => {
     duration: dateTime.convertAmadeusTime(stop.duration),
     arrivalAt: stop.arrivalAt,
     departureAt: stop.departureAt,
-    airport: airports[stop.iataCode].airport,
-    city: airports[stop.iataCode].city,
+    airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : { code: stop.iataCode, name: "UNKNOWN" },
+    city: !!airports[stop.iataCode] ? airports[stop.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
   });
 };
 
@@ -51,14 +51,14 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
     },
     stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
     departure: {
-      airport: airports[segment.departure.iataCode].airport,
-      city: airports[segment.departure.iataCode].city,
+      airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : { code: segment.departure.iataCode, name: "UNKNOWN" },
+      city: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
       terminal: segment.departure.terminal,
       at: segment.departure.at,
     },
     arrival: {
-      airport: airports[segment.arrival.iataCode].airport,
-      city: airports[segment.arrival.iataCode].city,
+      airport: !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].airport : { code: segment.arrival.iataCode, name: "UNKNOWN" },
+      city: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].city : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
       terminal: segment.arrival.terminal,
       at: segment.arrival.at,
     },
@@ -163,11 +163,11 @@ module.exports.searchFlights = async (req, res) => {
       destination = await countryRepository.getCityByCode(req.query.destination);
 
       if (!origin) {
-        origin = airports[req.query.origin].city;
+        origin = !!airports[req.query.origin] ? airports[req.query.origin].city : { code: "UNKNOWN", name: "UNKNOWN" };
       }
 
       if (!destination) {
-        destination = airports[req.query.destination].city;
+        destination = !!airports[req.query.destination] ? airports[req.query.destination].city : { code: "UNKNOWN", name: "UNKNOWN" };
       }
 
       let flightInfo = await flightInfoRepository.findOne({
@@ -251,6 +251,11 @@ module.exports.filterFlights = async (req, res) => {
                   name: segment.departure.airport.name,
                   description: segment.departure.airport.description,
                 },
+                city: {
+                  code: segment.departure.city.code,
+                  name: segment.departure.city.name,
+                  description: segment.departure.city.description,
+                },
                 terminal: segment.departure.terminal,
                 at: segment.departure.at,
               },
@@ -259,6 +264,11 @@ module.exports.filterFlights = async (req, res) => {
                   code: segment.arrival.airport.code,
                   name: segment.arrival.airport.name,
                   description: segment.arrival.airport.description,
+                },
+                city: {
+                  code: segment.arrival.city.code,
+                  name: segment.arrival.city.name,
+                  description: segment.arrival.city.description,
                 },
                 terminal: segment.arrival.terminal,
                 at: segment.arrival.at,
@@ -370,6 +380,11 @@ module.exports.getFlight = async (req, res) => {
                 name: segment.departure.airport.name,
                 description: segment.departure.airport.description,
               },
+              city: {
+                code: segment.departure.city.code,
+                name: segment.departure.city.name,
+                description: segment.departure.city.description,
+              },
               terminal: segment.departure.terminal,
               at: segment.departure.at,
             },
@@ -378,6 +393,11 @@ module.exports.getFlight = async (req, res) => {
                 code: segment.arrival.airport.code,
                 name: segment.arrival.airport.name,
                 description: segment.arrival.airport.description,
+              },
+              city: {
+                code: segment.arrival.city.code,
+                name: segment.arrival.city.name,
+                description: segment.arrival.city.description,
               },
               terminal: segment.arrival.terminal,
               at: segment.arrival.at,
