@@ -221,6 +221,54 @@ paths:
           in: path
           required: true
           type: string
+        - name: stops
+          in: query
+          required: false
+          type: number
+        - name: airports
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+        - name: airlines
+          in: query
+          required: false
+          type: array
+          items:
+            type: string
+        - name: priceFrom
+          in: query
+          required: false
+          type: number
+        - name: priceTo
+          in: query
+          required: false
+          type: number
+        - name: departureTimeFrom
+          in: query
+          required: false
+          type: number
+        - name: departureTimeTo
+          in: query
+          required: false
+          type: number
+        - name: arrivalTimeFrom
+          in: query
+          required: false
+          type: number
+        - name: arrivalTimeTo
+          in: query
+          required: false
+          type: number
+        - name: durationFrom
+          in: query
+          required: false
+          type: number
+        - name: durationTo
+          in: query
+          required: false
+          type: number
       description: Get search by code.
       responses:
         "200":
