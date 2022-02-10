@@ -125,7 +125,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
       availableSeats: flight.numberOfBookableSeats,
       currencyCode: flight.price.currency,
       travelClass,
-      price: flight.price.total,
+      price: parseFloat(flight.price.total),
       itineraries: flight.itineraries.map(itinerary => {
         let result = {
           duration: dateTime.convertAmadeusTime(itinerary.duration),
@@ -139,17 +139,17 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
           filter.durationTo = result.duration;
         }
 
-        if (new Date(result.segments[0].departure.at) < (!filter.departureTimeFrom ? Number.POSITIVE_INFINITY : new Date(filter.departureTimeFrom))) {
+        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTimeFrom ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.departureTimeFrom))) {
           filter.departureTimeFrom = result.segments[0].departure.at;
         }
-        if (new Date(result.segments[0].departure.at) > (!filter.departureTimeTo ? 0 : new Date(filter.departureTimeTo))) {
+        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTimeTo ? 0 : dateTime.getMinutesFromIsoString(filter.departureTimeTo))) {
           filter.departureTimeTo = result.segments[0].departure.at;
         }
 
-        if (new Date(result.segments[0].arrival.at) < (!filter.arrivalTimeFrom ? Number.POSITIVE_INFINITY : new Date(filter.arrivalTimeFrom))) {
+        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTimeFrom ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.arrivalTimeFrom))) {
           filter.arrivalTimeFrom = result.segments[0].arrival.at;
         }
-        if (new Date(result.segments[0].arrival.at) > (!filter.arrivalTimeTo ? 0 : new Date(filter.arrivalTimeTo))) {
+        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTimeTo ? 0 : dateTime.getMinutesFromIsoString(filter.arrivalTimeTo))) {
           filter.arrivalTimeTo = result.segments[0].arrival.at;
         }
 
