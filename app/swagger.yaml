@@ -211,6 +211,25 @@ paths:
             items:
               $ref: "#/definitions/Flight"
 
+  /flight/search/{searchId}/limits:
+    # NOTE: Get popular flights
+    get:
+      tags:
+        - Flight
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          type: string
+      description: Get filter limits for a search.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/FilterLimit"
+
   /flight/search/{searchId}:
     # NOTE: Get popular flights
     get:
@@ -269,14 +288,14 @@ paths:
           in: query
           required: false
           type: number
-      description: Get search by code.
+      description: Get search by code and filter that.
       responses:
         "200":
           description: OK
           schema:
             type: array
             items:
-              $ref: "#/definitions/FlightPopular"
+              $ref: "#/definitions/Flight"
 
   /flight/search/{searchId}/details/{flightIndex}:
     # NOTE: Get popular flights
@@ -297,9 +316,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/FlightPopular"
+            $ref: "#/definitions/Flight"
 
   /flight/popular:
     # NOTE: Get popular flights
@@ -331,6 +348,49 @@ definitions:
       time:
         type: string
         example: "2022-01-13T12:15:00.000Z"
+
+  FilterLimit:
+    properties:
+      stops:
+        type: array
+        items:
+          type: number
+      aircrafts:
+        type: array
+        items:
+          type: string
+      airports:
+        type: array
+        items:
+          $ref: "#/definitions/Waypoint"
+      airlines:
+        type: array
+        items:
+          $ref: "#/definitions/Waypoint"
+      priceFrom:
+        type: number
+        example: 100
+      priceTo:
+        type: number
+        example: 100
+      departureTimeFrom:
+        type: number
+        example: 100
+      departureTimeTo:
+        type: number
+        example: 100
+      arrivalTimeFrom:
+        type: number
+        example: 100
+      arrivalTimeTo:
+        type: number
+        example: 100
+      durationFrom:
+        type: number
+        example: 100
+      durationTo:
+        type: number
+        example: 100
 
   FlightPopular:
     required:

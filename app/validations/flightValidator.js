@@ -190,7 +190,7 @@ module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
   searchFlights: new SearchFlights(),
-  getFilters: new GetFilters(),
+  getFilterLimit: new GetFilters(),
   filterFlights: new FilterFlights(),
   getFlight: new GetFlight(),
   getPopularFlights: new GetPopularFlights(),

@@ -326,7 +326,7 @@ module.exports.searchFlights = async (req, res) => {
 };
 
 // NOTE: Get filters
-module.exports.getFilters = async (req, res) => {
+module.exports.getFilterLimit = async (req, res) => {
   const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
   response.success(res, {
