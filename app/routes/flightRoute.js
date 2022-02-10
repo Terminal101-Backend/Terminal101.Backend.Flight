@@ -23,6 +23,16 @@ router
     flightValidator.getFlight.check(),
     flightController.getFlight);
 
+// NOTE: Get filter limits
+router
+  .get("/search/:searchId/filters",
+    (req, res, next) => {
+      console.log("Get filter limits", req.params, req.body, req.query);
+      next();
+    },
+    flightValidator.getFilters.check(),
+    flightController.getFilters);
+
 // NOTE: Filter searched flight
 router
   .get("/search/:searchId",

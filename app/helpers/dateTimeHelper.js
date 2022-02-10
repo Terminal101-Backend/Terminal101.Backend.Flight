@@ -15,3 +15,8 @@ module.exports.excludeTimeFromIsoString = isoString => {
   const reTest = re.exec(isoString);
   return reTest ? reTest[2] : undefined;
 };
+
+module.exports.getMinutesFromIsoString = isoString => {
+  const date = new Date(isoString);
+  return date.getHours() * 60 + date.getMinutes();
+};

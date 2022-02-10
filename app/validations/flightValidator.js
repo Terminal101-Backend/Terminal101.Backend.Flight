@@ -60,6 +60,20 @@ class SearchFlights extends BaseValidator {
   }
 };
 
+class GetFilters extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      searchId: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class FilterFlights extends BaseValidator {
   constructor() {
     const body = {
@@ -176,6 +190,7 @@ module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
   searchFlights: new SearchFlights(),
+  getFilters: new GetFilters(),
   filterFlights: new FilterFlights(),
   getFlight: new GetFlight(),
   getPopularFlights: new GetPopularFlights(),

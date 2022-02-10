@@ -77,7 +77,22 @@ const addSampleFlightInfos = async () => {
     for (let j = 0; j < Math.random() * maxSearchCount; j++) {
       let code = await flightInfoRepository.generateUniqueCode();
 
-      const searchedIndex = flightInfo.searches.push({ code }) - 1;
+      const searchedIndex = flightInfo.searches.push({
+        code,
+        filter: {
+          stops: [0],
+          airports: [],
+          airlines: [],
+          priceFrom: 0,
+          priceTo: 0,
+          departureTimeFrom: 0,
+          departureTimeTo: 0,
+          arrivalTimeFrom: 0,
+          arrivalTimeTo: 0,
+          durationFrom: 0,
+          durationTo: 0,
+        }
+      }) - 1;
       const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.length;
       flightInfo.searches[searchedIndex].flights.push({
         code: flightDetailsIndex,
