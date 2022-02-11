@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const Airport = require("./airport");
 const Airline = require("./airline");
+const NumberRange = require("./numberRange");
 
 const filterLimit = new Schema({
   _id: {
@@ -25,36 +26,20 @@ const filterLimit = new Schema({
     type: [Airline],
     default: [],
   },
-  priceFrom: {
-    type: Number,
+  price: {
+    type: NumberRange,
     required: true,
   },
-  priceTo: {
-    type: Number,
+  departureTime: {
+    type: NumberRange,
     required: true,
   },
-  departureTimeFrom: {
-    type: Number,
+  arrivalTime: {
+    type: NumberRange,
     required: true,
   },
-  departureTimeTo: {
-    type: Number,
-    required: true,
-  },
-  arrivalTimeFrom: {
-    type: Number,
-    required: true,
-  },
-  arrivalTimeTo: {
-    type: Number,
-    required: true,
-  },
-  durationFrom: {
-    type: Number,
-    required: true,
-  },
-  durationTo: {
-    type: Number,
+  duration: {
+    type: NumberRange,
     required: true,
   },
 }, {

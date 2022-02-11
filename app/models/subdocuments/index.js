@@ -8,3 +8,4 @@ module.exports.Itinerary = require("./itinerary");
 module.exports.Segment = require("./segment");
 module.exports.Waypoint = require("./waypoint");
 module.exports.Stop = require("./stop");
+module.exports.NumberRange = require("./numberRange");

@@ -83,14 +83,22 @@ const addSampleFlightInfos = async () => {
           stops: [0],
           airports: [],
           airlines: [],
-          priceFrom: 0,
-          priceTo: 0,
-          departureTimeFrom: 0,
-          departureTimeTo: 0,
-          arrivalTimeFrom: 0,
-          arrivalTimeTo: 0,
-          durationFrom: 0,
-          durationTo: 0,
+          price: {
+            min: 0,
+            max: 0,
+          },
+          departureTime: {
+            min: 0,
+            max: 0,
+          },
+          arrivalTime: {
+            min: 0,
+            max: 0,
+          },
+          duration: {
+            min: 0,
+            max: 0,
+          },
         }
       }) - 1;
       const flightDetailsIndex = flightInfo.searches[searchedIndex].flights.length;

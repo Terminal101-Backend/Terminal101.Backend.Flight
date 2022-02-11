@@ -100,18 +100,18 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
       filter.stops.push(result.stops.length);
     }
 
-    // if (new Date(result.departure.at) < (!filter.departureTimeFrom ? Number.POSITIVE_INFINITY : new Date(filter.departureTimeFrom))) {
-    //   filter.departureTimeFrom = result.departure.at;
+    // if (new Date(result.departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : new Date(filter.departureTime.min))) {
+    //   filter.departureTime.min = result.departure.at;
     // }
-    // if (new Date(result.departure.at) > (!filter.departureTimeTo ? 0 : new Date(filter.departureTimeTo))) {
-    //   filter.departureTimeTo = result.departure.at;
+    // if (new Date(result.departure.at) > (!filter.departureTime.max ? 0 : new Date(filter.departureTime.max))) {
+    //   filter.departureTime.max = result.departure.at;
     // }
 
-    // if (new Date(result.arrival.at) < (!filter.arrivalTimeFrom ? Number.POSITIVE_INFINITY : new Date(filter.arrivalTimeFrom))) {
-    //   filter.arrivalTimeFrom = result.arrival.at;
+    // if (new Date(result.arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : new Date(filter.arrivalTime.min))) {
+    //   filter.arrivalTime.min = result.arrival.at;
     // }
-    // if (new Date(result.arrival.at) > (!filter.arrivalTimeTo ? 0 : new Date(filter.arrivalTimeTo))) {
-    //   filter.arrivalTimeTo = result.arrival.at;
+    // if (new Date(result.arrival.at) > (!filter.arrivalTime.max ? 0 : new Date(filter.arrivalTime.max))) {
+    //   filter.arrivalTime.max = result.arrival.at;
     // }
 
     return result;
@@ -132,36 +132,36 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
           segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports, filter)),
         };
 
-        if (result.duration < filter.durationFrom) {
-          filter.durationFrom = result.duration;
+        if (result.duration < filter.duration.min) {
+          filter.duration.min = result.duration;
         }
-        if (result.duration > filter.durationTo) {
-          filter.durationTo = result.duration;
-        }
-
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTimeFrom ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.departureTimeFrom))) {
-          filter.departureTimeFrom = result.segments[0].departure.at;
-        }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTimeTo ? 0 : dateTime.getMinutesFromIsoString(filter.departureTimeTo))) {
-          filter.departureTimeTo = result.segments[0].departure.at;
+        if (result.duration > filter.duration.max) {
+          filter.duration.max = result.duration;
         }
 
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTimeFrom ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.arrivalTimeFrom))) {
-          filter.arrivalTimeFrom = result.segments[0].arrival.at;
+        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.departureTime.min))) {
+          filter.departureTime.min = result.segments[0].departure.at;
         }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTimeTo ? 0 : dateTime.getMinutesFromIsoString(filter.arrivalTimeTo))) {
-          filter.arrivalTimeTo = result.segments[0].arrival.at;
+        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.departureTime.max))) {
+          filter.departureTime.max = result.segments[0].departure.at;
+        }
+
+        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.arrivalTime.min))) {
+          filter.arrivalTime.min = result.segments[0].arrival.at;
+        }
+        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.arrivalTime.max))) {
+          filter.arrivalTime.max = result.segments[0].arrival.at;
         }
 
         return result;
       }),
     };
 
-    if (result.price < filter.priceFrom) {
-      filter.priceFrom = result.price;
+    if (result.price < filter.price.min) {
+      filter.price.min = result.price;
     }
-    if (result.price > filter.priceTo) {
-      filter.priceTo = result.price;
+    if (result.price > filter.price.max) {
+      filter.price.max = result.price;
     }
 
     return result;
@@ -246,25 +246,41 @@ module.exports.searchFlights = async (req, res) => {
         aircrafts: [],
         airports: [],
         airlines: [],
-        priceFrom: Number.POSITIVE_INFINITY,
-        priceTo: 0,
-        departureTimeFrom: undefined,
-        departureTimeTo: undefined,
-        arrivalTimeFrom: undefined,
-        arrivalTimeTo: undefined,
-        durationFrom: Number.POSITIVE_INFINITY,
-        durationTo: 0,
+        price: {
+          min: Number.POSITIVE_INFINITY,
+          max: Number.NEGATIVE_INFINITY,
+        },
+        departureTime: {
+          min: undefined,
+          max: undefined,
+        },
+        arrivalTime: {
+          min: undefined,
+          max: undefined,
+        },
+        duration: {
+          min: Number.POSITIVE_INFINITY,
+          max: Number.NEGATIVE_INFINITY,
+        },
+        // priceFrom: Number.POSITIVE_INFINITY,
+        // priceTo: 0,
+        // departureTimeFrom: undefined,
+        // departureTimeTo: undefined,
+        // arrivalTimeFrom: undefined,
+        // arrivalTimeTo: undefined,
+        // durationFrom: Number.POSITIVE_INFINITY,
+        // durationTo: 0,
       };
       const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode([...Object.keys(result.dictionaries.locations), ...stops]) : [];
       const aircrafts = !!result.dictionaries ? result.dictionaries.aircraft : [];
       const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
       const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports, req.query.travelClass, filter));
 
-      filter.departureTimeFrom = dateTime.getMinutesFromIsoString(filter.departureTimeFrom);
-      filter.departureTimeTo = dateTime.getMinutesFromIsoString(filter.departureTimeTo);
+      filter.departureTime.min = dateTime.getMinutesFromIsoString(filter.departureTime.min);
+      filter.departureTime.max = dateTime.getMinutesFromIsoString(filter.departureTime.max);
 
-      filter.arrivalTimeFrom = dateTime.getMinutesFromIsoString(filter.arrivalTimeFrom);
-      filter.arrivalTimeTo = dateTime.getMinutesFromIsoString(filter.arrivalTimeTo);
+      filter.arrivalTime.min = dateTime.getMinutesFromIsoString(filter.arrivalTime.min);
+      filter.arrivalTime.max = dateTime.getMinutesFromIsoString(filter.arrivalTime.max);
 
       let origin;
       let destination;
@@ -342,14 +358,22 @@ module.exports.getFilterLimit = async (req, res) => {
       name: airline.name,
       description: airline.description,
     })),
-    priceFrom: flightInfo.searches.filter.priceFrom,
-    priceTo: flightInfo.searches.filter.priceTo,
-    departureTimeFrom: flightInfo.searches.filter.departureTimeFrom,
-    departureTimeTo: flightInfo.searches.filter.departureTimeTo,
-    arrivalTimeFrom: flightInfo.searches.filter.arrivalTimeFrom,
-    arrivalTimeTo: flightInfo.searches.filter.arrivalTimeTo,
-    durationFrom: flightInfo.searches.filter.durationFrom,
-    durationTo: flightInfo.searches.filter.durationTo,
+    price: {
+      min: flightInfo.searches.filter.price.min,
+      max: flightInfo.searches.filter.price.max,
+    },
+    departureTime: {
+      min: flightInfo.searches.filter.departureTime.min,
+      max: flightInfo.searches.filter.departureTime.max,
+    },
+    arrivalTime: {
+      min: flightInfo.searches.filter.arrivalTime.min,
+      max: flightInfo.searches.filter.arrivalTime.max,
+    },
+    duration: {
+      min: flightInfo.searches.filter.duration.min,
+      max: flightInfo.searches.filter.duration.max,
+    },
   });
 
   // let stops = 0;
@@ -361,8 +385,8 @@ module.exports.getFilterLimit = async (req, res) => {
   // let departureTimeTo = 0;
   // let arrivalTimeFrom = Number.POSITIVE_INFINITY;
   // let arrivalTimeTo = 0;
-  // let durationFrom = Number.POSITIVE_INFINITY;
-  // let durationTo = 0;
+  // let duration.min = Number.POSITIVE_INFINITY;
+  // let duration.max = 0;
 
   // flightInfo.searches.flights.forEach(flight => {
   //   if (flight.price < priceFrom) {
@@ -373,11 +397,11 @@ module.exports.getFilterLimit = async (req, res) => {
   //   }
 
   //   flight.itineraries.forEach(itinerary => {
-  //     if (itinerary.duration < durationFrom) {
-  //       durationFrom = itinerary.duration;
+  //     if (itinerary.duration < duration.min) {
+  //       duration.min = itinerary.duration;
   //     }
-  //     if (itinerary.duration > durationTo) {
-  //       durationTo = itinerary.duration;
+  //     if (itinerary.duration > duration.max) {
+  //       duration.max = itinerary.duration;
   //     }
 
   //     itinerary.segments.forEach(segment => {
@@ -396,8 +420,8 @@ module.exports.getFilterLimit = async (req, res) => {
   //   departureTimeTo,
   //   arrivalTimeFrom,
   //   arrivalTimeTo,
-  //   durationFrom,
-  //   durationTo,
+  //   duration.min,
+  //   duration.max,
   // });
 }
 
@@ -489,8 +513,8 @@ module.exports.filterFlights = async (req, res) => {
           result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
           result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
 
-          result = result && (!req.query.durationFrom || (itinerary.duration >= req.query.durationFrom));
-          result = result && (!req.query.durationTo || (itinerary.duration <= req.query.durationTo));
+          result = result && (!req.query.duration.min || (itinerary.duration >= req.query.duration.min));
+          result = result && (!req.query.duration.max || (itinerary.duration <= req.query.duration.max));
 
           return result;
         });

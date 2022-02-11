@@ -367,30 +367,14 @@ definitions:
         type: array
         items:
           $ref: "#/definitions/Waypoint"
-      priceFrom:
-        type: number
-        example: 100
-      priceTo:
-        type: number
-        example: 100
-      departureTimeFrom:
-        type: number
-        example: 100
-      departureTimeTo:
-        type: number
-        example: 100
-      arrivalTimeFrom:
-        type: number
-        example: 100
-      arrivalTimeTo:
-        type: number
-        example: 100
-      durationFrom:
-        type: number
-        example: 100
-      durationTo:
-        type: number
-        example: 100
+      price:
+        $ref: "#/definitions/NumberRange"
+      departureTime:
+        $ref: "#/definitions/NumberRange"
+      arrivalTime:
+        $ref: "#/definitions/NumberRange"
+      duration:
+        $ref: "#/definitions/NumberRange"
 
   FlightPopular:
     required:
@@ -484,6 +468,15 @@ definitions:
       dialingCode:
         type: number
         example: 123
+
+  NumberRange:
+    properties:
+      min:
+        type: number
+        example: 0
+      max:
+        type: number
+        example: 1000
 
 schemes:
   # - http
