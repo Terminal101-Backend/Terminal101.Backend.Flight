@@ -65,7 +65,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
       },
     };
 
-    if (!filter.airlines.some(airline => airline.code === segment.carriesCode)) {
+    if (!filter.airlines.some(airline => airline.code === segment.carrierCode)) {
       filter.airlines.push({
         code: segment.carrierCode,
         name: airlines[segment.carrierCode]
