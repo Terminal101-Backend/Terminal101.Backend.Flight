@@ -84,7 +84,10 @@ class FilterFlights extends BaseValidator {
     };
 
     const query = {
-      stops: Joi.number(),
+      stops: [
+        Joi.string(),
+        Joi.array().items(Joi.number()),
+      ],
       airports: [
         Joi.string(),
         Joi.array().items(Joi.string()),

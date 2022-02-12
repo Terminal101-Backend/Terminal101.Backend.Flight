@@ -433,11 +433,73 @@ module.exports.filterFlights = async (req, res) => {
     const flights = flightInfo.searches.flights.map(flight => {
       let itineraries = [];
       if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
-        itineraries = flight.itineraries.map(itinerary => {
+        itineraries = flight.itineraries.map(itinerary => ({
+          duration: itinerary.duration,
+          segments: itinerary.segments.map(segment => ({
+            duration: segment.duration,
+            flightNumber: segment.flightNumber,
+            aircraft: segment.aircraft,
+            airline: {
+              code: segment.airline.code,
+              name: segment.airline.name,
+              description: segment.airline.description,
+            },
+            departure: {
+              airport: {
+                code: segment.departure.airport.code,
+                name: segment.departure.airport.name,
+                description: segment.departure.airport.description,
+              },
+              city: {
+                code: segment.departure.city.code,
+                name: segment.departure.city.name,
+                description: segment.departure.city.description,
+              },
+              terminal: segment.departure.terminal,
+              at: segment.departure.at,
+            },
+            arrival: {
+              airport: {
+                code: segment.arrival.airport.code,
+                name: segment.arrival.airport.name,
+                description: segment.arrival.airport.description,
+              },
+              city: {
+                code: segment.arrival.city.code,
+                name: segment.arrival.city.name,
+                description: segment.arrival.city.description,
+              },
+              terminal: segment.arrival.terminal,
+              at: segment.arrival.at,
+            },
+            stops: segment.stops.map(stop => ({
+              duration: stop.duration,
+              arrivalAt: stop.arrivalAt,
+              departureAt: stop.departureAt,
+              airport: {
+                code: stop.airport.code,
+                name: stop.airport.name,
+                description: stop.airport.description,
+              },
+              city: {
+                code: stop.city.code,
+                name: stop.city.name,
+                description: stop.city.description,
+              },
+            })),
+          })),
+        })).filter(itinerary => {
+          let result = true;
+
           let segments = itinerary.segments.some(segment => {
             let result = true;
             let airlines = req.query.airlines;
             let airports = req.query.airports;
+            let stops = req.query.stops
+
+            if (!!stops && (typeof stops === "string")) {
+              stops = stops.split(",").map(stop => parseInt(stop.trim()));
+            }
 
             if (!!airlines && (typeof airlines === "string")) {
               airlines = airlines.split(",").map(airline => airline.trim());
@@ -447,6 +509,8 @@ module.exports.filterFlights = async (req, res) => {
               airports = airports.split(",").map(airport => airport.trim());
             }
 
+            result = result && (!stops || stops.includes(segment.stops.length));
+
             result = result && (!airlines || airlines.includes(segment.airline.code));
 
             result = result && (!airports || airports.includes(segment.departure.airport.code) || airports.includes(segment.arrival.airport.code));
@@ -454,66 +518,7 @@ module.exports.filterFlights = async (req, res) => {
             return result;
           });
 
-          return {
-            duration: itinerary.duration,
-            segments: !!segments ? itinerary.segments.map(segment => ({
-              duration: segment.duration,
-              flightNumber: segment.flightNumber,
-              aircraft: segment.aircraft,
-              airline: {
-                code: segment.airline.code,
-                name: segment.airline.name,
-                description: segment.airline.description,
-              },
-              departure: {
-                airport: {
-                  code: segment.departure.airport.code,
-                  name: segment.departure.airport.name,
-                  description: segment.departure.airport.description,
-                },
-                city: {
-                  code: segment.departure.city.code,
-                  name: segment.departure.city.name,
-                  description: segment.departure.city.description,
-                },
-                terminal: segment.departure.terminal,
-                at: segment.departure.at,
-              },
-              arrival: {
-                airport: {
-                  code: segment.arrival.airport.code,
-                  name: segment.arrival.airport.name,
-                  description: segment.arrival.airport.description,
-                },
-                city: {
-                  code: segment.arrival.city.code,
-                  name: segment.arrival.city.name,
-                  description: segment.arrival.city.description,
-                },
-                terminal: segment.arrival.terminal,
-                at: segment.arrival.at,
-              },
-              stops: segment.stops.map(stop => ({
-                duration: stop.duration,
-                arrivalAt: stop.arrivalAt,
-                departureAt: stop.departureAt,
-                airport: {
-                  code: stop.airport.code,
-                  name: stop.airport.name,
-                  description: stop.airport.description,
-                },
-                city: {
-                  code: stop.city.code,
-                  name: stop.city.name,
-                  description: stop.city.description,
-                },
-              })),
-            })) : [],
-          };
-        }).filter(itinerary => {
-          let result = itinerary.segments.length > 0;
-
-          if (itinerary.segments.length === 0) {
+          if (!segments) {
             return false;
           }
 
