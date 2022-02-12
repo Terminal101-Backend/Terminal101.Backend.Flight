@@ -243,7 +243,9 @@ paths:
         - name: stops
           in: query
           required: false
-          type: number
+          type: array
+          items:
+            type: number
         - name: airports
           in: query
           required: false
