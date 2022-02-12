@@ -513,8 +513,8 @@ module.exports.filterFlights = async (req, res) => {
           result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
           result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
 
-          result = result && (!req.query.duration.min || (itinerary.duration >= req.query.duration.min));
-          result = result && (!req.query.duration.max || (itinerary.duration <= req.query.duration.max));
+          result = result && (!req.query.durationFrom || (itinerary.duration >= req.query.durationFrom));
+          result = result && (!req.query.durationTo || (itinerary.duration <= req.query.durationTo));
 
           return result;
         });
