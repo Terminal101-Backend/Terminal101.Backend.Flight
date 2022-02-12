@@ -436,10 +436,20 @@ module.exports.filterFlights = async (req, res) => {
         itineraries = flight.itineraries.map(itinerary => {
           let segments = itinerary.segments.some(segment => {
             let result = true;
+            let airlines = req.query.airlines;
+            let airports = req.query.airports;
 
-            result = result && (!req.query.airlineCode || req.query.airlineCode.includes(segment.airlineCode));
+            if (!!airlines && (typeof airlines === "string")) {
+              airlines = airlines.split(",").map(airline => airline.trim());
+            }
 
-            result = result && (!req.query.airports || req.query.airports.includes(segment.departure.airportCode) || req.query.airports.includes(segment.arrival.airportCode));
+            if (!!airports && (typeof airports === "string")) {
+              airports = airports.split(",").map(airport => airport.trim());
+            }
+
+            result = result && (!airlines || airlines.includes(segment.airline.code));
+
+            result = result && (!airports || airports.includes(segment.departure.airport.code) || airports.includes(segment.arrival.airport.code));
 
             return result;
           });
@@ -502,6 +512,10 @@ module.exports.filterFlights = async (req, res) => {
           };
         }).filter(itinerary => {
           let result = itinerary.segments.length > 0;
+
+          if (itinerary.segments.length === 0) {
+            return false;
+          }
 
           const departureTime = dateTime.getMinutesFromIsoString(itinerary.segments[0].departure.at);
 
