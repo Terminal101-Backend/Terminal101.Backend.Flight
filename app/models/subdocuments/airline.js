@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const Location = require("./location");
+const Point = require("./point");
 
 const airport = new Schema({
 	name: {
@@ -17,7 +17,7 @@ const airport = new Schema({
 		required: false,
 	},
 	headOfficeLocation: {
-		type: Location,
+		type: Point,
 		required: false,
 	},
 }, {

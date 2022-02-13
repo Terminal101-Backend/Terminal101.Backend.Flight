@@ -37,6 +37,7 @@ const makeSegmentStopsArray = airports => {
     departureAt: stop.departureAt,
     airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : { code: stop.iataCode, name: "UNKNOWN" },
     city: !!airports[stop.iataCode] ? airports[stop.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
+    country: !!airports[stop.iataCode] ? airports[stop.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
   });
 };
 
@@ -54,12 +55,14 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
       departure: {
         airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : { code: segment.departure.iataCode, name: "UNKNOWN" },
         city: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
+        country: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
         terminal: segment.departure.terminal,
         at: segment.departure.at,
       },
       arrival: {
         airport: !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].airport : { code: segment.arrival.iataCode, name: "UNKNOWN" },
         city: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].city : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
+        country: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].country : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
         terminal: segment.arrival.terminal,
         at: segment.arrival.at,
       },
@@ -455,6 +458,11 @@ module.exports.filterFlights = async (req, res) => {
                 name: segment.departure.city.name,
                 description: segment.departure.city.description,
               },
+              country: {
+                code: segment.departure.country.code,
+                name: segment.departure.country.name,
+                description: segment.departure.country.description,
+              },
               terminal: segment.departure.terminal,
               at: segment.departure.at,
             },
@@ -468,6 +476,11 @@ module.exports.filterFlights = async (req, res) => {
                 code: segment.arrival.city.code,
                 name: segment.arrival.city.name,
                 description: segment.arrival.city.description,
+              },
+              country: {
+                code: segment.arrival.country.code,
+                name: segment.arrival.country.name,
+                description: segment.arrival.country.description,
               },
               terminal: segment.arrival.terminal,
               at: segment.arrival.at,
@@ -485,6 +498,11 @@ module.exports.filterFlights = async (req, res) => {
                 code: stop.city.code,
                 name: stop.city.name,
                 description: stop.city.description,
+              },
+              country: {
+                code: stop.country.code,
+                name: stop.country.name,
+                description: stop.country.description,
               },
             })),
           })),

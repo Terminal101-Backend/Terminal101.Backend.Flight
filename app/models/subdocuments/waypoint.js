@@ -1,16 +1,19 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const Airport = require("./airport");
-const City = require("./city");
+const Location = require("./location");
 
 const waypoint = new Schema({
   airport: {
-    type: Airport,
+    type: Location,
     required: true,
   },
   city: {
-    type: City,
+    type: Location,
+    required: true,
+  },
+  country: {
+    type: Location,
     required: true,
   },
   terminal: {

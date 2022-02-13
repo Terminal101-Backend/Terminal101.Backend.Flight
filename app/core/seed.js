@@ -23,7 +23,7 @@ const addCountriesCitiesAirports = async () => {
         code: airport.AirportCode,
         name: airport.AirportName,
         description: airport.Fulltext,
-        location: {
+        point: {
           latitude: 0,
           longitude: 0,
         }

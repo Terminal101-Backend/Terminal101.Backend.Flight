@@ -12,11 +12,11 @@ const { Country } = require("../models/documents");
  * @property {String} name
  * @property {String} code
  * @property {String} description
- * @property {TLocation} location
+ * @property {TPoint} point
  */
 
 /**
- * @typedef TLocation
+ * @typedef TPoint
  * @property {Number} latitude
  * @property {Number} longitude
  */
@@ -276,10 +276,10 @@ class CountryRepository extends BaseRepository {
    * @param {String} name 
    * @param {String} code 
    * @param {String} description 
-   * @param {TLocation} location 
+   * @param {TPoint} point 
    * @returns {Promise<TAirportInfo>}
    */
-  async addAirport(countryCode, cityCode, name, code, description, location) {
+  async addAirport(countryCode, cityCode, name, code, description, point) {
     const agrCountry = Country.aggregate();
     agrCountry.append({ $unwind: "$cities" });
     agrCountry.append({ $unwind: "$cities.airports" });
@@ -291,7 +291,7 @@ class CountryRepository extends BaseRepository {
 
     const country = await Country.findOne({ code: countryCode });
     const cityIndex = country.cities.findIndex(city => city.code === cityCode);
-    const idx = country.cities[cityIndex].airports.push({ name, code, description, location });
+    const idx = country.cities[cityIndex].airports.push({ name, code, description, point });
     await country.save();
 
     return country.cities[cityIndex].airports[idx - 1];
@@ -303,7 +303,7 @@ class CountryRepository extends BaseRepository {
    * @param {String} name 
    * @param {String} code 
    * @param {String} description 
-   * @param {TLocation} headOfficeLocation 
+   * @param {TPoint} headOfficeLocation 
    * @returns {Promise<TAirportInfo>}
    */
   async addAirline(countryCode, name, code, description, headOfficeLocation) {
@@ -382,6 +382,10 @@ class CountryRepository extends BaseRepository {
         city: {
           code: country.cities.code,
           name: country.cities.name,
+        },
+        country: {
+          code: country.code,
+          name: country.name,
         },
       };
 

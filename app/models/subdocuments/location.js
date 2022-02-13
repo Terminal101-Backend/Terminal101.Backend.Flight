@@ -1,17 +1,27 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const airport = new Schema({
-	latitude: {
-		type: Number,
+const Point = require("./point");
+
+const location = new Schema({
+	name: {
+		type: String,
 		required: true,
 	},
-	longitude: {
-		type: Number,
+	code: {
+		type: String,
 		required: true,
+	},
+	description: {
+		type: String,
+		required: false,
+	},
+	point: {
+		type: Point,
+		required: false,
 	},
 }, {
 	timestamps: true
 });
 
-module.exports = airport;
+module.exports = location;
