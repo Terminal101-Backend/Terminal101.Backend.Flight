@@ -20,6 +20,8 @@ tags:
     description: Country routes
   - name: Flight
     description: Flight routes
+  - name: Restriction
+    description: Country/City Restriction Conditions
   - name: Waypoint
     description: Flight origin/destination points
 
@@ -333,6 +335,27 @@ paths:
             type: array
             items:
               $ref: "#/definitions/FlightPopular"
+
+  /restriction/{countryCode}/{cityCode}:
+    # NOTE: Restriction conditions
+    get:
+      tags:
+        - Restriction
+      description: Country/City restriction conditions
+      parameters:
+        - name: countryCode
+          in: path
+          required: true
+          type: string
+          example: US
+          value: US
+        - name: cityCode
+          in: path
+          required: false
+          type: string
+      responses:
+        "200":
+          description: OK
 
 definitions:
   Flight:
