@@ -346,86 +346,42 @@ module.exports.searchFlights = async (req, res) => {
 
 // NOTE: Get filters
 module.exports.getFilterLimit = async (req, res) => {
-  const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
+  try {
+    const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
-  response.success(res, {
-    stops: flightInfo.searches.filter.stops,
-    aircrafts: flightInfo.searches.filter.aircrafts,
-    airports: flightInfo.searches.filter.airports.map(airport => ({
-      code: airport.code,
-      name: airport.name,
-      description: airport.description,
-    })),
-    airlines: flightInfo.searches.filter.airlines.map(airline => ({
-      code: airline.code,
-      name: airline.name,
-      description: airline.description,
-    })),
-    price: {
-      min: flightInfo.searches.filter.price.min,
-      max: flightInfo.searches.filter.price.max,
-    },
-    departureTime: {
-      min: flightInfo.searches.filter.departureTime.min,
-      max: flightInfo.searches.filter.departureTime.max,
-    },
-    arrivalTime: {
-      min: flightInfo.searches.filter.arrivalTime.min,
-      max: flightInfo.searches.filter.arrivalTime.max,
-    },
-    duration: {
-      min: flightInfo.searches.filter.duration.min,
-      max: flightInfo.searches.filter.duration.max,
-    },
-  });
-
-  // let stops = 0;
-  // let airports = [];
-  // let airlines = [];
-  // let priceFrom = Number.POSITIVE_INFINITY;
-  // let priceTo = 0;
-  // let departureTimeFrom = Number.POSITIVE_INFINITY;
-  // let departureTimeTo = 0;
-  // let arrivalTimeFrom = Number.POSITIVE_INFINITY;
-  // let arrivalTimeTo = 0;
-  // let duration.min = Number.POSITIVE_INFINITY;
-  // let duration.max = 0;
-
-  // flightInfo.searches.flights.forEach(flight => {
-  //   if (flight.price < priceFrom) {
-  //     priceFrom = flight.price;
-  //   }
-  //   if (flight.price > priceTo) {
-  //     priceTo = flight.price;
-  //   }
-
-  //   flight.itineraries.forEach(itinerary => {
-  //     if (itinerary.duration < duration.min) {
-  //       duration.min = itinerary.duration;
-  //     }
-  //     if (itinerary.duration > duration.max) {
-  //       duration.max = itinerary.duration;
-  //     }
-
-  //     itinerary.segments.forEach(segment => {
-
-  //     });
-  //   });
-  // });
-
-  // response.success(res, {
-  //   stops,
-  //   airports,
-  //   airlines,
-  //   priceFrom,
-  //   priceTo,
-  //   departureTimeFrom,
-  //   departureTimeTo,
-  //   arrivalTimeFrom,
-  //   arrivalTimeTo,
-  //   duration.min,
-  //   duration.max,
-  // });
+    response.success(res, {
+      stops: flightInfo.searches.filter.stops,
+      aircrafts: flightInfo.searches.filter.aircrafts,
+      airports: flightInfo.searches.filter.airports.map(airport => ({
+        code: airport.code,
+        name: airport.name,
+        description: airport.description,
+      })),
+      airlines: flightInfo.searches.filter.airlines.map(airline => ({
+        code: airline.code,
+        name: airline.name,
+        description: airline.description,
+      })),
+      price: {
+        min: flightInfo.searches.filter.price.min,
+        max: flightInfo.searches.filter.price.max,
+      },
+      departureTime: {
+        min: flightInfo.searches.filter.departureTime.min,
+        max: flightInfo.searches.filter.departureTime.max,
+      },
+      arrivalTime: {
+        min: flightInfo.searches.filter.arrivalTime.min,
+        max: flightInfo.searches.filter.arrivalTime.max,
+      },
+      duration: {
+        min: flightInfo.searches.filter.duration.min,
+        max: flightInfo.searches.filter.duration.max,
+      },
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
 }
 
 // NOTE: Filter flights
