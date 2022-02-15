@@ -43,16 +43,20 @@ const addSampleFlightInfos = async () => {
   const agrCountry = Country.aggregate();
   agrCountry.append({ $unwind: "$cities" });
   agrCountry.append({ $unwind: "$cities.airports" });
-  agrCountry.append({ $replaceRoot: { newRoot: "$cities" } });
-  const waypoints = (await agrCountry.exec()).map(city => ({
+  // agrCountry.append({ $replaceRoot: { newRoot: "$cities" } });
+  const waypoints = (await agrCountry.exec()).map(country => ({
     airport: {
-      code: city.airports.code,
-      name: city.airports.name,
-      description: city.airports.description
+      code: country.cities.airports.code,
+      name: country.cities.airports.name,
+      description: country.cities.airports.description
     },
     city: {
-      code: city.code,
-      name: city.name,
+      code: country.cities.code,
+      name: country.cities.name,
+    },
+    country: {
+      code: country.code,
+      name: country.name,
     },
   }));
   const airlines = data.airlines.map(airline => ({ code: airline.AirLineCode, name: airline.AirLineName, description: airline.Fulltext }));
@@ -121,12 +125,14 @@ const addSampleFlightInfos = async () => {
         departure: {
           airport: randomOrigin.airport,
           city: randomOrigin.city,
+          country: randomOrigin.country,
           terminal: "1",
           at: time,
         },
         arrival: {
           airport: randomDestination.airport,
           city: randomDestination.city,
+          country: randomDestination.country,
           terminal: "1",
           at: time,
         },
