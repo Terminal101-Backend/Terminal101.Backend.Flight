@@ -101,7 +101,7 @@ class Enum {
   find(value) {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:
-        let found = Object.entries(this.#list).find(item => (item[1] === value) || (item[0] === value));
+        let found = Object.entries(this.#list).find(item => item[1] === value);
         return !!found ? found[0] : undefined;
 
       case EEnumType.NUMERIC:
@@ -128,18 +128,14 @@ class Enum {
   check(key, has) {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:
-        if (!Array.isArray(key)) {
-          key = [key];
+        if (typeof key === "symbol") {
+          key = this.find(key);
         }
-        if (!(has instanceof Symbol)) {
+        if (typeof has !== "symbol") {
           has = this.get(has);
         }
-        key = key.map(k => k instanceof Symbol ? this.find(k) : k);
-        // if (key instanceof Symbol) {
-        //   key = this.find(key);
-        // }
 
-        return key.some(k => this.#list[k] === has);
+        return this.#list[key] === has;
 
       case EEnumType.NUMERIC:
         let hasValue = isNaN(has) ? this.get(has) : has;
