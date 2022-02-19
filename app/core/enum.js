@@ -20,6 +20,9 @@ class Enum {
         return this.get(key);
       },
       set: value => {
+        if (typeof value !== "symbol") {
+          value = this.get(value);
+        }
         return this.find(value);
       },
     };
