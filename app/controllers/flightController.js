@@ -588,6 +588,11 @@ module.exports.getFlight = async (req, res) => {
                 name: segment.departure.city.name,
                 description: segment.departure.city.description,
               },
+              country: {
+                code: segment.departure.country.code,
+                name: segment.departure.country.name,
+                description: segment.departure.country.description,
+              },
               terminal: segment.departure.terminal,
               at: segment.departure.at,
             },
@@ -600,6 +605,11 @@ module.exports.getFlight = async (req, res) => {
               city: {
                 code: segment.arrival.city.code,
                 name: segment.arrival.city.name,
+                description: segment.arrival.country.description,
+              },
+              country: {
+                code: segment.arrival.country.code,
+                name: segment.arrival.country.name,
                 description: segment.arrival.city.description,
               },
               terminal: segment.arrival.terminal,
