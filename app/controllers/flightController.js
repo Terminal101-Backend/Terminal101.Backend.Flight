@@ -629,6 +629,11 @@ module.exports.getFlight = async (req, res) => {
                 name: stop.city.name,
                 description: stop.city.description,
               },
+              country: {
+                code: stop.country.code,
+                name: stop.country.name,
+                description: stop.country.description,
+              },
             })),
           })),
         })),
