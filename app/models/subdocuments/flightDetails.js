@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const Itinerary = require("./itinerary");
 const { ETravelClass } = require("../../constants");
+const Price = require("./price");
 
 const flightDetails = new Schema({
   _id: {
@@ -22,7 +23,7 @@ const flightDetails = new Schema({
     default: "USD",
   },
   price: {
-    type: Number,
+    type: Price,
     required: true,
   },
   availableSeats: {

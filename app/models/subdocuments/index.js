@@ -11,3 +11,7 @@ module.exports.Location = require("./location");
 module.exports.Point = require("./point");
 module.exports.Stop = require("./stop");
 module.exports.NumberRange = require("./numberRange");
+module.exports.Fee = require("./fee");
+module.exports.Tax = require("./tax");
+module.exports.PriceDetails = require("./priceDetails");
+module.exports.Price = require("./price");

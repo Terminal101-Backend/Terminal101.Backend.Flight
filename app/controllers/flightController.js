@@ -128,7 +128,53 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
       availableSeats: flight.numberOfBookableSeats,
       currencyCode: flight.price.currency,
       travelClass,
-      price: parseFloat(flight.price.total),
+      price: {
+        total: parseFloat(flight.price.total),
+        grandTotal: parseFloat(flight.price.grandTotal),
+        base: parseFloat(flight.price.base),
+        fees: (flight.price.fees ?? []).map(fee => ({
+          amount: parseFloat(fee.amount),
+          type: fee.type,
+        })),
+        taxes: (flight.price.taxes ?? []).map(tax => ({
+          amount: parseFloat(tax.amount),
+          code: tax.code,
+        })),
+        travelerPrices: flight.travelerPricings.map(travelerPrice => {
+          let travelerType;
+          switch (travelerPrice.travelerType) {
+            case "CHILD":
+              travelerType = "CHILD";
+              break;
+
+            case "HELD_INFANT":
+            case "SEATED_INFANT":
+              travelerType = "INFANT";
+              break;
+
+            case "ADULT":
+            case "SENIOR":
+              travelerType = "ADULT";
+              break;
+
+            default:
+          }
+
+          return {
+            total: parseFloat(travelerPrice.price.total),
+            base: parseFloat(travelerPrice.price.base),
+            travelerType,
+            fees: (travelerPrice.price.fees ?? []).map(fee => ({
+              amount: parseFloat(fee.amount),
+              type: fee.type,
+            })),
+            taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
+              amount: parseFloat(tax.amount),
+              code: tax.code,
+            })),
+          }
+        }),
+      },
       itineraries: flight.itineraries.map(itinerary => {
         let result = {
           duration: dateTime.convertAmadeusTime(itinerary.duration),
