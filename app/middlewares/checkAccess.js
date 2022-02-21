@@ -10,8 +10,18 @@ const tokenHelper = require("../helpers/tokenHelper");
  * @returns {Promise<Boolean>}
  */
 async function checkUserType(decodedToken, userType) {
-  let user = await userRepository.findById(decodedToken.userId);
-  let userRole = user.userRoles.find(userRole => userRole._id.toString() === decodedToken.userRoleId.toString());
+  let user;
+  let userRole;
+  switch (decodedToken.user) {
+    case "SERVICE":
+    case "SUPER_ADMIN":
+      userRole = { type: decodedToken.user };
+      break;
+
+    default:
+      user = await userRepository.findOne({ code: decodedToken.user });
+      userRole = user.userRoles.find(userRole => userRole._id.toString() === decodedToken.userRoleId.toString());
+  }
 
   return EUserType.check(userType, userRole.type);
 }
@@ -19,7 +29,7 @@ async function checkUserType(decodedToken, userType) {
 exports.isLogin = async (req, res, next) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.headers.authorization);
-    if (!!decodedToken && !!decodedToken.userId) {
+    if (!!decodedToken && !!decodedToken.user) {
       return next();
     }
     return response.error(res, "access denied", 403);

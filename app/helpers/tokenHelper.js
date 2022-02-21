@@ -10,14 +10,10 @@ exports.newToken = json => {
 }
 
 exports.decodeToken = token => {
-  if (!token) {
-    throw "unauthorized";
-  }
-  if (token.startsWith("Bearer ")) {
+  if (!!token && /^Bearer [\.\w]+/.test(token)) {
     token = token.substr("Bearer ".length);
+    return jwt.verify(token, process.env.JWT_SECRET);
   }
-
-  return jwt.verify(token, process.env.JWT_SECRET);
 }
 
 
