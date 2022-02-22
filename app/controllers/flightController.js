@@ -1,4 +1,4 @@
-const { EFlightWaypoint, ETravelClass } = require("../constants");
+const { EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const dateTime = require("../helpers/dateTimeHelper");
@@ -121,6 +121,54 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
   };
 };
 
+const makePriceObject = (flightPrice, travelerPricings) => ({
+  total: parseFloat(flightPrice.total),
+  grandTotal: parseFloat(flightPrice.grandTotal),
+  base: parseFloat(flightPrice.base),
+  fees: (flightPrice.fees ?? []).map(fee => ({
+    amount: parseFloat(fee.amount),
+    type: fee.type,
+  })),
+  taxes: (flightPrice.taxes ?? []).map(tax => ({
+    amount: parseFloat(tax.amount),
+    code: tax.code,
+  })),
+  travelerPrices: travelerPricings.map(travelerPrice => {
+    let travelerType;
+    switch (travelerPrice.travelerType) {
+      case "CHILD":
+        travelerType = "CHILD";
+        break;
+
+      case "HELD_INFANT":
+      case "SEATED_INFANT":
+        travelerType = "INFANT";
+        break;
+
+      case "ADULT":
+      case "SENIOR":
+        travelerType = "ADULT";
+        break;
+
+      default:
+    }
+
+    return {
+      total: parseFloat(travelerPrice.price.total),
+      base: parseFloat(travelerPrice.price.base),
+      travelerType,
+      fees: (travelerPrice.price.fees ?? []).map(fee => ({
+        amount: parseFloat(fee.amount),
+        type: fee.type,
+      })),
+      taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
+        amount: parseFloat(tax.amount),
+        code: tax.code,
+      })),
+    }
+  }),
+});
+
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filter) => {
   return (flight, index) => {
     result = {
@@ -128,53 +176,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
       availableSeats: flight.numberOfBookableSeats,
       currencyCode: flight.price.currency,
       travelClass,
-      price: {
-        total: parseFloat(flight.price.total),
-        grandTotal: parseFloat(flight.price.grandTotal),
-        base: parseFloat(flight.price.base),
-        fees: (flight.price.fees ?? []).map(fee => ({
-          amount: parseFloat(fee.amount),
-          type: fee.type,
-        })),
-        taxes: (flight.price.taxes ?? []).map(tax => ({
-          amount: parseFloat(tax.amount),
-          code: tax.code,
-        })),
-        travelerPrices: flight.travelerPricings.map(travelerPrice => {
-          let travelerType;
-          switch (travelerPrice.travelerType) {
-            case "CHILD":
-              travelerType = "CHILD";
-              break;
-
-            case "HELD_INFANT":
-            case "SEATED_INFANT":
-              travelerType = "INFANT";
-              break;
-
-            case "ADULT":
-            case "SENIOR":
-              travelerType = "ADULT";
-              break;
-
-            default:
-          }
-
-          return {
-            total: parseFloat(travelerPrice.price.total),
-            base: parseFloat(travelerPrice.price.base),
-            travelerType,
-            fees: (travelerPrice.price.fees ?? []).map(fee => ({
-              amount: parseFloat(fee.amount),
-              type: fee.type,
-            })),
-            taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
-              amount: parseFloat(tax.amount),
-              code: tax.code,
-            })),
-          }
-        }),
-      },
+      price: makePriceObject(flight.price, flight.travelerPricings),
       itineraries: flight.itineraries.map(itinerary => {
         let result = {
           duration: dateTime.convertAmadeusTime(itinerary.duration),
@@ -564,7 +566,31 @@ module.exports.filterFlights = async (req, res) => {
         availableSeats: flight.availableSeats,
         travelClass: ETravelClass.find(flight.travelClass),
         currencyCode: flight.currencyCode,
-        price: flight.price,
+        price: {
+          total: flight.price.total,
+          grandTotal: flight.price.grandTotal,
+          base: flight.price.base,
+          travelerPrices: flight.price.travelerPrices.map(travelerPrice => ({
+            total: travelerPrice.total,
+            base: travelerPrice.base,
+            fees: travelerPrice.fees.map(fee => ({
+              amount: fee.amount,
+              type: EFeeType.find(fee.type),
+            })),
+            taxes: travelerPrice.taxes.map(tax => ({
+              amount: tax.amount,
+              code: tax.code,
+            })),
+          })),
+          fees: flight.price.fees.map(fee => ({
+            amount: fee.amount,
+            type: EFeeType.find(fee.type),
+          })),
+          taxes: flight.price.taxes.map(tax => ({
+            amount: tax.amount,
+            code: tax.code,
+          })),
+        },
         itineraries,
       };
     }).filter(flight => flight.itineraries.length > 0);
@@ -611,7 +637,32 @@ module.exports.getFlight = async (req, res) => {
         code: flightInfo.flight.code,
         availableSeats: flightInfo.flight.availableSeats,
         currencyCode: flightInfo.flight.currencyCode,
-        price: flightInfo.flight.price,
+        // price: flightInfo.flight.price,
+        price: {
+          total: flightInfo.flight.price.total,
+          grandTotal: flightInfo.flight.price.grandTotal,
+          base: flightInfo.flight.price.base,
+          travelerPrices: flightInfo.flight.price.travelerPrices.map(travelerPrice => ({
+            total: travelerPrice.total,
+            base: travelerPrice.base,
+            fees: travelerPrice.fees.map(fee => ({
+              amount: fee.amount,
+              type: EFeeType.find(fee.type),
+            })),
+            taxes: travelerPrice.taxes.map(tax => ({
+              amount: tax.amount,
+              code: tax.code,
+            })),
+          })),
+          fees: flightInfo.flight.price.fees.map(fee => ({
+            amount: fee.amount,
+            type: EFeeType.find(fee.type),
+          })),
+          taxes: flightInfo.flight.price.taxes.map(tax => ({
+            amount: tax.amount,
+            code: tax.code,
+          })),
+        },
         itineraries: flightInfo.flight.itineraries.map(itinerary => ({
           duration: itinerary.duration,
           segments: itinerary.segments.map(segment => ({
