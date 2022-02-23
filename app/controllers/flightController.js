@@ -344,6 +344,18 @@ module.exports.searchFlights = async (req, res) => {
   }
 };
 
+// NOTE: FLIGHT COIN PAY IPN
+
+module.exports.flightPayIPN = async (req, res) => {
+  try {
+    console.log(req.body);
+    req.body = req.body || {};
+    response.success(res, req.body);
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
 // NOTE: Get filters
 module.exports.getFilterLimit = async (req, res) => {
   try {

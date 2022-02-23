@@ -60,6 +60,7 @@ class SearchFlights extends BaseValidator {
   }
 };
 
+
 class GetFilters extends BaseValidator {
   constructor() {
     const body = {

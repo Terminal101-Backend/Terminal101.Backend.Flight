@@ -53,4 +53,12 @@ router
     flightValidator.searchFlights.check(),
     flightController.searchFlights);
 
+router
+  .post("/coinIPN",
+    (req, res, next) => {
+      console.log("Flight Coin Payment", req.body);
+      next();
+    },
+    flightController.flightPayIPN);
+
 module.exports = router;
