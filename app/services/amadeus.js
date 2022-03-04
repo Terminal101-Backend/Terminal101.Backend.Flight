@@ -168,11 +168,20 @@ const covid19AreaReport = async (countryCode, cityCode) => {
   return response;
 };
 
+const updateFlightPrice = async flightDetails => {
+  const { data: response } = await axiosApiInstance.post("/v1//shopping/flight-offers/pricing", {
+    flightDetails
+  });
+
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
   searchAirportAndCity,
   flightOffersSingleSearch,
   flightOffersMultiSearch,
+  updateFlightPrice,
   covid19AreaReport,
 };
