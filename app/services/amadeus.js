@@ -5,18 +5,18 @@ let accessToken = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.AMADEUS_BASE_URL;
-    config.headers = {
-      'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/json',
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Type': 'application/json',
-    }
-    return config;
-  },
-  error => {
-    Promise.reject(error)
-  });
+      config.baseURL = process.env.AMADEUS_BASE_URL;
+      config.headers = {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
+      }
+      return config;
+    },
+    error => {
+      Promise.reject(error)
+    });
 
 // Response interceptor for API calls
 axiosApiInstance.interceptors.response.use((response) => {
@@ -40,8 +40,12 @@ const getAccessToken = async () => {
   params.append("client_secret", process.env.AMADEUS_API_SECRET);
   delete axios.defaults.headers.common['Authorization'];
 
-  const { data: response } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
-    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+  const {
+    data: response
+  } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
+    headers: {
+      'content-type': 'application/x-www-form-urlencoded'
+    },
   });
 
   accessToken = response.access_token;
@@ -50,7 +54,9 @@ const getAccessToken = async () => {
 };
 
 const airlineCodeLookup = async code => {
-  const { data: response } = await axiosApiInstance.get("/v1/reference-data/airlines", {
+  const {
+    data: response
+  } = await axiosApiInstance.get("/v1/reference-data/airlines", {
     params: {
       airlineCodes: code
     }
@@ -60,7 +66,9 @@ const airlineCodeLookup = async code => {
 };
 
 const searchAirportAndCity = async keyword => {
-  const { data: response } = await axiosApiInstance.get("/v1/reference-data/locations", {
+  const {
+    data: response
+  } = await axiosApiInstance.get("/v1/reference-data/locations", {
     params: {
       subType: "AIRPORT,CITY",
       keyword
@@ -71,7 +79,9 @@ const searchAirportAndCity = async keyword => {
 };
 
 const flightOffersSingleSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
-  const { data: response } = await axiosApiInstance.get("/v2/shopping/flight-offers", {
+  const {
+    data: response
+  } = await axiosApiInstance.get("/v2/shopping/flight-offers", {
     params: {
       originLocationCode,
       destinationLocationCode,
@@ -147,7 +157,9 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
 
   // console.log({ travelers, originDestinations });
 
-  const { data: response } = await axiosApiInstance.post("/v2/shopping/flight-offers", {
+  const {
+    data: response
+  } = await axiosApiInstance.post("/v2/shopping/flight-offers", {
     currencyCode,
     originDestinations,
     travelers,
@@ -158,7 +170,9 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
 };
 
 const covid19AreaReport = async (countryCode, cityCode) => {
-  const { data: response } = await axiosApiInstance.get("/v1/duty-of-care/diseases/covid19-area-report", {
+  const {
+    data: response
+  } = await axiosApiInstance.get("/v1/duty-of-care/diseases/covid19-area-report", {
     params: {
       countryCode,
       cityCode,
@@ -169,9 +183,37 @@ const covid19AreaReport = async (countryCode, cityCode) => {
 };
 
 const updateFlightPrice = async flightDetails => {
-  const { data: response } = await axiosApiInstance.post("/v1//shopping/flight-offers/pricing", {
+  const {
+    data: response
+  } = await axiosApiInstance.post("/v1//shopping/flight-offers/pricing", {
     flightDetails
   });
+
+  return response;
+};
+
+const flightCreateOrder = async flightDetails => {
+  const {
+    data: response
+  } = await axiosApiInstance.post("/v1/booking/flight-orders", {
+    flightDetails
+  });
+
+  return response;
+};
+
+const getFlightOrder = async (orderId) => {
+  const {
+    data: response
+  } = await axiosApiInstance.get(`/v1/booking/flight-orders/${orderId}`);
+
+  return response;
+};
+
+const deleteFlightOrder = async (orderId) => {
+  const {
+    data: response
+  } = await axiosApiInstance.delete(`/v1/booking/flight-orders/${orderId}`);
 
   return response;
 };
@@ -184,4 +226,7 @@ module.exports = {
   flightOffersMultiSearch,
   updateFlightPrice,
   covid19AreaReport,
+  flightCreateOrder,
+  getFlightOrder,
+  deleteFlightOrder
 };
