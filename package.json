@@ -9,24 +9,10 @@
     "seed": "node app/core/seed.js",
     "test": "jest --detectOpenHandles"
   },
-  "_moduleAliases": {
-    "~root": ".",
-    "~app": "app",
-    "~core": "app/core",
-    "~helpers": "app/helpers",
-    "~config": "app/config",
-    "~controllers": "app/controllers",
-    "~repositories": "app/repositories",
-    "~models": "app/models",
-    "~services": "app/services",
-    "~routes": "app/routes",
-    "~validations": "app/validations"
-  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "amadeus": "^5.7.0",
-    "auto-bind": "^4.0.0",
     "axios": "^0.24.0",
     "bcrypt": "^5.0.1",
     "celebrate": "^15.0.0",
@@ -35,7 +21,6 @@
     "express": "^4.17.1",
     "express-validator": "^6.10.0",
     "jsonwebtoken": "^8.5.1",
-    "link-module-alias": "^1.2.0",
     "md5": "^2.3.0",
     "mongoose": "^5.11.18",
     "redis": "^4.0.1",
