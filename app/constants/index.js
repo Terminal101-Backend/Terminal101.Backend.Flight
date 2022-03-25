@@ -4,3 +4,4 @@ module.exports.EFlightWaypoint = require("./EFlightWaypoint");
 module.exports.ETravelClass = require("./ETravelClass");
 module.exports.ETravelerType = require("./ETravelerType");
 module.exports.EFeeType = require("./EFeeType");
+module.exports.EFlightBookType = require("./EFlightBookType");

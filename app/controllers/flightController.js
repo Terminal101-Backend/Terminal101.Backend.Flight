@@ -794,3 +794,13 @@ module.exports.restrictionCovid19 = async (req, res) => {
   }
 };
 
+module.exports.flightCreateOrder = async (req, res) => {
+  try {
+    const report = await amadeus.flightCreateOrder(req.body);
+
+    response.success(res, report);
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
