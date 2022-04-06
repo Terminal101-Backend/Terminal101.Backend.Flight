@@ -30,7 +30,7 @@ const getRequestIpAddress = request => {
     const value = request.header(header);
     if (value) {
       const parts = value.split(/\s*,\s*/g);
-      if (!!part[0]) {
+      if (!!parts[0]) {
         return parts[0];
       }
     }
