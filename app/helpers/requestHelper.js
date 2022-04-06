@@ -1,4 +1,5 @@
 const IP_HEADERS = [
+  'FWD',
   'Forwarded',
   'Forwarded-For',
   'X-Forwarded',
