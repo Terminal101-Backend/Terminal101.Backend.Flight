@@ -29,12 +29,14 @@ const getRequestIpAddress = request => {
     const value = headers[header];
     if (value) {
       const parts = value.split(/\s*,\s*/g);
-      return parts[0] ?? null;
+      if (!!part[0]) {
+        return parts[0];
+      }
     }
   }
   const client = request.connection ?? request.socket ?? request.info;
-  if (client) {
-    return client.remoteAddress ?? null;
+  if (!!client && !!client.remoteAddress) {
+    return client.remoteAddress;
   }
   return null;
 };
