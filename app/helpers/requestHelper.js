@@ -1,5 +1,5 @@
 const IP_HEADERS = [
-  'fwd',
+  'FWD',
   'Forwarded',
   'Forwarded-For',
   'X-Forwarded',
@@ -25,9 +25,9 @@ const IP_HEADERS = [
 ];
 
 const getRequestIpAddress = request => {
-  const headers = request.headers;
+  // const headers = request.headers;
   for (const header of IP_HEADERS) {
-    const value = headers[header];
+    const value = request.header(header);
     if (value) {
       const parts = value.split(/\s*,\s*/g);
       if (!!part[0]) {
