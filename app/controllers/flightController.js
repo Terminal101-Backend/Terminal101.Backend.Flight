@@ -223,10 +223,12 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filt
 module.exports.searchOriginDestination = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
+    let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
         const ip = request.getRequestIpAddress(req);
-        const ipInfo = await getIpInfo(ip);
+        ipInfo = await getIpInfo(ip);
+        console.log({ ip, ipInfo });
         // const ipInfo = await getIpInfo("24.48.0.1");
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
@@ -237,7 +239,7 @@ module.exports.searchOriginDestination = async (req, res) => {
       }
     }
 
-    const result = await countryRepository.search(keyword, 5);
+    let result = await countryRepository.search(keyword, 5);
     // const reKeyword = new RegExp(`.*${keyword}.*`, "i");
 
     // const foundCountries = result.filter(country => reKeyword.test(`${country.name}|${country.code}`));
