@@ -108,7 +108,6 @@ paths:
         - name: keyword
           in: query
           type: string
-          required: true
           value: MUC
           description: Keyword for search.
       responses:
