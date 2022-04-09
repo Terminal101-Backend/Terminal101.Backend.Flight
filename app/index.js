@@ -5,7 +5,10 @@ const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
 const yaml = require('yamljs');
+const fs = require("fs");
+
 require("dotenv").config();
+
 global.config = require("./config");
 
 const apiRouter = require("./routes");
@@ -26,11 +29,14 @@ swaggerDocument = yaml.load('./app/swagger.yaml');
 // swaggerDocument.host = "localhost:" + process.env.PORT;
 
 app.use("/public", express.static(path.join(__dirname, 'static')));
+if (!fs.existsSync("app/static/tickets")) {
+    fs.mkdirSync("app/static/tickets", { recursive: true });
+}
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { customJs: "/public/scripts/swagger.js" }));
 
 // NOTE: Routes
-apiRouter(app); 
+apiRouter(app);
 
 app.use(BaseValidator.errors());
 

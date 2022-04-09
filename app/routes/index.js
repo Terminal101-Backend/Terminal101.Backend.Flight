@@ -1,5 +1,6 @@
 module.exports = (app) => {
   app.use("/flight/book", require("./bookFlightRoute"));
+  app.use("/flight/ticket", require("./flightTicketRoute"));
   app.use("/flight", require("./flightRoute"));
   app.use("/waypoint", require("./waypointRoute"));
   app.use("/country", require("./countryRoute"));

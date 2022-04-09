@@ -5,7 +5,7 @@ const { flightInfoRepository, bookedFlightRepository } = require("../repositorie
 const { wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 
-// NOTE: Flight
+// NOTE: Book Flight
 // NOTE: Success payment callback
 module.exports.payForFlight = async (req, res) => {
   try {
@@ -63,9 +63,12 @@ module.exports.bookFlight = async (req, res) => {
       default:
     }
 
-    await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId);
+    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId);
 
-    response.success(res, result);
+    response.success(res, {
+      code: bookedFlight.code,
+      ...result
+    });
   } catch (e) {
     response.exception(res, e);
   }
@@ -89,6 +92,7 @@ module.exports.getBookedFlights = async (req, res) => {
     const result = await bookedFlightRepository.getBookedFlights(decodedToken.user);
     response.success(res, result.map(bookedFlight => ({
       bookedBy: bookedFlight.bookedBy,
+      code: bookedFlight.code,
       status: EBookedFlightStatus.find(bookedFlight.status),
       time: bookedFlight.time,
       passengers: bookedFlight.passengers.map(passenger => ({

@@ -1,6 +1,7 @@
 const BaseRepository = require("../core/baseRepository");
 const { BookedFlight } = require("../models/documents");
 const { EBookedFlightStatus } = require("../constants");
+const { generateRandomString } = require("../helpers/stringHelper");
 
 class BookedFlightRepository extends BaseRepository {
   constructor() {
@@ -19,13 +20,23 @@ class BookedFlightRepository extends BaseRepository {
     let bookedFlight = await this.findOne({ transactionId });
 
     if (!bookedFlight) {
-      bookedFlight = new BookedFlight({ bookedBy, searchedFlightCode, flightDetailsCode, transactionId });
+      let code;
+      while (!code) {
+        code = generateRandomString(15, 20, true, true, false);
+
+        bookedFlight = await this.findOne({ code });
+
+        if (!!bookedFlight) {
+          code = undefined;
+        }
+      }
+
+      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId });
       await bookedFlight.save();
     }
 
     return bookedFlight;
   }
-
 
   /**
    * 
@@ -39,7 +50,6 @@ class BookedFlightRepository extends BaseRepository {
         bookedBy,
       }
     });
-    agrBookedFlight.append({ $match: { bookedBy } });
     agrBookedFlight.append({
       $lookup: {
         from: 'flightinfos',
@@ -67,6 +77,48 @@ class BookedFlightRepository extends BaseRepository {
     });
 
     return await agrBookedFlight.exec();
+  }
+
+  /**
+   * 
+   * @param {String} code 
+   * @returns {Promise<BookedFlight>}
+   */
+  async getBookedFlight(code) {
+    const agrBookedFlight = BookedFlight.aggregate();
+    agrBookedFlight.append({
+      $match: {
+        code,
+      }
+    });
+    agrBookedFlight.append({
+      $lookup: {
+        from: 'flightinfos',
+        localField: 'searchedFlightCode',
+        foreignField: 'searches.code',
+        as: 'flightInfo'
+      }
+    });
+    agrBookedFlight.append({ $unwind: "$flightInfo" });
+    agrBookedFlight.append({ $unwind: "$flightInfo.searches" });
+    agrBookedFlight.append({ $unwind: "$flightInfo.searches.flights" });
+    agrBookedFlight.append({
+      $match: {
+        $expr: {
+          $eq: ["$searchedFlightCode", "$flightInfo.searches.code"]
+        }
+      }
+    });
+    agrBookedFlight.append({
+      $match: {
+        $expr: {
+          $eq: ["$flightDetailsCode", "$flightInfo.searches.flights.code"]
+        }
+      }
+    });
+
+    const result = await agrBookedFlight.exec();
+    return !!result && !!result[0] ? result[0] : {};
   }
 };
 

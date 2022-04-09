@@ -61,7 +61,12 @@ class GetBookedFlight extends BaseValidator {
     const body = {
     };
 
+    const params = {
+      bookedFlightCode: Joi.string().required(),
+    };
+
     super(body);
+    this.params(params);
   }
 };
 
@@ -72,6 +77,7 @@ class GetUserBookedFlight extends BaseValidator {
 
     const params = {
       userCode: Joi.string().required(),
+      bookedFlightCode: Joi.string().required(),
     };
 
     super(body);
