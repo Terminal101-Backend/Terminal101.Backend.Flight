@@ -23,10 +23,9 @@ const bookedFlight = new Schema({
     searchedFlightCode: {
         type: String,
         required: true,
-        unique: true
     },
     flightDetailsCode: {
-        type: String,
+        type: Number,
         required: true,
     },
     transactionId: {
@@ -38,7 +37,7 @@ const bookedFlight = new Schema({
         default: [],
     },
     status: EBookedFlightStatus.mongoField({
-        default: "PAYING"
+        default: "PAYING",
     }),
 }, {
     timestamps: true

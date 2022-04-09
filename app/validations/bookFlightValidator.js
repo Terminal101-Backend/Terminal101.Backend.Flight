@@ -2,32 +2,30 @@ const { Joi } = require("celebrate");
 
 const { BaseValidator } = require("../core");
 
-class SearchOriginDestination extends BaseValidator {
+class BookFlight extends BaseValidator {
   constructor() {
     const body = {
-    };
-
-    const params = {
-      waypointType: Joi.string().required(),
-    };
-
-    const query = {
-      keyword: Joi.string(),
+      searchedFlightCode: Joi.string().required(),
+      flightDetailsCode: Joi.number().required(),
+      paymentMethodName: Joi.string().required(),
+      payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+      passengers: Joi.array().items(Joi.object({
+        documentCode: Joi.string().required(),
+        documentIssuedAt: Joi.string().required(),
+      })).default([]),
     };
 
     super(body);
-    this.params(params);
-    this.query(query);
   }
 };
 
-class GetPopularWaypoints extends BaseValidator {
+class BookFlightForUser extends BaseValidator {
   constructor() {
     const body = {
     };
 
     const params = {
-      waypointType: Joi.string().required(),
+      userCode: Joi.string().required(),
     };
 
     super(body);
@@ -35,38 +33,22 @@ class GetPopularWaypoints extends BaseValidator {
   }
 };
 
-class SearchFlights extends BaseValidator {
+class GetBookedFlights extends BaseValidator {
   constructor() {
     const body = {
     };
 
-    const query = {
-      origin: Joi.string().required(),
-      destination: Joi.string().required(),
-      departureDate: Joi.date().required(),
-      returnDate: Joi.date(),
-      adults: Joi.number().default(1),
-      children: Joi.number(),
-      infants: Joi.number(),
-      travelClass: Joi.string().default("ECONOMY"),
-      segments: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-    };
-
     super(body);
-    this.query(query);
   }
 };
 
-class GetFilters extends BaseValidator {
+class GetUserBookedFlights extends BaseValidator {
   constructor() {
     const body = {
     };
 
     const params = {
-      searchId: Joi.string().required(),
+      userCode: Joi.string().required(),
     };
 
     super(body);
@@ -74,52 +56,22 @@ class GetFilters extends BaseValidator {
   }
 };
 
-class FilterFlights extends BaseValidator {
+class GetBookedFlight extends BaseValidator {
   constructor() {
     const body = {
-    };
-
-    const params = {
-      searchId: Joi.string().required(),
-    };
-
-    const query = {
-      stops: [
-        Joi.string(),
-        Joi.array().items(Joi.number()),
-      ],
-      airports: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-      airlines: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-      priceFrom: Joi.number(),
-      priceTo: Joi.number(),
-      departureTimeFrom: Joi.number().default(0),
-      departureTimeTo: Joi.number().default(23 * 60 + 59),
-      arrivalTimeFrom: Joi.number().default(0),
-      arrivalTimeTo: Joi.number().default(23 * 60 + 59),
-      durationFrom: Joi.number(),
-      durationTo: Joi.number(),
     };
 
     super(body);
-    this.params(params);
-    this.query(query);
   }
 };
 
-class GetFlight extends BaseValidator {
+class GetUserBookedFlight extends BaseValidator {
   constructor() {
     const body = {
     };
 
     const params = {
-      searchId: Joi.string().required(),
-      flightIndex: Joi.number().required(),
+      userCode: Joi.string().required(),
     };
 
     super(body);
@@ -127,78 +79,24 @@ class GetFlight extends BaseValidator {
   }
 };
 
-class GetPopularFlights extends BaseValidator {
+class PayForFlight extends BaseValidator {
   constructor() {
     const body = {
+      userCode: Joi.string().required(),
+      externalTransactionId: Joi.string().required(),
+      confirmed: Joi.boolean().required(),
     };
 
     super(body);
-  }
-};
-
-class GetCountries extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    super(body);
-  }
-};
-
-class GetCities extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      code: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetAirports extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      countryCode: Joi.string().required(),
-      cityCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class RestrictionCovid19 extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      countryCode: Joi.string().required(),
-      cityCode: Joi.string(),
-    };
-
-    super(body);
-    this.params(params);
   }
 };
 
 module.exports = {
-  searchOriginDestination: new SearchOriginDestination(),
-  getPopularWaypoints: new GetPopularWaypoints(),
-  searchFlights: new SearchFlights(),
-  getFilterLimit: new GetFilters(),
-  filterFlights: new FilterFlights(),
-  getFlight: new GetFlight(),
-  getPopularFlights: new GetPopularFlights(),
-  getCountries: new GetCountries(),
-  getCities: new GetCities(),
-  getAirports: new GetAirports(),
-  restrictionCovid19: new RestrictionCovid19(),
+  bookFlight: new BookFlight(),
+  bookFlightForUser: new BookFlightForUser(),
+  getBookedFlights: new GetBookedFlights(),
+  getUserBookedFlights: new GetUserBookedFlights(),
+  getBookedFlight: new GetBookedFlight(),
+  getUserBookedFlight: new GetUserBookedFlight(),
+  payForFlight: new PayForFlight(),
 };
