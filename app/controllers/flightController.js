@@ -6,6 +6,7 @@ const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
 const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
+const array = require("../helpers/arrayHelper");
 
 // NOTE: Flight
 const makeSegmentsArray = segments => {
@@ -384,7 +385,7 @@ module.exports.searchFlights = async (req, res) => {
           description: flightInfo.destination.description,
         },
         time: flightInfo.time,
-        flights: flightDetails,
+        flights: array.pagination(flightDetails, req.header("Page")),
         // AMADEUS_RESULT: result,
       });
     } else {

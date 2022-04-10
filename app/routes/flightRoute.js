@@ -13,6 +13,16 @@ router
     flightValidator.getPopularFlights.check(),
     flightController.getPopularFlights);
 
+// NOTE: Search flight origin/destination
+router
+  .get("/search",
+    (req, res, next) => {
+      console.log("Search flight", req.params, req.body, req.query);
+      next();
+    },
+    flightValidator.searchFlights.check(true),
+    flightController.searchFlights);
+
 // NOTE: Get flight details
 router
   .get("/search/:searchId/details/:flightIndex",
@@ -42,15 +52,5 @@ router
     },
     flightValidator.filterFlights.check(),
     flightController.filterFlights);
-
-// NOTE: Search flight origin/destination
-router
-  .get("/search",
-    (req, res, next) => {
-      console.log("Search flight", req.params, req.body, req.query);
-      next();
-    },
-    flightValidator.searchFlights.check(),
-    flightController.searchFlights);
 
 module.exports = router;
