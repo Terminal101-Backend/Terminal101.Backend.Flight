@@ -24,6 +24,8 @@ tags:
     description: Flight routes
   - name: Restriction
     description: Country/City Restriction Conditions
+  - name: Ticket
+    description: Flight's tickets
   - name: Waypoint
     description: Flight origin/destination points
 
@@ -399,6 +401,56 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/BookFlightResult"
+
+  /flight/ticket/{bookedFlightCode}:
+    # NOTE: Get booked flight's tickets
+    get:
+      tags:
+        - Ticket
+      description: Get booked flight's tickets
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
+  /flight/ticket/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight's tickets for other users by admins
+    get:
+      tags:
+        - Ticket
+      description: Get booked flight's tickets for other users by admins
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+        - name: userCode
+          type: string
+          required: true
+          value: 342ryhf3hui34rf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
 
 definitions:
   Flight:

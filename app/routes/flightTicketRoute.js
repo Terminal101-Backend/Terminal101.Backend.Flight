@@ -22,7 +22,7 @@ router
       console.log("Get other user's flight tickets", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
     flightTicketValidator.getUserFlightTickets.check(),
     flightTicketController.getUserFlightTickets);
 
