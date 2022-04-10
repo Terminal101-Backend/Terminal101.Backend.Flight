@@ -41,7 +41,7 @@ app.use(l10n.translate);
 // NOTE: Routes
 apiRouter(app);
 
-app.use(BaseValidator.errors());
+app.use(BaseValidator.errors);
 
 // NOTE: Views
 app.get('/example', (req, res) => {

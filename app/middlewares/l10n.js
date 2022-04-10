@@ -9,7 +9,7 @@ exports.translate = async (req, res, next) => {
       try {
         let args = Array.from(arguments);
         if (!translated) {
-          args = await common.translate(args, req.header("language"));
+          args = await common.translate(args, req.header("language") ?? "EN");
           translated = true;
         }
         return resSend.apply(res, args);

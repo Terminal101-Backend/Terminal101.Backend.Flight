@@ -29,13 +29,22 @@ class BaseValidator {
     this.#cookies = validation;
   }
 
-  check() {
-    this.#header.language = Joi.string().default("EN");
+  check(pagination = false) {
+    if (!!pagination) {
+      this.#header.page = Joi.number().default(0);
+      this.#header.pageSize = Joi.number().default(config.application.pagination.pageSize);
+    }
 
-    return celebrate({ body: Joi.object().keys(this.#body), cookies: this.#cookies, query: this.#query, params: this.#params, headers: Joi.object().keys(this.#header).unknown() });
+    return celebrate({
+      body: Joi.object().keys(this.#body),
+      cookies: Joi.object().keys(this.#cookies),
+      query: Joi.object().keys(this.#query),
+      params: Joi.object().keys(this.#params),
+      headers: Joi.object().keys(this.#header).unknown()
+    });
   }
 
-  static errors() {
+  static get errors() {
     return errors();
   }
 }
