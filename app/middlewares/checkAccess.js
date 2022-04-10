@@ -9,7 +9,7 @@ exports.isLogin = async (req, res, next) => {
     if (!!decodedToken && !!decodedToken.user) {
       return next();
     }
-    return response.error(res, "access denied", 403);
+    return response.error(res, "access_denied", 403);
   } catch (e) {
     return response.exception(res, e);
   }
@@ -26,7 +26,7 @@ exports.checkUserType = (userType = "CLIENT") => async (req, res, next) => {
     if (!!decodedToken && EUserType.check(userType, decodedToken.type)) {
       return next();
     } else {
-      return response.error(res, "access denied", 403);
+      return response.error(res, "access_denied", 403);
     }
   } catch (e) {
     return response.exception(res, e);
@@ -39,7 +39,7 @@ exports.checkUserAccess = async (req, res, next) => {
     if (!!decodedToken && await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, req.path)) {
       return next();
     } else {
-      return response.error(res, "access denied", 403);
+      return response.error(res, "access_denied", 403);
     }
   } catch (e) {
     return response.exception(res, e);
