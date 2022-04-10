@@ -30,6 +30,8 @@ class BaseValidator {
   }
 
   check() {
+    this.#header.language = Joi.string().default("EN");
+
     return celebrate({ body: Joi.object().keys(this.#body), cookies: this.#cookies, query: this.#query, params: this.#params, headers: Joi.object().keys(this.#header).unknown() });
   }
 

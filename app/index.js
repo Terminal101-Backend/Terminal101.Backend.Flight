@@ -6,6 +6,7 @@ const app = express();
 const cors = require("cors");
 const yaml = require('yamljs');
 const fs = require("fs");
+const { l10n } = require("./middlewares")
 
 require("dotenv").config();
 
@@ -34,6 +35,8 @@ if (!fs.existsSync("app/static/tickets")) {
 }
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { customJs: "/public/scripts/swagger.js" }));
+
+app.use(l10n.translate);
 
 // NOTE: Routes
 apiRouter(app);
