@@ -14,6 +14,8 @@ basePath: /
 tags:
   - name: Airport
     description: Airport routes
+  - name: Book
+    description: Book flight and booked flights routes
   - name: City
     description: City routes
   - name: Country
@@ -356,6 +358,48 @@ paths:
         "200":
           description: OK
 
+  /flight/book:
+    # NOTE: Get all booked flights list
+    get:
+      tags:
+        - Book
+      description: Get all booked flights list
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
+
+    # NOTE: Book flight
+    post:
+      tags:
+        - Book
+      description: Book flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Flight Info
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/BookFlightInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
 definitions:
   Flight:
     required:
@@ -501,6 +545,98 @@ definitions:
       max:
         type: number
         example: 1000
+
+  BookedFlightDetails:
+    properties:
+      code:
+        type: string
+        example: fw3r879fyh24ry7yf
+      bookedBy:
+        type: string
+        example: 231f234rfh34yhf32y
+      status:
+        type: string
+        enum: [PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED]
+        example: PAYING
+      time:
+        type: string
+        example: 2022-02-05
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+      origin:
+        $ref: "#/definitions/Waypoint"
+      destination:
+        $ref: "#/definitions/Waypoint"
+      travelClass:
+        type: string
+        enum: [ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST]
+        example: ECONOMY
+      price:
+        type: number
+        example: 234
+
+  BookFlightInfo:
+    required:
+      - searchedFlightCode
+      - flightDetailsCode
+      - paymentMethodName
+    properties:
+      searchedFlightCode:
+        type: string
+        example: asdfhkadfhdksaa
+      flightDetailsCode:
+        type: number
+        example: 2
+      paymentMethodName:
+        type: string
+        example: credit-card
+      payWay:
+        type: string
+        enum: [PAY, WALLET]
+        example: WALLET
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+
+  BookFlightResult:
+    properties:
+      code:
+        type: string
+        example: asdfhkadfhdksaa
+      type:
+        type: string
+        enum: [PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT]
+        example: DEPOSIT
+      value:
+        type: number
+        example: 100
+      credit:
+        type: number
+        example: 1000
+      time:
+        type: string
+        example: 2022-02-25
+      description:
+        type: string
+        example: Pay for book flight's ticket
+      externalTransactionId:
+        type: string
+        example: askjfh23h31i2uyuf93h4ifyh78934y3i
+
+  BookFlightPassenger:
+    required:
+      - documentCode
+      - documentIssuedAt
+    properties:
+      documentCode:
+        type: string
+        example: 231aweiW2
+      documentIssuedAt:
+        type: string
+        example: Germany
 
 schemes:
   # - http

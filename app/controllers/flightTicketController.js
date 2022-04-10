@@ -13,6 +13,8 @@ let path = require("path");
 module.exports.getFlightTickets = async (req, res) => {
   try {
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    // TODO: Get lead and passengers' informations by account management service
+
     let templatePath = path.join(path.resolve("app/static/templates"), "ticket.html");
     let template = fs.readFileSync(templatePath, "utf8");
 
