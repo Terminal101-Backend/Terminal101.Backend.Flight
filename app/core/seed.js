@@ -145,6 +145,6 @@ const addSampleFlightInfos = async () => {
 (async () => {
   await db.startDatabase();
   await addCountriesCitiesAirports();
-  await addSampleFlightInfos();
+  // await addSampleFlightInfos();
   await db.stopDatabase();
 })()

@@ -37,11 +37,14 @@ class FlightInfoRepository extends BaseRepository {
       const agrFlightInfo = FlightInfo.aggregate();
       agrFlightInfo.append({ $unwind: "$searches" });
 
+      agrFlightInfo.append({ $match: { [waypointType.toLowerCase() + ".code"]: { $ne: "UNKNOWN" } } });
       agrFlightInfo.append({
         $group: {
           _id: {
-            airport: "$" + waypointType.toLowerCase(),
-            // waypoint: "$waypoint.cities.airports.name",
+            airport: {
+              code: "$" + waypointType.toLowerCase() + ".code",
+              name: "$" + waypointType.toLowerCase() + ".name",
+            },
           },
           count: {
             $sum: 1,
@@ -54,7 +57,6 @@ class FlightInfoRepository extends BaseRepository {
         $addFields: {
           airport: "$_id.airport",
           count: "$count",
-          // name: "$_id.waypoint"
         }
       });
       agrFlightInfo.append({
