@@ -18,6 +18,7 @@ module.exports.payForFlight = async (req, res) => {
     }
 
     // TODO: Finilize book flight by Amadeus
+    // TODO: Send notification to user
 
     response.success(res, result);
   } catch (e) {
