@@ -168,10 +168,10 @@ class FlightInfoRepository extends BaseRepository {
   /**
    * 
    * @param {String} searchCode 
-   * @param {String} flightIndex 
+   * @param {String} flightCode 
    * @returns {Promise<FlightInfo>}
    */
-  async getFlight(searchCode, flightIndex) {
+  async getFlight(searchCode, flightCode) {
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
     // agrFlightInfo.append({ $unwind: "$searches.flights" });
@@ -179,7 +179,7 @@ class FlightInfoRepository extends BaseRepository {
     agrFlightInfo.append({
       $addFields: {
         "flight": {
-          $arrayElemAt: ["$searches.flights", flightIndex]
+          $arrayElemAt: ["$searches.flights", flightCode]
         },
       }
     });
@@ -192,6 +192,57 @@ class FlightInfoRepository extends BaseRepository {
 
     if (searches.length > 0) {
       return searches[0];
+    }
+  }
+
+  /**
+   * 
+   * @param {String} searchCode 
+   * @param {Number} flightCode 
+   * @param {String<"flight-offers-pricing|flight-order">} type 
+   * @returns {Promise}
+   */
+  async regenerateAmadeusFlightObject(searchCode, flightCode, type = "flight-offers-pricing") {
+    const flightInfo = await this.getFlight(searchCode, flightCode);
+
+    return {
+      data: {
+        type,
+        flightOffers: {
+          type: "flight-offer",
+          id: "1",
+          source: "GDS",
+          itineraries: flightInfo.flight.itineraries.map((itinerary, itineraryIndex) => ({
+            segments: itinerary.segments.map((segment, segmentIndex) => ({
+              departure: {
+                code: segment.departure.airport.code,
+                at: segment.departure.at
+              },
+              arrival: {
+                code: segment.arrival.airport.code,
+                at: segment.arrival.at
+              },
+              carrierCode: segment.airline.code,
+              number: segment.flightNumber,
+              id: `${itineraryIndex + 1}-${segmentIndex + 1}`,
+            })),
+          })),
+          validatingAirlineCodes: flightInfo.flight.itineraries.reduce((res, cur) => [...res, ...cur.segments.map(segment => segment.airline.code)], []),
+          travelerPricings: flightInfo.flight.price.travelerPrices.map((price, travelerIndex) => ({
+            travelerId: `${travelerIndex + 1}`,
+            fareOption: "STANDARD",
+            travelerType: "", // TODO: Set traveler type
+            price: {
+              currency: flightInfo.flight.currencyCode,
+            },
+            fareDetailsBySegment: flightInfo.flight.itineraries.reduce((res, cur, itineraryIndex) => [...res, ...cur.segments.map((segment, segmentIndex) => ({
+              segmentId: `${itineraryIndex + 1}-${segmentIndex + 1}`,
+              class: "T",
+            }))], [])
+          })),
+          travelers: [], // TODO: Generate travelers info for create order service
+        },
+      },
     }
   }
 };
