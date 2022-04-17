@@ -1,7 +1,7 @@
 const { Aggregate } = require("mongoose");
 
-const limit_offset = (aggregate, itemIndex, page, fields) => {
-  const pageSize = config.application.pagination.pageSize;
+const limit_offset = (aggregate, itemIndex, page, fields, pageSize) => {
+  pageSize = parseInt(pageSize) ?? config.application.pagination.pageSize;
   const skip = page * pageSize;
 
   fields.forEach(field => {
@@ -48,7 +48,7 @@ const limit_offset = (aggregate, itemIndex, page, fields) => {
   });
 };
 
-module.exports.rootPagination = async (aggregate, page) => {
+module.exports.rootPagination = async (aggregate, page, pageSize) => {
   // const pageSize = config.application.pagination.pageSize;
   // const skip = page * pageSize;
 
@@ -61,7 +61,7 @@ module.exports.rootPagination = async (aggregate, page) => {
     }
   });
 
-  limit_offset(aggregate, 0, page, ["result"]);
+  limit_offset(aggregate, 0, page, ["result"], pageSize);
 
   aggregate.append({
     $replaceRoot: {
@@ -79,10 +79,11 @@ module.exports.rootPagination = async (aggregate, page) => {
  * @param {Aggregate} aggregate 
  * @param {Number} itemIndex 
  * @param {Number} page 
- * @param  {...String} fields 
+ * @param  {String} fields 
+ * @param {Number} pageSize 
  * @returns {Promise<any[]>}
  */
-module.exports.fieldsPagination = async (aggregate, itemIndex, page, ...fields) => {
+module.exports.fieldsPagination = async (aggregate, itemIndex, page, fields, pageSize) => {
   fields.forEach(field => {
     const fieldSplited = field.split(".");
     fieldSplited.splice(fieldSplited.length - 1)
@@ -99,7 +100,7 @@ module.exports.fieldsPagination = async (aggregate, itemIndex, page, ...fields) 
     });
   });
 
-  limit_offset(aggregate, itemIndex, page, fields);
+  limit_offset(aggregate, itemIndex, page, fields, pageSize);
 
   const result = await aggregate.exec();
   return result;

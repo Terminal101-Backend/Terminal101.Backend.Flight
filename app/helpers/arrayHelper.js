@@ -2,10 +2,11 @@
  * 
  * @param {Array} arr 
  * @param {Number} page 
+ * @param {Number} pageSize 
  * @returns {Array}
  */
-module.exports.pagination = (arr, page) => {
-  const pageSize = config.application.pagination.pageSize;
+module.exports.pagination = (arr, page, pageSize) => {
+  pageSize = pageSize ? parseInt(pageSize) : config.application.pagination.pageSize;
 
   const result = {
     page,
