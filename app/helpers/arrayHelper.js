@@ -6,7 +6,7 @@
  * @returns {Array}
  */
 module.exports.pagination = (arr, page, pageSize) => {
-  pageSize = pageSize ? parseInt(pageSize) : config.application.pagination.pageSize;
+  pageSize = !!pageSize ? parseInt(pageSize) : config.application.pagination.pageSize;
 
   const result = {
     page,
