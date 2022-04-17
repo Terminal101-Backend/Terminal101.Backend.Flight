@@ -23,9 +23,19 @@ router
     flightValidator.searchFlights.check(true),
     flightController.searchFlights);
 
+// NOTE: Get flight price
+router
+  .get("/search/:searchId/details/:flightCode/price",
+    (req, res, next) => {
+      console.log("Filter flights", req.params, req.body, req.query);
+      next();
+    },
+    flightValidator.getFlightPrice.check(),
+    flightController.getFlightPrice);
+
 // NOTE: Get flight details
 router
-  .get("/search/:searchId/details/:flightIndex",
+  .get("/search/:searchId/details/:flightCode",
     (req, res, next) => {
       console.log("Filter flights", req.params, req.body, req.query);
       next();

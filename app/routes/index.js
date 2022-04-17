@@ -10,7 +10,7 @@ module.exports = (app) => {
 
   app.get("/test-rollbackAmadeusData", async (req, res) => {
     const repository = require("../repositories/flightInfoRepository");
-    res.send(await repository.regenerateAmadeusFlightObject("JiazIVN1RmxSW5u4OLGb", 0));
+    res.send(await repository.regenerateAmadeusFlightOfferObject("JiazIVN1RmxSW5u4OLGb", 0));
   });
 
   app.use((req, res, next) => {

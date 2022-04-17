@@ -1,5 +1,5 @@
 const BaseRepository = require("../core/baseRepository");
-const { FlightInfo, Country } = require("../models/documents");
+const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 
@@ -202,47 +202,72 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String<"flight-offers-pricing|flight-order">} type 
    * @returns {Promise}
    */
-  async regenerateAmadeusFlightObject(searchCode, flightCode, type = "flight-offers-pricing") {
+  async regenerateAmadeusFlightOfferObject(searchCode, flightCode) {
+    /**
+     * 
+     * @param {Date} date 
+     * @returns {String}
+     */
+    const dateToIsoString = date => {
+      let result = date.toISOString();
+      return result.replace(/\.\d+Z$/, "");
+    }
+
     const flightInfo = await this.getFlight(searchCode, flightCode);
+    let travelClass;
+    switch (flightInfo.flight.travelClass) {
+      case "ECONOMY":
+        travelClass = "Y";
+        break;
+
+      case "PERMIUM_ECONOMY":
+        travelClass = "W";
+        break;
+
+      case "BUSINESS":
+        travelClass = "J";
+        break;
+
+      case "FIRST":
+        travelClass = "F";
+        break;
+
+      default:
+        travelClass = "T";
+    }
 
     return {
-      data: {
-        type,
-        flightOffers: {
-          type: "flight-offer",
-          id: "1",
-          source: "GDS",
-          itineraries: flightInfo.flight.itineraries.map((itinerary, itineraryIndex) => ({
-            segments: itinerary.segments.map((segment, segmentIndex) => ({
-              departure: {
-                code: segment.departure.airport.code,
-                at: segment.departure.at
-              },
-              arrival: {
-                code: segment.arrival.airport.code,
-                at: segment.arrival.at
-              },
-              carrierCode: segment.airline.code,
-              number: segment.flightNumber,
-              id: `${itineraryIndex + 1}-${segmentIndex + 1}`,
-            })),
-          })),
-          validatingAirlineCodes: flightInfo.flight.itineraries.reduce((res, cur) => [...res, ...cur.segments.map(segment => segment.airline.code)], []),
-          travelerPricings: flightInfo.flight.price.travelerPrices.map((price, travelerIndex) => ({
-            travelerId: `${travelerIndex + 1}`,
-            fareOption: "STANDARD",
-            travelerType: "", // TODO: Set traveler type
-            price: {
-              currency: flightInfo.flight.currencyCode,
-            },
-            fareDetailsBySegment: flightInfo.flight.itineraries.reduce((res, cur, itineraryIndex) => [...res, ...cur.segments.map((segment, segmentIndex) => ({
-              segmentId: `${itineraryIndex + 1}-${segmentIndex + 1}`,
-              class: "T",
-            }))], [])
-          })),
-          travelers: [], // TODO: Generate travelers info for create order service
+      type: "flight-offer",
+      id: "1",
+      source: "GDS",
+      itineraries: flightInfo.flight.itineraries.map((itinerary, itineraryIndex) => ({
+        segments: itinerary.segments.map((segment, segmentIndex) => ({
+          departure: {
+            iataCode: segment.departure.airport.code,
+            at: dateToIsoString(segment.departure.at),
+          },
+          arrival: {
+            iataCode: segment.arrival.airport.code,
+            at: dateToIsoString(segment.arrival.at),
+          },
+          carrierCode: segment.airline.code,
+          number: segment.flightNumber,
+          id: `${itineraryIndex + 1}-${segmentIndex + 1}`,
+        })),
+      })),
+      validatingAirlineCodes: flightInfo.flight.itineraries.reduce((res, cur) => [...res, ...cur.segments.map(segment => segment.airline.code)], []),
+      travelerPricings: flightInfo.flight.price.travelerPrices.map((price, travelerIndex) => ({
+        travelerId: `${travelerIndex + 1}`,
+        fareOption: "STANDARD",
+        travelerType: price.travelerType,
+        price: {
+          currency: flightInfo.flight.currencyCode,
         },
-      },
+        fareDetailsBySegment: flightInfo.flight.itineraries.reduce((res, cur, itineraryIndex) => [...res, ...cur.segments.map((segment, segmentIndex) => ({
+          segmentId: `${itineraryIndex + 1}-${segmentIndex + 1}`,
+          class: travelClass,
+        }))], [])
+      })),
     }
   }
 };

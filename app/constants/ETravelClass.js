@@ -5,6 +5,7 @@ class EFlightWaypoint extends Enum {
   constructor() {
     super(EEnumType.SYMBOLIC);
 
+    this.add("DEEP_DISCOUNTED");
     this.add("ECONOMY");
     this.add("PERMIUM_ECONOMY");
     this.add("BUSINESS");

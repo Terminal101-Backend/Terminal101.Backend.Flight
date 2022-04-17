@@ -619,10 +619,29 @@ module.exports.filterFlights = async (req, res) => {
   }
 };
 
+// NOTE: Get specific flight's price
+module.exports.getFlightPrice = async (req, res) => {
+  try {
+    const amadeusFlightObject = await flightInfoRepository.regenerateAmadeusFlightOfferObject(req.params.searchId, req.params.flightCode);
+
+    const result = await amadeus.updateFlightPrice(amadeusFlightObject);
+
+    if (!!result.data && !!result.data.flightOffers && (result.data.flightOffers.length > 0)) {
+      const price = makePriceObject(result.data.flightOffers[0].price, result.data.flightOffers[0].travelerPricings);
+
+      response.success(res, price);
+    } else {
+      response.success(res, {});
+    }
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightIndex);
+    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
     response.success(res, {
       code: req.params.searchId,

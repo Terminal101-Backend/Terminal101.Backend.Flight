@@ -162,7 +162,7 @@ paths:
           in: query
           type: string
           required: true
-          value: WDC
+          value: IST
           description: Flight destination code.
         - name: departureDate
           in: query
@@ -304,7 +304,7 @@ paths:
             items:
               $ref: "#/definitions/Flight"
 
-  /flight/search/{searchId}/details/{flightIndex}:
+  /flight/search/{searchId}/details/{flightCode}:
     # NOTE: Get popular flights
     get:
       tags:
@@ -314,10 +314,31 @@ paths:
           in: path
           required: true
           type: string
-        - name: flightIndex
+        - name: flightCode
+          in: path
+          required: true
+          type: number
+      description: Get specific flight.
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Flight"
+
+  /flight/search/{searchId}/details/{flightCode}/price:
+    # NOTE: Get popular flights
+    get:
+      tags:
+        - Flight
+      parameters:
+        - name: searchId
           in: path
           required: true
           type: string
+        - name: flightCode
+          in: path
+          required: true
+          type: number
       description: Get specific flight.
       responses:
         "200":
