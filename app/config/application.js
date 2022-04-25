@@ -1,7 +1,7 @@
 
 module.exports = {
     pagination: {
-        pageSize: 2,
+        pageSize: 25,
     },
     defaultServiceRole: {
         CLIENT: {

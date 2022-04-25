@@ -385,7 +385,7 @@ module.exports.searchFlights = async (req, res) => {
           description: flightInfo.destination.description,
         },
         time: flightInfo.time,
-        flights: array.pagination(flightDetails, req.header("Page")),
+        flights: array.pagination(flightDetails, req.header("Page"), req.header("PageSize")),
         // AMADEUS_RESULT: result,
       });
     } else {
