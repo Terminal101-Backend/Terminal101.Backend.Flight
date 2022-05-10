@@ -25,6 +25,8 @@
     "mongoose": "^5.11.18",
     "pdf-creator-node": "^2.3.4",
     "redis": "^4.0.1",
+    "sha1": "^1.1.1",
+    "soap": "^0.43.0",
     "socket.io": "^4.3.2",
     "swagger-ui-express": "^4.1.6",
     "uuid": "^8.3.2",

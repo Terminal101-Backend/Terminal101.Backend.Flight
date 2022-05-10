@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xml.amadeus.com/QUQMDR_03_1_1A" xmlns="http://xml.amadeus.com/QUQMDR_03_1_1A" elementFormDefault="qualified">
+  <xs:element name="Queue_RemoveItemReply">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">response to queue removal of items</xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="errorReturn" minOccurs="0">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">use this group to return any error message</xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="errorDefinition" type="ApplicationErrorInformationTypeI">
+                <xs:annotation>
+                  <xs:documentation xml:lang="en">returns the error code</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+              <xs:element name="errorText" minOccurs="0" type="FreeTextInformationType">
+                <xs:annotation>
+                  <xs:documentation xml:lang="en">contains the text of the error</xs:documentation>
+                </xs:annotation>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="goodResponse" minOccurs="0" type="ResponseAnalysisDetailsTypeI">
+          <xs:annotation>
+            <xs:documentation xml:lang="en">good response to the message</xs:documentation>
+          </xs:annotation>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="ApplicationErrorDetailTypeI">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Code assigned by the recipient of a message to indicate a data validation error condition.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="errorCode" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">error code</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="errorCategory" minOccurs="0" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">error category</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="errorCodeOwner" minOccurs="0" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">error code owner</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ApplicationErrorInformationTypeI">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">To identify the type of application error within a message.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="errorDetails" type="ApplicationErrorDetailTypeI">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">error details</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FreeTextDetailsType">
+    <xs:sequence>
+      <xs:element name="textSubjectQualifier" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">qualifier of the following text</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="source" minOccurs="0" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Source Details</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="encoding" minOccurs="0" type="AlphaNumericString_Length1To3">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Encoding Informations</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="FreeTextInformationType">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">This segment is used to convey the free text</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="freeTextDetails" minOccurs="0" type="FreeTextDetailsType">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">contains only the qualifier.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="freeText" maxOccurs="99" type="AlphaNumericString_Length1To199">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">Free text</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ResponseAnalysisDetailsTypeI">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">To specify the type of query and the processing status associated with this response.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="responseType" type="AlphaString_Length1To1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">type of response</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="statusCode" type="AlphaString_Length1To1">
+        <xs:annotation>
+          <xs:documentation xml:lang="en">will only be used in a good response</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:simpleType name="AlphaNumericString_Length1To199">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Format limitations: an..199</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="199" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AlphaString_Length1To1">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Format limitations: a1</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="1" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AlphaNumericString_Length1To3">
+    <xs:annotation>
+      <xs:documentation xml:lang="en">Format limitations: an..3</xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:minLength value="1" />
+      <xs:maxLength value="3" />
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+<!-- SchemaRules="2010/01"-->
+<!--Created with SchemaBuilder 4.3.5 by Amadeus S.A.S.-->
+<!--"Amadeus Proprietary and Confidential Information: unauthorized use and disclosure strictly forbidden. 2010 - Amadeus s.a.s - All Rights Reserved."-->
+<!--Build Key:
+1F8B080000000000000095534D4F1B3110BDFB57585C7AA8B2D90450A5483E2CE443484D80106E9122B39E24165E7BEBB1110BE2BF77BCBB14AA1EDA5E56E319EF9BF17B6F16B3D56C5D6C66D3DDF54A8CF3D168907F1B8CC77CEEB5920D1F8D27E76793F1295F2C375FF37C92E7AC5816A1A901E7DA809515084AEC2E24EA7293D2D9332AF620115654C35A96208E21D493E1F0B93299ACA4828859E9AA212B8F503EDED1B79222F808AC740A10020AEB6C3A5515583AF5B5AA96B649A8C246632851375E1F8E419C141D2ABFF1AEF61A82F40D9756F14B67F75A118696865FD9BDF3950CDAD9098F56C670745EBF80E211A1BDAE3496C661F4C031785D06D370FAE7412BC2C838B193F3017F6F8699CC309D8DE1EB3407F2354DEF9F4065274CC15E461316BE4EAC28B197068129171F0CDCC18F08B6841B19CA635F017BF14F9C81FDB8F39A7478DBBD3E81477A15451E0C100C45F2401D9A37B62795D6D18068A356AFF6B714FDE557E34A697AB28D3B28EDC5E5643B75656C656929BB8310B43DE0766FE48BF411B753C0C7E0EA6DA7EB45D44681E767D96976BEFDEE0E84640FED185A5D5BD3B00AFC017A12DA78AEC128BC733EFCA28D1E8C34558189CBDF7353525B9BDE31F6BFA8A99DB66105A193A13599772E7CE28761FB88C41FA6E5C887F9A8CFE1DCF9C26842ECFD9994D725E0947C431DC9821D7358491F12DABDD5A50E4D3F7EF0D2A269DD48AC08E217873DF2A6580E5F15184DC34BB2CB5B46559686529F9785AC71F9BE211D26655A82DAF5D4B664CF68C2750C750C7397641029C1D860B0ECC8FB825C7F6CC560C03A6AC4A8609FFA8BE2A6D8DD4688B01BE564E14A6A2B6EEF670C9E6B52692771379D2DC4664DA95E152E3D4831FAF67EA6EBB7CBE99AD5647F8D4712B6A3BBD3448C287AD249280A5B66644BA2E8BAAEA1724F7015A062EFD2FC5159434D66EAE516F929FB09CF2E1DCAD9040000
+-->
+

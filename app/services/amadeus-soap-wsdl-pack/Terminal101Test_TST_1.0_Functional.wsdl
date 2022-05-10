@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Created with WSDLGenerator 2.0.0 by Amadeus SAS-->
+<!--  Amadeus Proprietary and Confidential Information: unauthorized use and disclosure strictly forbidden. 2015 - Amadeus s.a.s - All Rights Reserved.  -->
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:air_sellfromrecommendation_5_2="http://xml.amadeus.com/ITAREQ_05_2_IA" xmlns:air_sellfromrecommendationreply_5_2="http://xml.amadeus.com/ITARES_05_2_IA" xmlns:amasec="http://xml.amadeus.com/2010/06/Security_v1" xmlns:awsl="http://wsdl.amadeus.com/2010/06/ws/Link_v1" xmlns:awsse="http://xml.amadeus.com/2010/06/Session_v3" xmlns:docissuance_issueticket_15_1="http://xml.amadeus.com/TTKTIQ_15_1_1A" xmlns:docissuance_issueticketreply_15_1="http://xml.amadeus.com/TTKTIR_15_1_1A" xmlns:fare_checkrules_7_1="http://xml.amadeus.com/FARQNQ_07_1_1A" xmlns:fare_checkrulesreply_7_1="http://xml.amadeus.com/FARQNR_07_1_1A" xmlns:fare_informativebestpricingwithoutpnr_18_1="http://xml.amadeus.com/TIBNRQ_18_1_1A" xmlns:fare_informativebestpricingwithoutpnrreply_18_1="http://xml.amadeus.com/TIBNRR_18_1_1A" xmlns:fare_informativepricingwithoutpnr_18_1="http://xml.amadeus.com/TIPNRQ_18_1_1A" xmlns:fare_informativepricingwithoutpnrreply_18_1="http://xml.amadeus.com/TIPNRR_18_1_1A" xmlns:fare_masterpricercalendar_16_3="http://xml.amadeus.com/FMPCAQ_16_3_1A" xmlns:fare_masterpricercalendarreply_16_3="http://xml.amadeus.com/FMPCAR_16_3_1A" xmlns:fare_masterpricertravelboardsearch_17_4="http://xml.amadeus.com/FMPTBQ_17_4_1A" xmlns:fare_masterpricertravelboardsearchreply_17_4="http://xml.amadeus.com/FMPTBR_17_4_1A" xmlns:fare_pricepnrwithbookingclass_18_1="http://xml.amadeus.com/TPCBRQ_18_1_1A" xmlns:fare_pricepnrwithbookingclassreply_18_1="http://xml.amadeus.com/TPCBRR_18_1_1A" xmlns:pnr_addmultielements_17_1="http://xml.amadeus.com/PNRADD_17_1_1A" xmlns:pnr_cancel_16_1="http://xml.amadeus.com/PNRXCL_16_1_1A" xmlns:pnr_list_0_1="http://xml.amadeus.com/TNLRES_00_1_1A" xmlns:pnr_reply_16_1="http://xml.amadeus.com/PNRACC_16_1_1A" xmlns:pnr_reply_17_1="http://xml.amadeus.com/PNRACC_17_1_1A" xmlns:pnr_retrieve_17_1="http://xml.amadeus.com/PNRRET_17_1_1A" xmlns:queue_counttotal_13_1="http://xml.amadeus.com/QCSDRQ_13_1_1A" xmlns:queue_counttotalreply_13_1="http://xml.amadeus.com/QCSDRR_13_1_1A" xmlns:queue_list_11_1="http://xml.amadeus.com/QDQLRQ_11_1_1A" xmlns:queue_listreply_11_1="http://xml.amadeus.com/QDQLRR_11_1_1A" xmlns:queue_placepnr_3_1="http://xml.amadeus.com/QUQPCQ_03_1_1A" xmlns:queue_placepnrreply_3_1="http://xml.amadeus.com/QUQPCR_03_1_1A" xmlns:queue_removeitem_3_1="http://xml.amadeus.com/QUQMDQ_03_1_1A" xmlns:queue_removeitemreply_3_1="http://xml.amadeus.com/QUQMDR_03_1_1A" xmlns:security_signout_4_1="http://xml.amadeus.com/VLSSOQ_04_1_1A" xmlns:security_signoutreply_4_1="http://xml.amadeus.com/VLSSOR_04_1_1A" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ticket_canceldocument_11_1="http://xml.amadeus.com/TRCANQ_11_1_1A" xmlns:ticket_canceldocumentreply_11_1="http://xml.amadeus.com/TRCANR_11_1_1A" xmlns:ticket_createtstfrompricing_4_1="http://xml.amadeus.com/TAUTCQ_04_1_1A" xmlns:ticket_createtstfrompricingreply_4_1="http://xml.amadeus.com/TAUTCR_04_1_1A" xmlns:tns="http://xml.amadeus.com/Terminal101Test_PDT_1_0" xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://xml.amadeus.com/Terminal101Test_PDT_1_0">
+  <wsdl:types>
+    <xs:schema>
+      <xs:import schemaLocation="Air_SellFromRecommendation_05_2_IA.xsd" namespace="http://xml.amadeus.com/ITAREQ_05_2_IA" />
+      <xs:import schemaLocation="Air_SellFromRecommendationReply_05_2_IA.xsd" namespace="http://xml.amadeus.com/ITARES_05_2_IA" />
+      <xs:import schemaLocation="DocIssuance_IssueTicket_15_1_1A.xsd" namespace="http://xml.amadeus.com/TTKTIQ_15_1_1A" />
+      <xs:import schemaLocation="DocIssuance_IssueTicketReply_15_1_1A.xsd" namespace="http://xml.amadeus.com/TTKTIR_15_1_1A" />
+      <xs:import schemaLocation="Fare_CheckRules_07_1_1A.xsd" namespace="http://xml.amadeus.com/FARQNQ_07_1_1A" />
+      <xs:import schemaLocation="Fare_CheckRulesReply_07_1_1A.xsd" namespace="http://xml.amadeus.com/FARQNR_07_1_1A" />
+      <xs:import schemaLocation="Fare_InformativeBestPricingWithoutPNR_18_1_1A.xsd" namespace="http://xml.amadeus.com/TIBNRQ_18_1_1A" />
+      <xs:import schemaLocation="Fare_InformativeBestPricingWithoutPNRReply_18_1_1A.xsd" namespace="http://xml.amadeus.com/TIBNRR_18_1_1A" />
+      <xs:import schemaLocation="Fare_InformativePricingWithoutPNR_18_1_1A.xsd" namespace="http://xml.amadeus.com/TIPNRQ_18_1_1A" />
+      <xs:import schemaLocation="Fare_InformativePricingWithoutPNRReply_18_1_1A.xsd" namespace="http://xml.amadeus.com/TIPNRR_18_1_1A" />
+      <xs:import schemaLocation="Fare_MasterPricerCalendar_16_3_1A.xsd" namespace="http://xml.amadeus.com/FMPCAQ_16_3_1A" />
+      <xs:import schemaLocation="Fare_MasterPricerCalendarReply_16_3_1A.xsd" namespace="http://xml.amadeus.com/FMPCAR_16_3_1A" />
+      <xs:import schemaLocation="Fare_MasterPricerTravelBoardSearch_17_4_1A.xsd" namespace="http://xml.amadeus.com/FMPTBQ_17_4_1A" />
+      <xs:import schemaLocation="Fare_MasterPricerTravelBoardSearchReply_17_4_1A.xsd" namespace="http://xml.amadeus.com/FMPTBR_17_4_1A" />
+      <xs:import schemaLocation="Fare_PricePNRWithBookingClass_18_1_1A.xsd" namespace="http://xml.amadeus.com/TPCBRQ_18_1_1A" />
+      <xs:import schemaLocation="Fare_PricePNRWithBookingClassReply_18_1_1A.xsd" namespace="http://xml.amadeus.com/TPCBRR_18_1_1A" />
+      <xs:import schemaLocation="PNR_AddMultiElements_17_1_1A.xsd" namespace="http://xml.amadeus.com/PNRADD_17_1_1A" />
+      <xs:import schemaLocation="PNR_Reply_17_1_1A.xsd" namespace="http://xml.amadeus.com/PNRACC_17_1_1A" />
+      <xs:import schemaLocation="PNR_Cancel_16_1_1A.xsd" namespace="http://xml.amadeus.com/PNRXCL_16_1_1A" />
+      <xs:import schemaLocation="PNR_Reply_16_1_1A.xsd" namespace="http://xml.amadeus.com/PNRACC_16_1_1A" />
+      <xs:import schemaLocation="PNR_Retrieve_17_1_1A.xsd" namespace="http://xml.amadeus.com/PNRRET_17_1_1A" />
+      <xs:import schemaLocation="PNR_List_00_1_1A.xsd" namespace="http://xml.amadeus.com/TNLRES_00_1_1A" />
+      <xs:import schemaLocation="Queue_CountTotal_13_1_1A.xsd" namespace="http://xml.amadeus.com/QCSDRQ_13_1_1A" />
+      <xs:import schemaLocation="Queue_CountTotalReply_13_1_1A.xsd" namespace="http://xml.amadeus.com/QCSDRR_13_1_1A" />
+      <xs:import schemaLocation="Queue_List_11_1_1A.xsd" namespace="http://xml.amadeus.com/QDQLRQ_11_1_1A" />
+      <xs:import schemaLocation="Queue_ListReply_11_1_1A.xsd" namespace="http://xml.amadeus.com/QDQLRR_11_1_1A" />
+      <xs:import schemaLocation="Queue_PlacePNR_03_1_1A.xsd" namespace="http://xml.amadeus.com/QUQPCQ_03_1_1A" />
+      <xs:import schemaLocation="Queue_PlacePNRReply_03_1_1A.xsd" namespace="http://xml.amadeus.com/QUQPCR_03_1_1A" />
+      <xs:import schemaLocation="Queue_RemoveItem_03_1_1A.xsd" namespace="http://xml.amadeus.com/QUQMDQ_03_1_1A" />
+      <xs:import schemaLocation="Queue_RemoveItemReply_03_1_1A.xsd" namespace="http://xml.amadeus.com/QUQMDR_03_1_1A" />
+      <xs:import schemaLocation="Security_SignOut_04_1_1A.xsd" namespace="http://xml.amadeus.com/VLSSOQ_04_1_1A" />
+      <xs:import schemaLocation="Security_SignOutReply_04_1_1A.xsd" namespace="http://xml.amadeus.com/VLSSOR_04_1_1A" />
+      <xs:import schemaLocation="Ticket_CancelDocument_11_1_1A.xsd" namespace="http://xml.amadeus.com/TRCANQ_11_1_1A" />
+      <xs:import schemaLocation="Ticket_CancelDocumentReply_11_1_1A.xsd" namespace="http://xml.amadeus.com/TRCANR_11_1_1A" />
+      <xs:import schemaLocation="Ticket_CreateTSTFromPricing_04_1_1A.xsd" namespace="http://xml.amadeus.com/TAUTCQ_04_1_1A" />
+      <xs:import schemaLocation="Ticket_CreateTSTFromPricingReply_04_1_1A.xsd" namespace="http://xml.amadeus.com/TAUTCR_04_1_1A" />
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="Air_SellFromRecommendation_5_2">
+    <wsdl:part name="Air_SellFromRecommendation_5_2" element="air_sellfromrecommendation_5_2:Air_SellFromRecommendation" />
+  </wsdl:message>
+  <wsdl:message name="Air_SellFromRecommendationReply_5_2">
+    <wsdl:part name="Air_SellFromRecommendationReply_5_2" element="air_sellfromrecommendationreply_5_2:Air_SellFromRecommendationReply" />
+  </wsdl:message>
+  <wsdl:message name="DocIssuance_IssueTicket_15_1">
+    <wsdl:part name="DocIssuance_IssueTicket_15_1" element="docissuance_issueticket_15_1:DocIssuance_IssueTicket" />
+  </wsdl:message>
+  <wsdl:message name="DocIssuance_IssueTicketReply_15_1">
+    <wsdl:part name="DocIssuance_IssueTicketReply_15_1" element="docissuance_issueticketreply_15_1:DocIssuance_IssueTicketReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_CheckRules_7_1">
+    <wsdl:part name="Fare_CheckRules_7_1" element="fare_checkrules_7_1:Fare_CheckRules" />
+  </wsdl:message>
+  <wsdl:message name="Fare_CheckRulesReply_7_1">
+    <wsdl:part name="Fare_CheckRulesReply_7_1" element="fare_checkrulesreply_7_1:Fare_CheckRulesReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_InformativeBestPricingWithoutPNR_18_1">
+    <wsdl:part name="Fare_InformativeBestPricingWithoutPNR_18_1" element="fare_informativebestpricingwithoutpnr_18_1:Fare_InformativeBestPricingWithoutPNR" />
+  </wsdl:message>
+  <wsdl:message name="Fare_InformativeBestPricingWithoutPNRReply_18_1">
+    <wsdl:part name="Fare_InformativeBestPricingWithoutPNRReply_18_1" element="fare_informativebestpricingwithoutpnrreply_18_1:Fare_InformativeBestPricingWithoutPNRReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_InformativePricingWithoutPNR_18_1">
+    <wsdl:part name="Fare_InformativePricingWithoutPNR_18_1" element="fare_informativepricingwithoutpnr_18_1:Fare_InformativePricingWithoutPNR" />
+  </wsdl:message>
+  <wsdl:message name="Fare_InformativePricingWithoutPNRReply_18_1">
+    <wsdl:part name="Fare_InformativePricingWithoutPNRReply_18_1" element="fare_informativepricingwithoutpnrreply_18_1:Fare_InformativePricingWithoutPNRReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_MasterPricerCalendar_16_3">
+    <wsdl:part name="Fare_MasterPricerCalendar_16_3" element="fare_masterpricercalendar_16_3:Fare_MasterPricerCalendar" />
+  </wsdl:message>
+  <wsdl:message name="Fare_MasterPricerCalendarReply_16_3">
+    <wsdl:part name="Fare_MasterPricerCalendarReply_16_3" element="fare_masterpricercalendarreply_16_3:Fare_MasterPricerCalendarReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_MasterPricerTravelBoardSearch_17_4">
+    <wsdl:part name="Fare_MasterPricerTravelBoardSearch_17_4" element="fare_masterpricertravelboardsearch_17_4:Fare_MasterPricerTravelBoardSearch" />
+  </wsdl:message>
+  <wsdl:message name="Fare_MasterPricerTravelBoardSearchReply_17_4">
+    <wsdl:part name="Fare_MasterPricerTravelBoardSearchReply_17_4" element="fare_masterpricertravelboardsearchreply_17_4:Fare_MasterPricerTravelBoardSearchReply" />
+  </wsdl:message>
+  <wsdl:message name="Fare_PricePNRWithBookingClass_18_1">
+    <wsdl:part name="Fare_PricePNRWithBookingClass_18_1" element="fare_pricepnrwithbookingclass_18_1:Fare_PricePNRWithBookingClass" />
+  </wsdl:message>
+  <wsdl:message name="Fare_PricePNRWithBookingClassReply_18_1">
+    <wsdl:part name="Fare_PricePNRWithBookingClassReply_18_1" element="fare_pricepnrwithbookingclassreply_18_1:Fare_PricePNRWithBookingClassReply" />
+  </wsdl:message>
+  <wsdl:message name="PNR_AddMultiElements_17_1">
+    <wsdl:part name="PNR_AddMultiElements_17_1" element="pnr_addmultielements_17_1:PNR_AddMultiElements" />
+  </wsdl:message>
+  <wsdl:message name="PNR_Reply_17_1">
+    <wsdl:part name="PNR_Reply_17_1" element="pnr_reply_17_1:PNR_Reply" />
+  </wsdl:message>
+  <wsdl:message name="PNR_Cancel_16_1">
+    <wsdl:part name="PNR_Cancel_16_1" element="pnr_cancel_16_1:PNR_Cancel" />
+  </wsdl:message>
+  <wsdl:message name="PNR_Reply_16_1">
+    <wsdl:part name="PNR_Reply_16_1" element="pnr_reply_16_1:PNR_Reply" />
+  </wsdl:message>
+  <wsdl:message name="PNR_Retrieve_17_1">
+    <wsdl:part name="PNR_Retrieve_17_1" element="pnr_retrieve_17_1:PNR_Retrieve" />
+  </wsdl:message>
+  <wsdl:message name="PNR_List_0_1">
+    <wsdl:part name="PNR_List_0_1" element="pnr_list_0_1:PNR_List" />
+  </wsdl:message>
+  <wsdl:message name="Queue_CountTotal_13_1">
+    <wsdl:part name="Queue_CountTotal_13_1" element="queue_counttotal_13_1:Queue_CountTotal" />
+  </wsdl:message>
+  <wsdl:message name="Queue_CountTotalReply_13_1">
+    <wsdl:part name="Queue_CountTotalReply_13_1" element="queue_counttotalreply_13_1:Queue_CountTotalReply" />
+  </wsdl:message>
+  <wsdl:message name="Queue_List_11_1">
+    <wsdl:part name="Queue_List_11_1" element="queue_list_11_1:Queue_List" />
+  </wsdl:message>
+  <wsdl:message name="Queue_ListReply_11_1">
+    <wsdl:part name="Queue_ListReply_11_1" element="queue_listreply_11_1:Queue_ListReply" />
+  </wsdl:message>
+  <wsdl:message name="Queue_PlacePNR_3_1">
+    <wsdl:part name="Queue_PlacePNR_3_1" element="queue_placepnr_3_1:Queue_PlacePNR" />
+  </wsdl:message>
+  <wsdl:message name="Queue_PlacePNRReply_3_1">
+    <wsdl:part name="Queue_PlacePNRReply_3_1" element="queue_placepnrreply_3_1:Queue_PlacePNRReply" />
+  </wsdl:message>
+  <wsdl:message name="Queue_RemoveItem_3_1">
+    <wsdl:part name="Queue_RemoveItem_3_1" element="queue_removeitem_3_1:Queue_RemoveItem" />
+  </wsdl:message>
+  <wsdl:message name="Queue_RemoveItemReply_3_1">
+    <wsdl:part name="Queue_RemoveItemReply_3_1" element="queue_removeitemreply_3_1:Queue_RemoveItemReply" />
+  </wsdl:message>
+  <wsdl:message name="Security_SignOut_4_1">
+    <wsdl:part name="Security_SignOut_4_1" element="security_signout_4_1:Security_SignOut" />
+  </wsdl:message>
+  <wsdl:message name="Security_SignOutReply_4_1">
+    <wsdl:part name="Security_SignOutReply_4_1" element="security_signoutreply_4_1:Security_SignOutReply" />
+  </wsdl:message>
+  <wsdl:message name="Ticket_CancelDocument_11_1">
+    <wsdl:part name="Ticket_CancelDocument_11_1" element="ticket_canceldocument_11_1:Ticket_CancelDocument" />
+  </wsdl:message>
+  <wsdl:message name="Ticket_CancelDocumentReply_11_1">
+    <wsdl:part name="Ticket_CancelDocumentReply_11_1" element="ticket_canceldocumentreply_11_1:Ticket_CancelDocumentReply" />
+  </wsdl:message>
+  <wsdl:message name="Ticket_CreateTSTFromPricing_4_1">
+    <wsdl:part name="Ticket_CreateTSTFromPricing_4_1" element="ticket_createtstfrompricing_4_1:Ticket_CreateTSTFromPricing" />
+  </wsdl:message>
+  <wsdl:message name="Ticket_CreateTSTFromPricingReply_4_1">
+    <wsdl:part name="Ticket_CreateTSTFromPricingReply_4_1" element="ticket_createtstfrompricingreply_4_1:Ticket_CreateTSTFromPricingReply" />
+  </wsdl:message>
+  <wsdl:portType name="Terminal101Test_PDT_1_0_ServicesPT">
+    <wsdl:operation name="Air_SellFromRecommendation">
+      <wsdl:input message="tns:Air_SellFromRecommendation_5_2" />
+      <wsdl:output message="tns:Air_SellFromRecommendationReply_5_2" />
+    </wsdl:operation>
+    <wsdl:operation name="DocIssuance_IssueTicket">
+      <wsdl:input message="tns:DocIssuance_IssueTicket_15_1" />
+      <wsdl:output message="tns:DocIssuance_IssueTicketReply_15_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_CheckRules">
+      <wsdl:input message="tns:Fare_CheckRules_7_1" />
+      <wsdl:output message="tns:Fare_CheckRulesReply_7_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_InformativeBestPricingWithoutPNR">
+      <wsdl:input message="tns:Fare_InformativeBestPricingWithoutPNR_18_1" />
+      <wsdl:output message="tns:Fare_InformativeBestPricingWithoutPNRReply_18_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_InformativePricingWithoutPNR">
+      <wsdl:input message="tns:Fare_InformativePricingWithoutPNR_18_1" />
+      <wsdl:output message="tns:Fare_InformativePricingWithoutPNRReply_18_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_MasterPricerCalendar">
+      <wsdl:input message="tns:Fare_MasterPricerCalendar_16_3" />
+      <wsdl:output message="tns:Fare_MasterPricerCalendarReply_16_3" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_MasterPricerTravelBoardSearch">
+      <wsdl:input message="tns:Fare_MasterPricerTravelBoardSearch_17_4" />
+      <wsdl:output message="tns:Fare_MasterPricerTravelBoardSearchReply_17_4" />
+    </wsdl:operation>
+    <wsdl:operation name="Fare_PricePNRWithBookingClass">
+      <wsdl:input message="tns:Fare_PricePNRWithBookingClass_18_1" />
+      <wsdl:output message="tns:Fare_PricePNRWithBookingClassReply_18_1" />
+    </wsdl:operation>
+    <wsdl:operation name="PNR_AddMultiElements">
+      <wsdl:input message="tns:PNR_AddMultiElements_17_1" />
+      <wsdl:output message="tns:PNR_Reply_17_1" />
+    </wsdl:operation>
+    <wsdl:operation name="PNR_Cancel">
+      <wsdl:input message="tns:PNR_Cancel_16_1" />
+      <wsdl:output message="tns:PNR_Reply_16_1" />
+    </wsdl:operation>
+    <wsdl:operation name="PNR_Retrieve">
+      <wsdl:input message="tns:PNR_Retrieve_17_1" />
+      <wsdl:output message="tns:PNR_Reply_17_1" />
+    </wsdl:operation>
+    <wsdl:operation name="PNR_Retrieve2">
+      <wsdl:input message="tns:PNR_Retrieve_17_1" />
+      <wsdl:output message="tns:PNR_List_0_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Queue_CountTotal">
+      <wsdl:input message="tns:Queue_CountTotal_13_1" />
+      <wsdl:output message="tns:Queue_CountTotalReply_13_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Queue_List">
+      <wsdl:input message="tns:Queue_List_11_1" />
+      <wsdl:output message="tns:Queue_ListReply_11_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Queue_PlacePNR">
+      <wsdl:input message="tns:Queue_PlacePNR_3_1" />
+      <wsdl:output message="tns:Queue_PlacePNRReply_3_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Queue_RemoveItem">
+      <wsdl:input message="tns:Queue_RemoveItem_3_1" />
+      <wsdl:output message="tns:Queue_RemoveItemReply_3_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Security_SignOut">
+      <wsdl:input message="tns:Security_SignOut_4_1" />
+      <wsdl:output message="tns:Security_SignOutReply_4_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Ticket_CancelDocument">
+      <wsdl:input message="tns:Ticket_CancelDocument_11_1" />
+      <wsdl:output message="tns:Ticket_CancelDocumentReply_11_1" />
+    </wsdl:operation>
+    <wsdl:operation name="Ticket_CreateTSTFromPricing">
+      <wsdl:input message="tns:Ticket_CreateTSTFromPricing_4_1" />
+      <wsdl:output message="tns:Ticket_CreateTSTFromPricingReply_4_1" />
+    </wsdl:operation>
+  </wsdl:portType>
+</wsdl:definitions>
+<!--1F8B0800000000000000458E310BC2301085F7FE8A1B1569B90441C9565A9AC58260C0F9D01B02C925A441F0DF1B7410DEF286EF7BCFB270A1EA9340F591B74A311BD0A8758FC75E9D614DF2A4376865F4A905ECEA0E8806B1BBDFE60BD81F9F0ABCB86C4DD3E00107ECA6E0592A50CEC13FBE0306C67F81DD322FFBE618AF2014D980E312BD5050A85CFBF101BD46F12C99000000-->
