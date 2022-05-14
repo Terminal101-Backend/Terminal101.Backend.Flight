@@ -612,7 +612,8 @@ module.exports.filterFlights = async (req, res) => {
         description: flightInfo.destination.description,
       },
       time: flightInfo.time,
-      flights,
+      flights: array.pagination(flights, req.header("Page"), req.header("PageSize")),
+      // flights,
     });
   } catch (e) {
     response.exception(res, e);

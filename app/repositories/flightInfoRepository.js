@@ -2,6 +2,7 @@ const BaseRepository = require("../core/baseRepository");
 const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
+const pagination = require("../helpers/paginationHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -171,7 +172,7 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} flightCode 
    * @returns {Promise<FlightInfo>}
    */
-  async getFlight(searchCode, flightCode) {
+  async getFlight(searchCode, flightIndex, page, pageSize) {
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
     // agrFlightInfo.append({ $unwind: "$searches.flights" });
@@ -188,6 +189,7 @@ class FlightInfoRepository extends BaseRepository {
         searches: 0,
       }
     });
+
     const searches = await agrFlightInfo.exec();
 
     if (searches.length > 0) {
