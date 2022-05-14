@@ -172,7 +172,7 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} flightCode 
    * @returns {Promise<FlightInfo>}
    */
-  async getFlight(searchCode, flightIndex, page, pageSize) {
+  async getFlight(searchCode, flightIndex) {
     const agrFlightInfo = FlightInfo.aggregate();
     agrFlightInfo.append({ $unwind: "$searches" });
     // agrFlightInfo.append({ $unwind: "$searches.flights" });
