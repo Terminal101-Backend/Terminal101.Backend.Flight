@@ -30,7 +30,7 @@ router
       console.log("Filter flights", req.params, req.body, req.query);
       next();
     },
-    flightValidator.getFlight.check(),
+    flightValidator.getFlight.check(true),
     flightController.getFlight);
 
 // NOTE: Get filter limits
