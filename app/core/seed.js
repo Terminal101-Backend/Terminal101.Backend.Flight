@@ -3,11 +3,17 @@ require("dotenv").config();
 global.config = require("../config");
 const db = require("./db/mongo");
 
-const { countryRepository, flightInfoRepository } = require("../repositories");
+const { providerRepository, countryRepository, flightInfoRepository } = require("../repositories");
 const { Country } = require("../models/documents");
 
 const data = require("./initData");
 const { ETravelClass } = require("../constants");
+
+const addProviders = async () => {
+  await providerRepository.deleteMany();
+  await providerRepository.createProvider("AMADEUS", "Amadeus");
+  await providerRepository.createProvider("PARTO", "Parto", false);
+};
 
 const addCountriesCitiesAirports = async () => {
   await countryRepository.deleteMany();
@@ -145,6 +151,7 @@ const addSampleFlightInfos = async () => {
 (async () => {
   await db.startDatabase();
   await addCountriesCitiesAirports();
+  await addProviders();
   // await addSampleFlightInfos();
   await db.stopDatabase();
 })()

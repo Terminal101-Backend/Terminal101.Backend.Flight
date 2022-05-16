@@ -200,7 +200,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
   };
 };
 
-const searchFlights = async params => {
+module.exports.searchFlights = async params => {
   let segments = makeSegmentsArray(params.segments);
 
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
@@ -250,9 +250,3 @@ const searchFlights = async params => {
     flightDetails,
   };
 };
-
-module.exports = {
-  searchFlights,
-  // makeFlightDetailsArray,
-  // makeSegmentsArray,
-}
