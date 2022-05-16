@@ -1,225 +1,13 @@
 const { EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const dateTime = require("../helpers/dateTimeHelper");
 const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
-const { FlightInfo } = require("../models/documents");
+// const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const array = require("../helpers/arrayHelper");
+const { flightHelper, amadeusHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
-const makeSegmentsArray = segments => {
-  segments = segments ?? [];
-  if (!Array.isArray(segments)) {
-    try {
-      segments = segments.split(",");
-    } catch (e) {
-      segments = [segments];
-    }
-  };
-  segments = segments.map(segment => {
-    const segment_date = segment.trim().split(":");
-    return {
-      originCode: segment_date[0],
-      destinationCode: segment_date[1],
-      date: segment_date[2],
-    };
-  });
-
-  return segments;
-};
-
-const makeSegmentStopsArray = airports => {
-  return stop => ({
-    description: stop.description,
-    duration: dateTime.convertAmadeusTime(stop.duration),
-    arrivalAt: stop.arrivalAt,
-    departureAt: stop.departureAt,
-    airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : { code: stop.iataCode, name: "UNKNOWN" },
-    city: !!airports[stop.iataCode] ? airports[stop.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-    country: !!airports[stop.iataCode] ? airports[stop.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
-  });
-};
-
-const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
-  return segment => {
-    let result = {
-      duration: dateTime.convertAmadeusTime(segment.duration),
-      flightNumber: segment.number,
-      aircraft: aircrafts[segment.aircraft.code],
-      airline: {
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode],
-      },
-      stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
-      departure: {
-        airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : { code: segment.departure.iataCode, name: "UNKNOWN" },
-        city: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
-        terminal: segment.departure.terminal,
-        at: segment.departure.at,
-      },
-      arrival: {
-        airport: !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].airport : { code: segment.arrival.iataCode, name: "UNKNOWN" },
-        city: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].city : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].country : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
-        terminal: segment.arrival.terminal,
-        at: segment.arrival.at,
-      },
-    };
-
-    if (!filter.airlines.some(airline => airline.code === segment.carrierCode)) {
-      filter.airlines.push({
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode]
-      });
-    }
-
-    if (!filter.airports.some(airport => airport.code === segment.departure.iataCode)) {
-      filter.airports.push(
-        !!airports[segment.departure.iataCode]
-          ? airports[segment.departure.iataCode].airport
-          : {
-            code: segment.departure.iataCode,
-            name: "UNKNOWN"
-          });
-    }
-
-    if (!filter.airports.some(airport => airport.code === segment.arrival.iataCode)) {
-      filter.airports.push(
-        !!airports[segment.arrival.iataCode]
-          ? airports[segment.arrival.iataCode].airport
-          : {
-            code: segment.arrival.iataCode,
-            name: "UNKNOWN"
-          });
-    }
-
-    if (!filter.aircrafts.includes(aircrafts[segment.aircraft.code])) {
-      filter.aircrafts.push(aircrafts[segment.aircraft.code]);
-    }
-
-    if (!filter.stops.includes(result.stops.length)) {
-      filter.stops.push(result.stops.length);
-    }
-
-    // if (new Date(result.departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : new Date(filter.departureTime.min))) {
-    //   filter.departureTime.min = result.departure.at;
-    // }
-    // if (new Date(result.departure.at) > (!filter.departureTime.max ? 0 : new Date(filter.departureTime.max))) {
-    //   filter.departureTime.max = result.departure.at;
-    // }
-
-    // if (new Date(result.arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : new Date(filter.arrivalTime.min))) {
-    //   filter.arrivalTime.min = result.arrival.at;
-    // }
-    // if (new Date(result.arrival.at) > (!filter.arrivalTime.max ? 0 : new Date(filter.arrivalTime.max))) {
-    //   filter.arrivalTime.max = result.arrival.at;
-    // }
-
-    return result;
-  };
-};
-
-const makePriceObject = (flightPrice, travelerPricings) => ({
-  total: parseFloat(flightPrice.total),
-  grandTotal: parseFloat(flightPrice.grandTotal),
-  base: parseFloat(flightPrice.base),
-  fees: (flightPrice.fees ?? []).map(fee => ({
-    amount: parseFloat(fee.amount),
-    type: fee.type,
-  })),
-  taxes: (flightPrice.taxes ?? []).map(tax => ({
-    amount: parseFloat(tax.amount),
-    code: tax.code,
-  })),
-  travelerPrices: travelerPricings.map(travelerPrice => {
-    let travelerType;
-    switch (travelerPrice.travelerType) {
-      case "CHILD":
-        travelerType = "CHILD";
-        break;
-
-      case "HELD_INFANT":
-      case "SEATED_INFANT":
-        travelerType = "INFANT";
-        break;
-
-      case "ADULT":
-      case "SENIOR":
-        travelerType = "ADULT";
-        break;
-
-      default:
-    }
-
-    return {
-      total: parseFloat(travelerPrice.price.total),
-      base: parseFloat(travelerPrice.price.base),
-      travelerType,
-      fees: (travelerPrice.price.fees ?? []).map(fee => ({
-        amount: parseFloat(fee.amount),
-        type: fee.type,
-      })),
-      taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
-        amount: parseFloat(tax.amount),
-        code: tax.code,
-      })),
-    }
-  }),
-});
-
-const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filter) => {
-  return (flight, index) => {
-    result = {
-      code: index,
-      availableSeats: flight.numberOfBookableSeats,
-      currencyCode: flight.price.currency,
-      travelClass,
-      price: makePriceObject(flight.price, flight.travelerPricings),
-      itineraries: flight.itineraries.map(itinerary => {
-        let result = {
-          duration: dateTime.convertAmadeusTime(itinerary.duration),
-          segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports, filter)),
-        };
-
-        if (result.duration < filter.duration.min) {
-          filter.duration.min = result.duration;
-        }
-        if (result.duration > filter.duration.max) {
-          filter.duration.max = result.duration;
-        }
-
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.departureTime.min))) {
-          filter.departureTime.min = result.segments[0].departure.at;
-        }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.departureTime.max))) {
-          filter.departureTime.max = result.segments[0].departure.at;
-        }
-
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.arrivalTime.min))) {
-          filter.arrivalTime.min = result.segments[0].arrival.at;
-        }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.arrivalTime.max))) {
-          filter.arrivalTime.max = result.segments[0].arrival.at;
-        }
-
-        return result;
-      }),
-    };
-
-    if (result.price < filter.price.min) {
-      filter.price.min = result.price;
-    }
-    if (result.price > filter.price.max) {
-      filter.price.max = result.price;
-    }
-
-    return result;
-  };
-};
-
 // NOTE: Search origin or destination
 module.exports.searchOriginDestination = async (req, res) => {
   try {
@@ -274,126 +62,64 @@ module.exports.getPopularWaypoints = async (req, res) => {
 };
 
 // NOTE: Search flights
-module.exports.searchFlights = async (req, res) => {
-  try {
-    let segments = makeSegmentsArray(req.query.segments);
+module.exports.appendProviderResult = async (flight, time, searchIndex = -1, page, pageSize) => {
+  const flightInfo = await flightInfoRepository.createFlightInfo(
+    flight.origin,
+    flight.destination,
+    time,
+  );
 
-    const departureDate = dateTime.excludeDateFromIsoString(req.query.departureDate.toISOString());
-    const returnDate = dateTime.excludeDateFromIsoString(req.query.returnDate ? req.query.returnDate.toISOString() : "");
-
-    let result;
-    if (!segments || (segments.length === 0)) {
-      result = await amadeus.flightOffersSingleSearch(req.query.origin, req.query.destination, departureDate, returnDate, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
-    } else {
-      result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
-    }
-
-    if (!!result.data && (result.data.length > 0)) {
-      const stops = result.data
-        .reduce((res, cur) => [...res, ...cur.itineraries], [])
-        .reduce((res, cur) => [...res, ...cur.segments], [])
-        .filter(segment => !!segment.stops)
-        .reduce((res, cur) => [...res, ...cur.stops], [])
-        .map(stop => stop.iataCode);
-
-      const filter = {
-        stops: [],
-        aircrafts: [],
-        airports: [],
-        airlines: [],
-        price: {
-          min: Number.POSITIVE_INFINITY,
-          max: Number.NEGATIVE_INFINITY,
-        },
-        departureTime: {
-          min: undefined,
-          max: undefined,
-        },
-        arrivalTime: {
-          min: undefined,
-          max: undefined,
-        },
-        duration: {
-          min: Number.POSITIVE_INFINITY,
-          max: Number.NEGATIVE_INFINITY,
-        },
-        // priceFrom: Number.POSITIVE_INFINITY,
-        // priceTo: 0,
-        // departureTimeFrom: undefined,
-        // departureTimeTo: undefined,
-        // arrivalTimeFrom: undefined,
-        // arrivalTimeTo: undefined,
-        // durationFrom: Number.POSITIVE_INFINITY,
-        // durationTo: 0,
-      };
-      const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode([...Object.keys(result.dictionaries.locations), ...stops]) : [];
-      const aircrafts = !!result.dictionaries ? result.dictionaries.aircraft : [];
-      const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
-      const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports, req.query.travelClass, filter));
-
-      filter.departureTime.min = dateTime.getMinutesFromIsoString(filter.departureTime.min);
-      filter.departureTime.max = dateTime.getMinutesFromIsoString(filter.departureTime.max);
-
-      filter.arrivalTime.min = dateTime.getMinutesFromIsoString(filter.arrivalTime.min);
-      filter.arrivalTime.max = dateTime.getMinutesFromIsoString(filter.arrivalTime.max);
-
-      let origin;
-      let destination;
-      origin = await countryRepository.getCityByCode(req.query.origin);
-      destination = await countryRepository.getCityByCode(req.query.destination);
-
-      if (!origin) {
-        origin = !!airports[req.query.origin] ? airports[req.query.origin].city : { code: "UNKNOWN", name: "UNKNOWN" };
-      }
-
-      if (!destination) {
-        destination = !!airports[req.query.destination] ? airports[req.query.destination].city : { code: "UNKNOWN", name: "UNKNOWN" };
-      }
-
-      let flightInfo = await flightInfoRepository.findOne({
-        origin,
-        destination,
-        time: req.query.departureDate.toISOString(),
-      });
-
-      if (!flightInfo) {
-        flightInfo = new FlightInfo({
-          origin,
-          destination,
-          time: req.query.departureDate,
-        });
-      }
-
-      const searchIndex = flightInfo.searches.push({
-        code: await flightInfoRepository.generateUniqueCode(),
-        flights: flightDetails,
-        filter,
-      }) - 1;
-
-      await flightInfo.save();
-
-      response.success(res, {
-        code: flightInfo.searches[searchIndex].code,
-        origin: {
-          code: flightInfo.origin.code,
-          name: flightInfo.origin.name,
-          description: flightInfo.origin.description,
-        },
-        destination: {
-          code: flightInfo.destination.code,
-          name: flightInfo.destination.name,
-          description: flightInfo.destination.description,
-        },
-        time: flightInfo.time,
-        flights: array.pagination(flightDetails, req.header("Page"), req.header("PageSize")),
-        // AMADEUS_RESULT: result,
-      });
-    } else {
-      response.success(res, {});
-    }
-  } catch (e) {
-    response.exception(res, e);
+  if (searchIndex === -1) {
+    searchIndex = flightInfo.searches.push({
+      code: await flightInfoRepository.generateUniqueCode(),
+      flights: flight.flightDetails,
+      filter: flightHelper.getFilterLimitsFromFlightDetailsArray(flight.flightDetails),
+    }) - 1;
+  } else {
+    // TODO: Append result to last search
+    // TODO: Sort last search by completed result
+    // TODO: Make last search distinct
   }
+
+  await flightInfo.save();
+
+  return {
+    searchIndex,
+    response: {
+      code: flightInfo.searches[searchIndex].code,
+      origin: {
+        code: flightInfo.origin.code,
+        name: flightInfo.origin.name,
+        description: flightInfo.origin.description,
+      },
+      destination: {
+        code: flightInfo.destination.code,
+        name: flightInfo.destination.name,
+        description: flightInfo.destination.description,
+      },
+      time: flightInfo.time,
+      flights: arrayHelper.pagination(flight.flightDetails, page, pageSize),
+      // AMADEUS_RESULT: result,
+    }
+  };
+};
+
+module.exports.searchFlights = async (req, res) => {
+  // TODO: Get providers count from database for active providers
+  const providerCount = 1;
+  let providerNumber = 0;
+  let searchIndex = -1;
+
+  amadeusHelper.searchFlights(req.query).then(async flight => {
+    const result = await this.appendProviderResult(flight, req.query.departureDate.toISOString(), searchIndex, req.header("Page"), req.header("PageSize"));
+    searchIndex = result.searchIndex;
+
+    if (++providerNumber === providerCount) {
+      response.success(res, result.response);
+    }
+  }).catch(e => {
+    response.exception(res, e);
+  });
 };
 
 // NOTE: Get filters
@@ -548,12 +274,12 @@ module.exports.filterFlights = async (req, res) => {
             return false;
           }
 
-          const departureTime = dateTime.getMinutesFromIsoString(itinerary.segments[0].departure.at);
+          const departureTime = dateTimeHelper.getMinutesFromIsoString(itinerary.segments[0].departure.at);
 
           result = result && (!req.query.departureTimeFrom || (departureTime >= req.query.departureTimeFrom));
           result = result && (!req.query.departureTimeTo || (departureTime <= req.query.departureTimeTo));
 
-          const arrivalTime = dateTime.getMinutesFromIsoString(itinerary.segments[0].arrival.at);
+          const arrivalTime = dateTimeHelper.getMinutesFromIsoString(itinerary.segments[0].arrival.at);
 
           result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
           result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
@@ -612,7 +338,7 @@ module.exports.filterFlights = async (req, res) => {
         description: flightInfo.destination.description,
       },
       time: flightInfo.time,
-      flights: array.pagination(flights, req.header("Page"), req.header("PageSize")),
+      flights: arrayHelper.pagination(flights, req.header("Page"), req.header("PageSize")),
       // flights,
     });
   } catch (e) {

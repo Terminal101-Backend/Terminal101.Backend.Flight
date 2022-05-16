@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const Itinerary = require("./itinerary");
-const { ETravelClass } = require("../../constants");
+const { ETravelClass, EProvider } = require("../../constants");
 const Price = require("./price");
 
 const flightDetails = new Schema({
@@ -31,6 +31,7 @@ const flightDetails = new Schema({
     required: true,
   },
   travelClass: ETravelClass.mongoField({ required: true }),
+  provider: EProvider.mongoField({ required: true }),
 }, {
   timestamps: true
 });
