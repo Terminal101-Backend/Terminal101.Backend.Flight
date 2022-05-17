@@ -1,4 +1,4 @@
-const { EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
+const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
@@ -91,20 +91,28 @@ module.exports.appendProviderResult = async (flight, time, searchIndex = -1, pag
 
 module.exports.searchFlights = async (req, res) => {
   // TODO: Get providers count from database for active providers
-  const providerCount = (await providerRepository.getActiveProviders()).length;
+  const activeProviders = await providerRepository.getActiveProviders();
+  const activeProviderCount = activeProviders.length;
   let providerNumber = 0;
   let searchIndex = -1;
 
-  amadeusHelper.searchFlights(req.query).then(async flight => {
-    const result = await this.appendProviderResult(flight, req.query.departureDate.toISOString(), searchIndex, req.header("Page"), req.header("PageSize"));
-    searchIndex = result.searchIndex;
+  if (activeProviders.some(provider => provider.name === EProvider.get("AMADEUS"))) {
+    amadeusHelper.searchFlights(req.query).then(async flight => {
+      const result = await this.appendProviderResult(flight, req.query.departureDate.toISOString(), searchIndex, req.header("Page"), req.header("PageSize"));
+      searchIndex = result.searchIndex;
 
-    if (++providerNumber === providerCount) {
-      response.success(res, result.response);
-    }
-  }).catch(e => {
-    response.exception(res, e);
-  });
+      if (++providerNumber === activeProviderCount) {
+        response.success(res, result.response);
+      }
+    }).catch(e => {
+      response.exception(res, e);
+    });
+  }
+
+  if (activeProviders.some(provider => provider.name === EProvider.get("PARTO"))) {
+    // TODO: Search by Parto
+    console.log("Append Parto's result to db");
+  }
 };
 
 // NOTE: Get filters
