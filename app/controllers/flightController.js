@@ -5,7 +5,7 @@ const { getIpInfo } = require("../services/ip");
 const { providerRepository, countryRepository, flightInfoRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -111,6 +111,7 @@ module.exports.searchFlights = async (req, res) => {
 
   if (activeProviders.some(provider => provider.name === EProvider.get("PARTO"))) {
     // TODO: Search by Parto
+    partoHelper.searchFlights(req.query);
     console.log("Append Parto's result to db");
   }
 };

@@ -57,7 +57,40 @@ const createSession = async () => {
   return response;
 };
 
-const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD") => {
+  let cabinType = 1;
+
+  switch (travelClass) {
+    case "ECONOMY":
+      cabinType = 1;
+      break;
+
+    case "PREMIUM_ECONOMY":
+      cabinType = 2;
+      break;
+
+    case "BUSINESS":
+      cabinType = 3;
+      break;
+
+    case "FIRST_CLASS":
+      cabinType = 5;
+      break;
+
+    default:
+      throw "travel_class_invalid";
+  }
+
+  const originDestinations = [];
+  originDestinations.push({
+    OriginLocationCode: originLocationCode,
+    DestinationLocationCode: destinationLocationCode,
+    OriginType: 0,
+    DestinationType: 0,
+    DepartureDateTime: departureDate,
+  });
+
+
   const {
     data: response
   } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirLowFareSearch", {
@@ -68,26 +101,16 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     ChildCount: children,
     InfantCount: infants,
     TravelPreference: {
-      CabinType: 1,
-      MaxStopsQuantity: 0,
+      CabinType: cabinType,
+      MaxStopsQuantity: !!nonStop ? 2 : 0,
       AirTripType: 1,
-      VendorExcludeCodes: [
-      ],
-      VendorPreferenceCodes: [
-      ]
+      VendorExcludeCodes: excludedAirlineCodes,
+      VendorPreferenceCodes: includedAirlineCodes,
     },
-    OriginDestinationInformations: [
-      {
-        DepartureDateTime: departureDate,
-        DestinationLocationCode: destinationLocationCode,
-        DestinationType: 0,
-        OriginLocationCode: originLocationCode,
-        OriginType: 0
-      }
-    ],
+    OriginDestinationInformations: originDestinations,
   });
 
-  return response;
+  return response.data.PricedItineraries;
 };
 
 module.exports = {

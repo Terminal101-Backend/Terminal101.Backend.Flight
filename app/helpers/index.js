@@ -5,4 +5,5 @@ module.exports.paginationHelper = require("./paginationHelper");
 module.exports.arrayHelper = require("./arrayHelper");
 module.exports.dateTimeHelper = require("./dateTimeHelper");
 module.exports.amadeusHelper = require("./amadeusHelper");
+module.exports.partoHelper = require("./partoHelper");
 module.exports.flightHelper = require("./flightHelper");

@@ -12,7 +12,7 @@ const { ETravelClass } = require("../constants");
 const addProviders = async () => {
   await providerRepository.deleteMany();
   await providerRepository.createProvider("AMADEUS", "Amadeus");
-  await providerRepository.createProvider("PARTO", "Parto", false);
+  await providerRepository.createProvider("PARTO", "Parto");
 };
 
 const addCountriesCitiesAirports = async () => {
