@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const Airport = require("./airport");
-const Airline = require("./airline");
+const Location = require("./location");
 const NumberRange = require("./numberRange");
 
 const filterLimit = new Schema({
@@ -23,7 +23,7 @@ const filterLimit = new Schema({
     default: [],
   },
   airlines: {
-    type: [Airline],
+    type: [Location],
     default: [],
   },
   price: {

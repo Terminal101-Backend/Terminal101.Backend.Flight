@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const Point = require("./point");
+const Point = require("../subdocuments/point");
 
-const airport = new Schema({
+const airline = new Schema({
 	name: {
 		type: String,
 		required: true,
@@ -24,4 +24,4 @@ const airport = new Schema({
 	timestamps: true
 });
 
-module.exports = airport;
+module.exports = mongoose.model("airline", airline);

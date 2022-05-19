@@ -152,7 +152,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
   return (flight, index) => {
     result = {
-      code: index,
+      code: `AMD-${index}`,
       availableSeats: flight.numberOfBookableSeats,
       currencyCode: flight.price.currency,
       travelClass,

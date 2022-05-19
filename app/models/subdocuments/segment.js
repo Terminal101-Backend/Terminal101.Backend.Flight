@@ -2,8 +2,8 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const Waypoint = require("./waypoint");
-const Airline = require("./airline");
 const Stop = require("./stop");
+const Location = require("./location");
 
 const segment = new Schema({
   departure: {
@@ -27,7 +27,7 @@ const segment = new Schema({
     required: true,
   },
   airline: {
-    type: Airline,
+    type: Location,
     required: true,
   },
   stops: {

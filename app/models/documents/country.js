@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const { City, Airline } = require("../subdocuments");
+const { City } = require("../subdocuments");
 
 const country = new Schema({
     name: {
@@ -28,10 +28,10 @@ const country = new Schema({
         type: [City],
         required: true,
     },
-    airlines: {
-        type: [Airline],
-        required: true,
-    },
+    // airlines: {
+    //     type: [Airline],
+    //     required: true,
+    // },
 }, {
     timestamps: true
 });

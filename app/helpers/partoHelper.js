@@ -1,6 +1,6 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const { parto } = require("../services");
-const { countryRepository } = require("../repositories");
+const { countryRepository, airlineRepository } = require("../repositories");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -38,13 +38,10 @@ const makeSegmentStopsArray = airports => {
 const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   return segment => {
     let result = {
-      duration: dateTimeHelper.convertAmadeusTime(segment.duration),
-      flightNumber: segment.number,
-      aircraft: aircrafts[segment.aircraft.code],
-      airline: {
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode],
-      },
+      duration: dateTimeHelper.convertAmadeusTime(segment.JourneDurationPerMinute),
+      flightNumber: segment.FlightNumber,
+      aircraft: aircrafts[segment.OperatingAirline.Equipment],
+      airline: airlines[segment.MarketingAirlineCode],
       stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
       departure: {
         airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : { code: segment.departure.iataCode, name: "UNKNOWN" },
@@ -67,48 +64,46 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
 };
 
 const makePriceObject = (flightPrice, travelerPricings) => ({
-  total: parseFloat(flightPrice.total),
-  grandTotal: parseFloat(flightPrice.grandTotal),
-  base: parseFloat(flightPrice.base),
-  fees: (flightPrice.fees ?? []).map(fee => ({
-    amount: parseFloat(fee.amount),
-    type: fee.type,
-  })),
-  taxes: (flightPrice.taxes ?? []).map(tax => ({
-    amount: parseFloat(tax.amount),
-    code: tax.code,
-  })),
+  total: parseFloat(flightPrice.TotalFare),
+  grandTotal: parseFloat(flightPrice.TotalFare),
+  base: parseFloat(flightPrice.BaseFare),
+  fees: [{
+    amount: parseFloat(flightPrice.TotalCommission),
+    type: "COMMISION",
+  }],
+  taxes: [{
+    amount: parseFloat(flightPrice.TotalTax),
+    code: "Total Tax",
+  }],
   travelerPrices: travelerPricings.map(travelerPrice => {
     let travelerType;
-    switch (travelerPrice.travelerType) {
-      case "CHILD":
+    switch (travelerPrice.PassengerTypeQuantity.PassengerType) {
+      case 1:
+        travelerType = "ADULT";
+        break;
+
+      case 2:
         travelerType = "CHILD";
         break;
 
-      case "HELD_INFANT":
-      case "SEATED_INFANT":
+      case 3:
         travelerType = "INFANT";
-        break;
-
-      case "ADULT":
-      case "SENIOR":
-        travelerType = "ADULT";
         break;
 
       default:
     }
 
     return {
-      total: parseFloat(travelerPrice.price.total),
-      base: parseFloat(travelerPrice.price.base),
+      total: parseFloat(travelerPrice.PassengerFare.TotalFare),
+      base: parseFloat(travelerPrice.PassengerFare.BaseFare),
       travelerType,
-      fees: (travelerPrice.price.fees ?? []).map(fee => ({
-        amount: parseFloat(fee.amount),
-        type: fee.type,
-      })),
-      taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
-        amount: parseFloat(tax.amount),
-        code: tax.code,
+      fees: [{
+        amount: parseFloat(travelerPrice.PassengerFare.Commission),
+        type: "COMMISSION",
+      }],
+      taxes: (travelerPrice.PassengerFare.Taxes ?? []).map(tax => ({
+        amount: parseFloat(tax.Amount),
+        code: "Tax",
       })),
     }
   }),
@@ -117,16 +112,18 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
   return (flight, index) => {
     result = {
-      code: index,
-      availableSeats: flight.numberOfBookableSeats,
-      currencyCode: flight.price.currency,
+      code: `PRT-${index}`,
+      availableSeats: Math.min(...flight.OriginDestinationOptions
+        .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
+        .map(segment => segment.SeatsRemaining)),
+      currencyCode: flight.AirItineraryPricingInfo.ItinTotalFare.Currency,
       travelClass,
-      provider: "AMADEUS",
-      price: makePriceObject(flight.price, flight.travelerPricings),
-      itineraries: flight.itineraries.map(itinerary => {
+      provider: "PARTO",
+      price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare, flight.AirItineraryPricingInfo.PtcFareBreakdown),
+      itineraries: flight.OriginDestinationOptions.map(itinerary => {
         let result = {
-          duration: dateTimeHelper.convertAmadeusTime(itinerary.duration),
-          segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+          duration: itinerary.JourneDurationPerMinute,
+          segments: itinerary.FlightSegments.map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
         };
 
         return result;
@@ -151,12 +148,13 @@ module.exports.searchFlights = async params => {
     };
   }
 
-  const stops = partoSearchResult
+  const stops = Object.keys(partoSearchResult
     .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
     .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-    .filter(segment => !!segment.TechnicalStops && (segment.TechnicalStops.length > 0))
-    .reduce((res, cur) => [...res, ...cur.TechnicalStops], [])
-    .map(stop => stop.ArrivalAirport);
+    .reduce((res, cur) => ({ ...res, [cur.ArrivalAirportLocationCode]: 1 }), {}));
+  // .filter(segment => !!segment.TechnicalStops && (segment.TechnicalStops.length > 0))
+  // .reduce((res, cur) => [...res, ...cur.TechnicalStops], [])
+  // .map(stop => stop.ArrivalAirport);
 
   const carriers = Object.keys(
     partoSearchResult
@@ -168,10 +166,12 @@ module.exports.searchFlights = async params => {
   const aircrafts = partoSearchResult
     .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
     .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
+    .filter(segment => !!segment.OperatingAirline.Equipment)
     .reduce((res, cur) => ({ ...res, [cur.OperatingAirline.Equipment]: cur.OperatingAirline.Equipment }), {});
 
   const airports = await countryRepository.getAirportsByCode([params.origin, params.destination, ...stops]);
-  const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
+  const airlines = await airlineRepository.getAirlinesByCode(carriers);
+  const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, airlines, airports, params.travelClass));
 
   let origin = await countryRepository.getCityByCode(params.origin);
   let destination = await countryRepository.getCityByCode(params.destination);

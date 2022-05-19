@@ -306,21 +306,21 @@ class CountryRepository extends BaseRepository {
    * @param {TPoint} headOfficeLocation 
    * @returns {Promise<TAirportInfo>}
    */
-  async addAirline(countryCode, name, code, description, headOfficeLocation) {
-    const agrCountry = Country.aggregate();
-    agrCountry.append({ $unwind: "$airlines" });
-    agrCountry.append({ $match: { "airlines.code": code } });
-    const agrResult = await agrCountry.exec();
-    if (agrResult.length > 0) {
-      throw "airline_code_duplicated";
-    }
+  // async addAirline(countryCode, name, code, description, headOfficeLocation) {
+  //   const agrCountry = Country.aggregate();
+  //   agrCountry.append({ $unwind: "$airlines" });
+  //   agrCountry.append({ $match: { "airlines.code": code } });
+  //   const agrResult = await agrCountry.exec();
+  //   if (agrResult.length > 0) {
+  //     throw "airline_code_duplicated";
+  //   }
 
-    const country = await Country.findOne({ code: countryCode });
-    const idx = country.airlines.push({ name, code, description, headOfficeLocation });
-    await country.save();
+  //   const country = await Country.findOne({ code: countryCode });
+  //   const idx = country.airlines.push({ name, code, description, headOfficeLocation });
+  //   await country.save();
 
-    return country.airlines[idx - 1];
-  }
+  //   return country.airlines[idx - 1];
+  // }
 
   async search(keyword, limit = 10) {
     let countries = await this.#getCountries(keyword, limit);
@@ -349,20 +349,6 @@ class CountryRepository extends BaseRepository {
     const agrCountry = Country.aggregate();
     agrCountry.append({ $unwind: "$cities" });
     agrCountry.append({ $unwind: "$cities.airports" });
-    // agrCountry.append({
-    //   $match: {
-    //     code: {
-    //       $in: Object.values(airportCodes).map(info => info.countryCode)
-    //     }
-    //   }
-    // });
-    // agrCountry.append({
-    //   $match: {
-    //     "cities.code": {
-    //       $in: Object.values(airportCodes).map(info => info.cityCode)
-    //     }
-    //   }
-    // });
     agrCountry.append({
       $match: {
         "cities.airports.code": {
@@ -391,30 +377,6 @@ class CountryRepository extends BaseRepository {
 
       return airports;
     }, {});
-
-    //   return agrResult.reduce((countries, country) => {
-    //     countries[country._id.code] = {
-    //       name: country._id.name,
-    //       cities: country.cities.reduce((cities, city) => {
-    //         cities[city.code] = {
-    //           name: city.name,
-    //           // airports: city.airports,
-    //           airports: city.airports.reduce((airports, airport) => {
-    //             airports[airport.code] = {
-    //               name: airport.name,
-    //               description: airport.description,
-    //             };
-
-    //             return airports;
-    //           }, {}),
-    //         };
-
-    //         return cities;
-    //       }, {}),
-    //     };
-
-    //     return countries;
-    //   }, {});
   }
 
   /**

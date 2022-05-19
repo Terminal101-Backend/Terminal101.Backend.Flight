@@ -11,7 +11,7 @@ const flightDetails = new Schema({
     select: false,
   },
   code: {
-    type: Number,
+    type: String,
     required: true,
   },
   itineraries: {

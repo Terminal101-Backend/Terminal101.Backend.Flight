@@ -119,7 +119,7 @@ class GetFlightPrice extends BaseValidator {
 
     const params = {
       searchId: Joi.string().required(),
-      flightCode: Joi.number().required(),
+      flightCode: Joi.string().required(),
     };
 
     super(body);
@@ -134,7 +134,7 @@ class GetFlight extends BaseValidator {
 
     const params = {
       searchId: Joi.string().required(),
-      flightCode: Joi.number().required(),
+      flightCode: Joi.string().required(),
     };
 
     super(body);
