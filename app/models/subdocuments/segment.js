@@ -6,6 +6,7 @@ const Stop = require("./stop");
 const Location = require("./location");
 
 const segment = new Schema({
+
   departure: {
     type: Waypoint,
     require: true,
@@ -24,7 +25,7 @@ const segment = new Schema({
   },
   aircraft: {
     type: String,
-    required: true,
+    default: "",
   },
   airline: {
     type: Location,

@@ -6,10 +6,7 @@ const Location = require("./location");
 const NumberRange = require("./numberRange");
 
 const filterLimit = new Schema({
-  _id: {
-    type: mongoose.Types.ObjectId,
-    select: false,
-  },
+
   stops: {
     type: [Number],
     default: [0],

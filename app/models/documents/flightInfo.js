@@ -4,6 +4,7 @@ const SearchedFlight = require("../subdocuments/searchedFlight");
 const Airport = require("../subdocuments/airport");
 
 const flightInfo = new Schema({
+
     origin: {
         type: Airport,
         required: true,

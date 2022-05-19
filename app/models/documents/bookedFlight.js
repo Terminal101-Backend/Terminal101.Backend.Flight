@@ -4,6 +4,7 @@ const { EBookedFlightStatus } = require("../../constants");
 const Person = require("../subdocuments/person");
 
 const bookedFlight = new Schema({
+
     code: {
         type: String,
         required: true,

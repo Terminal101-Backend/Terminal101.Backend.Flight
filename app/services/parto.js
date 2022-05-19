@@ -59,6 +59,7 @@ const createSession = async () => {
 
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD") => {
   let cabinType = 1;
+  let airTripType = 1;
 
   switch (travelClass) {
     case "ECONOMY":
@@ -90,6 +91,34 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     DepartureDateTime: departureDate,
   });
 
+  if (!segments || (segments.length === 0)) {
+    airTripType = 1;
+  } else if (!!returnDate) {
+    airTripType = 2;
+  } else {
+    airTripType = 4;
+  }
+
+  for (let index = 0; index < segments.length; index++) {
+    originDestinations.push({
+      OriginLocationCode: segments[index].originCode,
+      DestinationLocationCode: segments[index].destinationCode,
+      OriginType: 0,
+      DestinationType: 0,
+      DepartureDateTime: segments[index].date,
+    });
+  }
+
+  if (!!returnDate) {
+    originDestinations.push({
+      OriginLocationCode: segments[segments.length - 1].destinationCode,
+      DestinationLocationCode: originLocationCode,
+      OriginType: 0,
+      DestinationType: 0,
+      DepartureDateTime: returnDate,
+    });
+  }
+
 
   const {
     data: response
@@ -103,7 +132,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     TravelPreference: {
       CabinType: cabinType,
       MaxStopsQuantity: !!nonStop ? 2 : 0,
-      AirTripType: 1,
+      AirTripType: airTripType,
       VendorExcludeCodes: excludedAirlineCodes,
       VendorPreferenceCodes: includedAirlineCodes,
     },

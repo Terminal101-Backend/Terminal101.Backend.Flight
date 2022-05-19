@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const Point = require("../subdocuments/point");
 
 const airline = new Schema({
+
 	name: {
 		type: String,
 		required: true,

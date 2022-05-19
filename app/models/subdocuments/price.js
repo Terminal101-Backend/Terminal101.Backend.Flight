@@ -5,6 +5,7 @@ const Tax = require("./tax");
 const Schema = mongoose.Schema;
 
 const price = new Schema({
+
 	total: {
 		type: Number,
 		required: true,

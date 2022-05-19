@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const Location = require("./location");
 
 const stop = new Schema({
+
   description: {
     type: String,
     required: false,

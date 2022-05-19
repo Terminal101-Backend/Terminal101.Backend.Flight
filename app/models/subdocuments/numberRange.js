@@ -2,10 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const filterLimit = new Schema({
-  _id: {
-    type: mongoose.Types.ObjectId,
-    select: false,
-  },
+
   min: {
     type: Number,
     default: Number.NEGATIVE_INFINITY,

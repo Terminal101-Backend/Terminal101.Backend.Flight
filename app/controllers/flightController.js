@@ -47,20 +47,22 @@ module.exports.getPopularWaypoints = async (req, res) => {
 };
 
 // NOTE: Search flights
-module.exports.appendProviderResult = async (flight, time, searchIndex = -1, page, pageSize) => {
+module.exports.appendProviderResult = async (origin, destination, time, flights, searchIndex = -1, page, pageSize) => {
   const flightInfo = await flightInfoRepository.createFlightInfo(
-    flight.origin,
-    flight.destination,
+    origin,
+    destination,
     time,
   );
 
   if (searchIndex === -1) {
     searchIndex = flightInfo.searches.push({
       code: await flightInfoRepository.generateUniqueCode(),
-      flights: flight.flightDetails,
-      filter: flightHelper.getFilterLimitsFromFlightDetailsArray(flight.flightDetails),
+      flights: flights,
+      filter: flightHelper.getFilterLimitsFromFlightDetailsArray(flights),
     }) - 1;
   } else {
+    flightInfo.searches[searchIndex].flights = flights;
+    flightInfo.searches[searchIndex].filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flightInfo.searches[searchIndex].flights);
     // TODO: Append result to last search
     // TODO: Sort last search by completed result
     // TODO: Make last search distinct
@@ -83,7 +85,7 @@ module.exports.appendProviderResult = async (flight, time, searchIndex = -1, pag
         description: flightInfo.destination.description,
       },
       time: flightInfo.time,
-      flights: arrayHelper.pagination(flight.flightDetails, page, pageSize),
+      flights: arrayHelper.pagination(flights.sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
       // AMADEUS_RESULT: result,
     }
   };
@@ -93,26 +95,40 @@ module.exports.searchFlights = async (req, res) => {
   // TODO: Get providers count from database for active providers
   const activeProviders = await providerRepository.getActiveProviders();
   const activeProviderCount = activeProviders.length;
+  const lastSearch = [];
   let providerNumber = 0;
   let searchIndex = -1;
 
   if (activeProviders.some(provider => provider.name === EProvider.get("AMADEUS"))) {
     amadeusHelper.searchFlights(req.query).then(async flight => {
-      const result = await this.appendProviderResult(flight, req.query.departureDate.toISOString(), searchIndex, req.header("Page"), req.header("PageSize"));
+      lastSearch.push(...flight.flightDetails);
+      const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
       searchIndex = result.searchIndex;
 
       if (++providerNumber === activeProviderCount) {
         response.success(res, result.response);
       }
     }).catch(e => {
-      response.exception(res, e);
+      if (++providerNumber === activeProviderCount) {
+        response.exception(res, e);
+      }
     });
   }
 
   if (activeProviders.some(provider => provider.name === EProvider.get("PARTO"))) {
-    // TODO: Search by Parto
-    partoHelper.searchFlights(req.query);
-    console.log("Append Parto's result to db");
+    partoHelper.searchFlights(req.query).then(async flight => {
+      lastSearch.push(...flight.flightDetails);
+      const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
+      searchIndex = result.searchIndex;
+
+      if (++providerNumber === activeProviderCount) {
+        response.success(res, result.response);
+      }
+    }).catch(e => {
+      if (++providerNumber === activeProviderCount) {
+        response.exception(res, e);
+      }
+    });
   }
 };
 

@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const { City } = require("../subdocuments");
 
 const country = new Schema({
+
     name: {
         type: String,
         required: true,

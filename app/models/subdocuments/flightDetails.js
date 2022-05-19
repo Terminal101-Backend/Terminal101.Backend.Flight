@@ -6,10 +6,7 @@ const { ETravelClass, EProvider } = require("../../constants");
 const Price = require("./price");
 
 const flightDetails = new Schema({
-  _id: {
-    type: mongoose.Types.ObjectId,
-    select: false,
-  },
+
   code: {
     type: String,
     required: true,
