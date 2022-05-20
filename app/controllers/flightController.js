@@ -47,7 +47,7 @@ module.exports.getPopularWaypoints = async (req, res) => {
 };
 
 // NOTE: Search flights
-module.exports.appendProviderResult = async (origin, destination, time, flights, searchIndex = -1, page, pageSize) => {
+module.exports.appendProviderResult = async (origin, destination, time, flights, searchIndex = -1, page = 0, pageSize) => {
   const flightInfo = await flightInfoRepository.createFlightInfo(
     origin,
     destination,
@@ -92,15 +92,16 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 };
 
 module.exports.searchFlights = async (req, res) => {
-  // TODO: Get providers count from database for active providers
   const activeProviders = await providerRepository.getActiveProviders();
   const activeProviderCount = activeProviders.length;
   const lastSearch = [];
   let providerNumber = 0;
   let searchIndex = -1;
 
-  if (activeProviders.some(provider => provider.name === EProvider.get("AMADEUS"))) {
-    amadeusHelper.searchFlights(req.query).then(async flight => {
+  activeProviders.forEach(provider => {
+    providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
+
+    providerHelper.searchFlights(req.query).then(async flight => {
       lastSearch.push(...flight.flightDetails);
       const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
       searchIndex = result.searchIndex;
@@ -113,23 +114,7 @@ module.exports.searchFlights = async (req, res) => {
         response.exception(res, e);
       }
     });
-  }
-
-  if (activeProviders.some(provider => provider.name === EProvider.get("PARTO"))) {
-    partoHelper.searchFlights(req.query).then(async flight => {
-      lastSearch.push(...flight.flightDetails);
-      const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
-      searchIndex = result.searchIndex;
-
-      if (++providerNumber === activeProviderCount) {
-        response.success(res, result.response);
-      }
-    }).catch(e => {
-      if (++providerNumber === activeProviderCount) {
-        response.exception(res, e);
-      }
-    });
-  }
+  });
 };
 
 // NOTE: Get filters

@@ -26,19 +26,30 @@ router.get("/socket", (req, res) => {
   <script>
     var socket = io();
 
-    socket.on("tm", msg => {
-      document.getElementById("msg").innerHTML = msg;
+    socket.on("searchFlightResult", result => {
+      document.getElementById("result").innerHTML = "Message Received";
+      console.log(result);
     });
 
     function sendMessage() {
-      socket.emit("test message", "hi");
-      console.log("Hi");
+      socket.emit("searchFlight", {
+        headers: {
+          page: 1,
+        },
+        body: {
+          origin: "IKA",
+          destination: "TBS",
+          departureDate: "2022-05-25T00:00:00",
+          travelClass: "ECONOMY",
+        }
+      });
+      document.getElementById("result").innerHTML = "Message Sent ...";
     }
   </script>
   </head>
   <body>
   <input type="button" onclick="sendMessage()" value="Press" />
-  <h1 id="msg">HII</h1>
+  <h1 id="result">HII</h1>
   </body>
   </html>
 `);

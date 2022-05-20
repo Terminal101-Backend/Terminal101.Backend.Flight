@@ -7,3 +7,4 @@ module.exports.dateTimeHelper = require("./dateTimeHelper");
 module.exports.amadeusHelper = require("./amadeusHelper");
 module.exports.partoHelper = require("./partoHelper");
 module.exports.flightHelper = require("./flightHelper");
+module.exports.socketHelper = require("./socketHelper");
