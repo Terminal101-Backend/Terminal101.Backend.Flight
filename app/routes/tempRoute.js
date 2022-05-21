@@ -25,8 +25,8 @@ router.get("/socket", (req, res) => {
   <script src="/public/scripts/socket.io/socket.io.js"></script>
   <script>
     var socket = io("https://test-terminal101-flight.herokuapp.com/", {
-      withCredentials: true,
-      extraHeaders: {},
+      // withCredentials: true,
+      // extraHeaders: {},
     });
 
     socket.on("searchFlightResult", result => {

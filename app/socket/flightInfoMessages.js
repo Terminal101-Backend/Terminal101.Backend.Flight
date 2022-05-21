@@ -24,7 +24,7 @@ module.exports = (io, socket) => {
 
     const language = req.header.language ?? "EN";
 
-    (async () => {
+    await (async () => {
       const response = {
         headers: {
           language,
