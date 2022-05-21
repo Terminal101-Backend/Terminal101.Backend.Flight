@@ -24,7 +24,10 @@ router.get("/socket", (req, res) => {
   <head>
   <script src="/public/scripts/socket.io/socket.io.js"></script>
   <script>
-    var socket = io("https://test-terminal101-flight.herokuapp.com/");
+    var socket = io("https://test-terminal101-flight.herokuapp.com/", {
+      withCredentials: true,
+      extraHeaders: {},
+    });
 
     socket.on("searchFlightResult", result => {
       document.getElementById("result").innerHTML = "Message Received";
