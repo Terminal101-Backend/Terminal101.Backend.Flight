@@ -5,15 +5,22 @@ const mongo = require("./app/core/db/mongo");
 const socketMessages = require("./app/socket");
 
 const server = app.listen(process.env.PORT, () => {
-    console.log(`🚀 Server running at port:${process.env.PORT}`);
+  console.log(`🚀 Server running at port:${process.env.PORT}`);
 });
 
-const io = require('socket.io')(server);
+const io = require('socket.io')(server, {
+  cors: {
+    // origin: "https://example.com",
+    methods: ["GET", "POST"],
+    // allowedHeaders: ["my-custom-header"],
+    credentials: true,
+  },
+});
 
 io.on('connection', function (socket) {
-    console.log(`User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id}`);
 
-    socketMessages(global.io, socket);
+  socketMessages(global.io, socket);
 });
 
 mongo.startDatabase();
