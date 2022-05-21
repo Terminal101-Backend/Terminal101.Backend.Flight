@@ -31,7 +31,9 @@ exports.exception = async (error, language, extraData) => {
     return await common.translate({
         status: false,
         message: `{{${message}}}`,
-        ...extraData,
-        data,
+        data: {
+            ...data,
+            ...extraData,
+        },
     }, language);
 };
