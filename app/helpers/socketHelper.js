@@ -22,7 +22,7 @@ exports.error = async (message, language, data = {}) => {
 };
 
 // convert Exception error to user error response
-exports.exception = async (error, language) => {
+exports.exception = async (error, language, extraData) => {
     let data = [];
     let message = error.message;
     if (error instanceof ValidationException) {
@@ -34,7 +34,10 @@ exports.exception = async (error, language) => {
         data: {
             status: false,
             message: `{{${message}}}`,
-            data,
+            data: {
+                ...data,
+                ...extraData,
+            },
         }
     }, language);
 };

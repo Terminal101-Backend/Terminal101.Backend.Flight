@@ -24,15 +24,24 @@ router.get("/socket", (req, res) => {
   <head>
   <script src="/public/scripts/socket.io/socket.io.js"></script>
   <script>
-    var socket = io("https://test-terminal101-flight.herokuapp.com/", {
-      // withCredentials: true,
-      // extraHeaders: {},
-    });
+    var socket;
+    window.onload = () => {
+      // socket = io("https://test-terminal101-flight.herokuapp.com/");
+      socket = io();
+  
+      socket.on("searchFlightResult", result => {
+        // if (result.headers.providerNumber < result.headers.activeProviderCount) {
+        //   document.getElementById("result").innerHTML = "Message Receiving ...";
+        // } else {
+        //   document.getElementById("result").innerHTML = "Message Received";
+        // }
+        console.log(result);
+      });
+    };
 
-    socket.on("searchFlightResult", result => {
-      document.getElementById("result").innerHTML = "Message Received";
-      console.log(result);
-    });
+    window.beforeUnload = () => {
+      socket.close();
+    };
 
     function sendMessage() {
       socket.emit("searchFlight", {

@@ -56,7 +56,11 @@ module.exports = (io, socket) => {
 
         socket.emit("searchFlightResult", await socketHelper.success(response, language));
       }).catch(async e => {
-        socket.emit("searchFlightResult", await socketHelper.exception(e, language));
+        socket.emit("searchFlightResult", await socketHelper.exception(e, language, {
+          language,
+          providerNumber: ++providerNumber,
+          activeProviderCount,
+        }));
       });
     });
   });
