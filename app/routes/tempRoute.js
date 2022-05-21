@@ -22,7 +22,7 @@ router.get("/socket", (req, res) => {
   res.send(`
   <html>
   <head>
-  <script src="https://cdn.socket.io/socket.io-1.0.0.js"></script>
+  <script src="/public/scripts/socket.io/socket.io.js"></script>
   <script>
     var socket;
     window.onload = () => {
@@ -30,11 +30,11 @@ router.get("/socket", (req, res) => {
       socket = io();
   
       socket.on("searchFlightResult", result => {
-        // if (result.headers.providerNumber < result.headers.activeProviderCount) {
-        //   document.getElementById("result").innerHTML = "Message Receiving ...";
-        // } else {
-        //   document.getElementById("result").innerHTML = "Message Received";
-        // }
+        if (result.data.headers.providerNumber < result.data.headers.activeProviderCount) {
+          document.getElementById("result").innerHTML = "Message Receiving ...";
+        } else {
+          document.getElementById("result").innerHTML = "Message Received";
+        }
         console.log(result);
       });
     };

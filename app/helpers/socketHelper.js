@@ -34,10 +34,8 @@ exports.exception = async (error, language, extraData) => {
         data: {
             status: false,
             message: `{{${message}}}`,
-            data: {
-                ...data,
-                ...extraData,
-            },
+            ...extraData,
+            data,
         }
     }, language);
 };
