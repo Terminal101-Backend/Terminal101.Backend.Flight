@@ -22,7 +22,7 @@ router.get("/socket", (req, res) => {
   res.send(`
   <html>
   <head>
-  <script src="/public/scripts/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/socket.io-1.0.0.js"></script>
   <script>
     var socket;
     window.onload = () => {
