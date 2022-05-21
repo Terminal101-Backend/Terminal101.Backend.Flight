@@ -24,6 +24,19 @@ module.exports = (io, socket) => {
 
     const language = req.header.language ?? "EN";
 
+    (async () => {
+      const response = {
+        headers: {
+          language,
+          providerNumber,
+          activeProviderCount,
+        },
+        body: {},
+      };
+
+      socket.emit("searchFlightResult", await socketHelper.success(response, language));
+    })();
+
     activeProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
@@ -35,7 +48,7 @@ module.exports = (io, socket) => {
         const response = {
           headers: {
             language,
-            providerNumber: providerNumber++,
+            providerNumber: ++providerNumber,
             activeProviderCount,
           },
           body: result.response,
