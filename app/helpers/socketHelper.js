@@ -13,11 +13,9 @@ exports.success = async (data, language) => {
 //making response for error by status code (default is 404)
 exports.error = async (message, language, data = {}) => {
     return await common.translate({
-        data: {
-            status: false,
-            message: `{{${message}}}`,
-            data,
-        }
+        status: false,
+        message: `{{${message}}}`,
+        data,
     }, language);
 };
 
@@ -31,11 +29,9 @@ exports.exception = async (error, language, extraData) => {
     }
 
     return await common.translate({
-        data: {
-            status: false,
-            message: `{{${message}}}`,
-            ...extraData,
-            data,
-        }
+        status: false,
+        message: `{{${message}}}`,
+        ...extraData,
+        data,
     }, language);
 };
