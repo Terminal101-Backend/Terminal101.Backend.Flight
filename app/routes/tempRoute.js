@@ -44,6 +44,8 @@ router.get("/socket", (req, res) => {
     };
 
     function sendMessage() {
+      var date = new Date();
+      date.setDate(date.getDate() + 5);
       socket.emit("searchFlight", {
         headers: {
           page: 1,
@@ -51,7 +53,7 @@ router.get("/socket", (req, res) => {
         body: {
           origin: "IKA",
           destination: "TBS",
-          departureDate: "2022-05-25T00:00:00",
+          departureDate: date,
           travelClass: "ECONOMY",
         }
       });
@@ -60,8 +62,8 @@ router.get("/socket", (req, res) => {
   </script>
   </head>
   <body>
-  <input type="button" onclick="sendMessage()" value="Press" />
-  <h1 id="result">HII</h1>
+  <input type="button" onclick="sendMessage()" value="Search" />
+  <h1 id="result">Press "Search" button to send request</h1>
   </body>
   </html>
 `);
