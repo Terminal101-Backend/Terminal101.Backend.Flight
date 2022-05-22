@@ -26,8 +26,8 @@ router.get("/socket", (req, res) => {
   <script>
     var socket;
     window.onload = () => {
-      // socket = io("https://test-terminal101-flight.herokuapp.com/");
-      socket = io();
+      socket = io("https://test-terminal101-flight.herokuapp.com/", {cors: {withCredentials: true}});
+      // socket = io();
   
       socket.on("searchFlightResult", result => {
         if (result.data.headers.providerNumber < result.data.headers.activeProviderCount) {

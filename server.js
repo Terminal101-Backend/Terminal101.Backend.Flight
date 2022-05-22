@@ -11,6 +11,7 @@ const server = app.listen(process.env.PORT, () => {
 const io = require('socket.io')(server, {
   cors: {
     // origin: "https://test-terminal101-flight.herokuapp.com/",
+    origin: "*",
     methods: ["GET", "POST"],
     // allowedHeaders: ["my-custom-header"],
     credentials: true,
