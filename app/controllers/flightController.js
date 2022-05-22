@@ -63,8 +63,6 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
   } else {
     flightInfo.searches[searchIndex].flights = flights;
     flightInfo.searches[searchIndex].filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flightInfo.searches[searchIndex].flights);
-    // TODO: Append result to last search
-    // TODO: Sort last search by completed result
     // TODO: Make last search distinct
   }
 
@@ -93,11 +91,15 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
 module.exports.searchFlights = async (req, res) => {
   try {
-    const activeProviders = await providerRepository.getActiveProviders();
+    const activeProviders = [] ?? await providerRepository.getActiveProviders();
     const activeProviderCount = activeProviders.length;
     const lastSearch = [];
     let providerNumber = 0;
     let searchIndex = -1;
+
+    if (activeProviders.length === 0) {
+      response.success(res, []);
+    }
 
     activeProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
