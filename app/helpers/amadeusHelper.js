@@ -1,6 +1,7 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const { amadeus } = require("../services");
 const { countryRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -156,7 +157,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
       availableSeats: flight.numberOfBookableSeats,
       currencyCode: flight.price.currency,
       travelClass,
-      provider: "AMADEUS",
+      provider: EProvider.get("AMADEUS"),
       price: makePriceObject(flight.price, flight.travelerPricings),
       itineraries: flight.itineraries.map(itinerary => {
         let result = {

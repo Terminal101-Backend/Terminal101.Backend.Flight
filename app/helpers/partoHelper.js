@@ -1,7 +1,7 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const { parto } = require("../services");
 const { countryRepository, airlineRepository } = require("../repositories");
-const { EFeeType } = require("../constants");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -117,7 +117,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
         .map(segment => segment.SeatsRemaining)),
       currencyCode: flight.AirItineraryPricingInfo.ItinTotalFare.Currency,
       travelClass,
-      provider: "PARTO",
+      provider: EProvider.get("PARTO"),
       price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare, flight.AirItineraryPricingInfo.PtcFareBreakdown),
       itineraries: flight.OriginDestinationOptions.map(itinerary => {
         let result = {

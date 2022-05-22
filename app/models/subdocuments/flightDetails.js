@@ -6,7 +6,6 @@ const { ETravelClass, EProvider } = require("../../constants");
 const Price = require("./price");
 
 const flightDetails = new Schema({
-
   code: {
     type: String,
     required: true,
