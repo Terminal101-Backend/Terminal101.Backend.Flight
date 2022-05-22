@@ -98,7 +98,7 @@ module.exports.searchFlights = async (req, res) => {
     let searchIndex = -1;
 
     if (activeProviders.length === 0) {
-      response.success(res, []);
+      response.error(res, "use_socket", 503);
     }
 
     activeProviders.forEach(provider => {
