@@ -92,29 +92,33 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 };
 
 module.exports.searchFlights = async (req, res) => {
-  const activeProviders = await providerRepository.getActiveProviders();
-  const activeProviderCount = activeProviders.length;
-  const lastSearch = [];
-  let providerNumber = 0;
-  let searchIndex = -1;
+  try {
+    const activeProviders = await providerRepository.getActiveProviders();
+    const activeProviderCount = activeProviders.length;
+    const lastSearch = [];
+    let providerNumber = 0;
+    let searchIndex = -1;
 
-  activeProviders.forEach(provider => {
-    providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
+    activeProviders.forEach(provider => {
+      providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
-    providerHelper.searchFlights(req.query).then(async flight => {
-      lastSearch.push(...flight.flightDetails);
-      const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
-      searchIndex = result.searchIndex;
+      providerHelper.searchFlights(req.query).then(async flight => {
+        lastSearch.push(...flight.flightDetails);
+        const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
+        searchIndex = result.searchIndex;
 
-      if (++providerNumber === activeProviderCount) {
-        response.success(res, result.response);
-      }
-    }).catch(e => {
-      if (++providerNumber === activeProviderCount) {
-        response.exception(res, e);
-      }
+        if (++providerNumber === activeProviderCount) {
+          response.success(res, result.response);
+        }
+      }).catch(e => {
+        if (++providerNumber === activeProviderCount) {
+          response.exception(res, e);
+        }
+      });
     });
-  });
+  } catch (e) {
+    response.exception(res, e);
+  }
 };
 
 // NOTE: Get filters
