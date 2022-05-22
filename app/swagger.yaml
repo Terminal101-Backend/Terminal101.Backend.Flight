@@ -7,8 +7,8 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
-# host: localhost:8005
+# host: test-terminal101-flight.herokuapp.com
+host: localhost:8005
 basePath: /
 
 tags:
@@ -241,6 +241,13 @@ paths:
       tags:
         - Flight
       parameters:
+        - name: Page
+          in: header
+          type: number
+          default: 0
+        - name: PageSize
+          in: header
+          type: number
         - name: searchId
           in: path
           required: true
@@ -712,8 +719,8 @@ definitions:
         example: Germany
 
 schemes:
-  # - http
-  - https
+  - http
+  # - https
 consumes:
   - application/json
 produces:

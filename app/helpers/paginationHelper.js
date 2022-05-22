@@ -1,6 +1,7 @@
 const { Aggregate } = require("mongoose");
 
 const limit_offset = (aggregate, itemIndex, page, fields, pageSize) => {
+  page = parseInt(page ?? 0);
   pageSize = !!pageSize ? parseInt(pageSize) : config.application.pagination.pageSize;
   const skip = page * pageSize;
 
