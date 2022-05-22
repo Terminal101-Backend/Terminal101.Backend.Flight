@@ -92,15 +92,14 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
 module.exports.searchFlights = async (req, res) => {
   try {
-    const activeProviders = [] ?? await providerRepository.getActiveProviders();
+    // response.error(res, "use_socket", 503);
+    // return;
+
+    const activeProviders = await providerRepository.getActiveProviders();
     const activeProviderCount = activeProviders.length;
     const lastSearch = [];
     let providerNumber = 0;
     let searchCode;
-
-    if (activeProviders.length === 0) {
-      response.error(res, "use_socket", 503);
-    }
 
     activeProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
