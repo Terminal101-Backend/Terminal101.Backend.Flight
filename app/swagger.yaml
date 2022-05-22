@@ -324,7 +324,7 @@ paths:
         - name: flightCode
           in: path
           required: true
-          type: number
+          type: string
       description: Get specific flight.
       responses:
         "200":
@@ -345,7 +345,7 @@ paths:
         - name: flightCode
           in: path
           required: true
-          type: number
+          type: string
       description: Get specific flight.
       responses:
         "200":
