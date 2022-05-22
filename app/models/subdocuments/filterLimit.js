@@ -6,7 +6,6 @@ const Location = require("./location");
 const NumberRange = require("./numberRange");
 
 const filterLimit = new Schema({
-
   stops: {
     type: [Number],
     default: [0],
@@ -25,19 +24,19 @@ const filterLimit = new Schema({
   },
   price: {
     type: NumberRange,
-    required: true,
+    default: {},
   },
   departureTime: {
     type: NumberRange,
-    required: true,
+    default: {},
   },
   arrivalTime: {
     type: NumberRange,
-    required: true,
+    default: {},
   },
   duration: {
     type: NumberRange,
-    required: true,
+    default: {},
   },
 }, {
   timestamps: true

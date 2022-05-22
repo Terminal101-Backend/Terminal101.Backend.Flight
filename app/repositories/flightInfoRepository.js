@@ -14,13 +14,19 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} origin 
    * @param {String} destination 
    * @param {Date} time 
+   * @param {String} [code] 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(origin, destination, time) {
-    let flightInfo = await this.findOne({ "origin.code": origin.code, "destination.code": destination.code, time: new Date(time) });
+  async createFlightInfo(origin, destination, time, code) {
+    let flightInfo;
+
+    if (!!code) {
+      flightInfo = await this.findOne({ code });
+    }
 
     if (!flightInfo) {
-      flightInfo = new FlightInfo({ origin, destination, time });
+      const code = await this.generateUniqueCode();
+      flightInfo = new FlightInfo({ code, origin, destination, time });
       await flightInfo.save();
     }
 
@@ -36,7 +42,7 @@ class FlightInfoRepository extends BaseRepository {
 
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
       const agrFlightInfo = FlightInfo.aggregate();
-      agrFlightInfo.append({ $unwind: "$searches" });
+      // agrFlightInfo.append({ $unwind: "$searches" });
 
       agrFlightInfo.append({ $match: { [waypointType.toLowerCase() + ".code"]: { $ne: "UNKNOWN" } } });
       agrFlightInfo.append({
@@ -87,7 +93,7 @@ class FlightInfoRepository extends BaseRepository {
     let result = [];
 
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $unwind: "$searches" });
     agrFlightInfo.append({
       $group: {
         _id: {
@@ -139,8 +145,9 @@ class FlightInfoRepository extends BaseRepository {
       code = generateRandomString(length, length, true, true, true);
 
       const agrFlightInfo = FlightInfo.aggregate();
-      agrFlightInfo.append({ $unwind: "$searches" });
-      agrFlightInfo.append({ $match: { "searches.code": code } });
+      // agrFlightInfo.append({ $unwind: "$searches" });
+      // agrFlightInfo.append({ $match: { "searches.code": code } });
+      agrFlightInfo.append({ $match: { code } });
       const searches = await agrFlightInfo.exec();
       if (searches.length > 0) {
         code = "";
@@ -157,8 +164,9 @@ class FlightInfoRepository extends BaseRepository {
    */
   async getSearchByCode(searchCode) {
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
-    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    // agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    agrFlightInfo.append({ $match: { code: searchCode } });
     const searches = await agrFlightInfo.exec();
 
     if (searches.length > 0) {
@@ -174,16 +182,18 @@ class FlightInfoRepository extends BaseRepository {
    */
   async getFlight(searchCode, flightCode) {
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
-    // agrFlightInfo.append({ $unwind: "$searches.flights" });
-    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
-    agrFlightInfo.append({
-      $addFields: {
-        "flight": {
-          $arrayElemAt: ["$searches.flights", flightCode]
-        },
-      }
-    });
+    // agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    agrFlightInfo.append({ $unwind: "$flights" });
+    agrFlightInfo.append({ $match: { code: searchCode } });
+    agrFlightInfo.append({ $match: { "flights.code": flightCode } });
+    // agrFlightInfo.append({
+    //   $addFields: {
+    //     "flight": {
+    //       $arrayElemAt: ["$searches.flights", flightCode]
+    //     },
+    //   }
+    // });
     agrFlightInfo.append({
       $project: {
         searches: 0,

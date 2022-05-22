@@ -5,7 +5,6 @@ const FlightDetails = require("./flightDetails");
 const FilterLimit = require("./filterLimit");
 
 const searchedFlight = new Schema({
-
   flights: {
     type: [FlightDetails],
     default: [],

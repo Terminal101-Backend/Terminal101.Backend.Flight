@@ -65,28 +65,28 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
 
     flight.itineraries.forEach(itinerary => {
       itinerary.segments.forEach(segment => {
-        if (!filter.airlines.some(airline => airline.code === segment.airline.code)) {
+        if (!!segment.airline.code && !filter.airlines.some(airline => airline.code === segment.airline.code)) {
           filter.airlines.push({
             code: segment.airline.code,
             name: segment.airline.name,
           });
         }
 
-        if (!filter.airports.some(airport => airport.code === segment.departure.airport.code)) {
+        if (!!segment.departure.airport.code && !filter.airports.some(airport => airport.code === segment.departure.airport.code)) {
           filter.airports.push({
             code: segment.departure.airport.code,
             name: segment.departure.airport.name,
           });
         }
 
-        if (!filter.airports.some(airport => airport.code === segment.arrival.airport.code)) {
+        if (!!segment.arrival.airport.code && !filter.airports.some(airport => airport.code === segment.arrival.airport.code)) {
           filter.airports.push({
             code: segment.arrival.airport.code,
             name: segment.arrival.airport.name,
           });
         }
 
-        if (!filter.aircrafts.includes(segment.aircraft)) {
+        if (!!segment.aircraft && !filter.aircrafts.includes(segment.aircraft)) {
           filter.aircrafts.push(segment.aircraft);
         }
 

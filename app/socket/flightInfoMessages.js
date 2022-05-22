@@ -10,7 +10,7 @@ module.exports = (io, socket) => {
       const activeProviderCount = activeProviders.length;
       const lastSearch = [];
       let providerNumber = 0;
-      let searchIndex = -1;
+      let searchCode;
       if (!req.headers) {
         req.headers = {};
       }
@@ -43,8 +43,8 @@ module.exports = (io, socket) => {
 
         providerHelper.searchFlights(req.body).then(async flight => {
           lastSearch.push(...flight.flightDetails);
-          const result = await flightController.appendProviderResult(flight.origin, flight.destination, req.body.departureDate.toISOString(), lastSearch, searchIndex, req.header("Page"), req.header("PageSize"));
-          searchIndex = result.searchIndex;
+          const result = await flightController.appendProviderResult(flight.origin, flight.destination, req.body.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+          searchCode = result.code;
 
           const response = {
             headers: {
@@ -52,7 +52,7 @@ module.exports = (io, socket) => {
               providerNumber: ++providerNumber,
               activeProviderCount,
             },
-            body: result.response,
+            body: result,
           };
 
           socket.emit("searchFlightResult", await socketHelper.success(response, language));
