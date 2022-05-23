@@ -56,7 +56,7 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
   );
 
   // TODO: Make last search distinct
-  flightInfo.flightss = flights;
+  flightInfo.flights = flights;
   flightInfo.filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flights);
 
   // if (searchCode === -1) {
@@ -168,7 +168,7 @@ module.exports.filterFlights = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
-    const flights = flightInfo.flightss.map(flight => {
+    const flights = flightInfo.flights.map(flight => {
       let itineraries = [];
       if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
         itineraries = flight.itineraries.map(itinerary => ({
