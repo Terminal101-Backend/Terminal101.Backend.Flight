@@ -22,7 +22,7 @@ exports.error = async (message, language, data = {}) => {
 // convert Exception error to user error response
 exports.exception = async (error, language, extraData) => {
     let data = [];
-    let message = error.message;
+    let message = error.message ?? error;
     if (error instanceof ValidationException) {
         data = error.data
         message = error.message
