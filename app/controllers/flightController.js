@@ -56,7 +56,7 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
   );
 
   // TODO: Make last search distinct
-  flightInfo.flights = flights;
+  flightInfo.flightss = flights;
   flightInfo.filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flights);
 
   // if (searchCode === -1) {
@@ -168,7 +168,7 @@ module.exports.filterFlights = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
-    const flights = flightInfo.flights.map(flight => {
+    const flights = flightInfo.flightss.map(flight => {
       let itineraries = [];
       if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
         itineraries = flight.itineraries.map(itinerary => ({
@@ -371,6 +371,11 @@ module.exports.getFlight = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
+    if (!flightInfo) {
+      response.error(res, "flight_not_found", 404);
+      return;
+    }
+
     response.success(res, {
       code: req.params.searchId,
       origin: {
@@ -385,15 +390,15 @@ module.exports.getFlight = async (req, res) => {
       },
       time: flightInfo.time,
       flight: {
-        code: flightInfo.flight.code,
-        availableSeats: flightInfo.flight.availableSeats,
-        currencyCode: flightInfo.flight.currencyCode,
-        // price: flightInfo.flight.price,
+        code: flightInfo.flights.code,
+        availableSeats: flightInfo.flights.availableSeats,
+        currencyCode: flightInfo.flights.currencyCode,
+        // price: flightInfo.flights.price,
         price: {
-          total: flightInfo.flight.price.total,
-          grandTotal: flightInfo.flight.price.grandTotal,
-          base: flightInfo.flight.price.base,
-          travelerPrices: flightInfo.flight.price.travelerPrices.map(travelerPrice => ({
+          total: flightInfo.flights.price.total,
+          grandTotal: flightInfo.flights.price.grandTotal,
+          base: flightInfo.flights.price.base,
+          travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
             total: travelerPrice.total,
             base: travelerPrice.base,
             fees: travelerPrice.fees.map(fee => ({
@@ -405,16 +410,16 @@ module.exports.getFlight = async (req, res) => {
               code: tax.code,
             })),
           })),
-          fees: flightInfo.flight.price.fees.map(fee => ({
+          fees: flightInfo.flights.price.fees.map(fee => ({
             amount: fee.amount,
             type: EFeeType.find(fee.type),
           })),
-          taxes: flightInfo.flight.price.taxes.map(tax => ({
+          taxes: flightInfo.flights.price.taxes.map(tax => ({
             amount: tax.amount,
             code: tax.code,
           })),
         },
-        itineraries: flightInfo.flight.itineraries.map(itinerary => ({
+        itineraries: flightInfo.flights.itineraries.map(itinerary => ({
           duration: itinerary.duration,
           segments: itinerary.segments.map(segment => ({
             duration: segment.duration,
