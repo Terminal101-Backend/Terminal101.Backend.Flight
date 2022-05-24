@@ -1,6 +1,7 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { providerRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 // NOTE: Provider tickets
 // NOTE: Get all provider
@@ -9,7 +10,7 @@ module.exports.getProviders = async (req, res) => {
     const providers = await providerRepository.findMany();
 
     response.success(res, providers.map(provider => ({
-      name: provider.name,
+      name: EProvider.find(provider.name),
       title: provider.title,
       isActive: provider.isActive,
     })));
@@ -39,7 +40,37 @@ module.exports.editProvider = async (req, res) => {
     }
 
     response.success(res, {
-      name: provider.name,
+      name: EProvider.find(provider.name),
+      title: provider.title,
+      isActive: provider.isActive,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Delete provider
+module.exports.deleteProvider = async (req, res) => {
+  try {
+    const provider = await providerRepository.deleteOne({ name: req.params.name });
+
+    response.success(res, {
+      name: EProvider.find(provider.name),
+      title: provider.title,
+      isActive: provider.isActive,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Add provider
+module.exports.addProvider = async (req, res) => {
+  try {
+    const provider = await providerRepository.createProvider(req.body.name, req.body.title, req.body.isActive);
+
+    response.success(res, {
+      name: EProvider.find(provider.name),
       title: provider.title,
       isActive: provider.isActive,
     });

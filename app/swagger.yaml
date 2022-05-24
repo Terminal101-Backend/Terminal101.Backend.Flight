@@ -7,8 +7,8 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
-# host: localhost:8005
+# host: test-terminal101-flight.herokuapp.com
+host: localhost:8005
 basePath: /
 
 tags:
@@ -22,6 +22,8 @@ tags:
     description: Country routes
   - name: Flight
     description: Flight routes
+  - name: Provider
+    description: Provider routes
   - name: Restriction
     description: Country/City Restriction Conditions
   - name: Ticket
@@ -466,10 +468,12 @@ paths:
           value: Bearer
           required: true
         - name: bookedFlightCode
+          in: path
           type: string
           required: true
           value: ge234f42g42r2
         - name: userCode
+          in: path
           type: string
           required: true
           value: 342ryhf3hui34rf
@@ -479,6 +483,91 @@ paths:
           schema:
             type: file
             description: "A pdf file contains flight's tickets"
+
+  /provider:
+    get:
+      tags:
+        - Provider
+      description: Get all providers
+      responses:
+        "200":
+          description: OK
+          schema:
+            description: Provider's info
+            type: array
+            items:
+              $ref: "#/definitions/ProviderInfo"
+
+    post:
+      tags:
+        - Provider
+      description: Add provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: providerInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
+
+  /provider/{name}:
+    patch:
+      tags:
+        - Provider
+      description: Edit provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: name
+          in: path
+          type: string
+          value: AMADEUS
+          required: true
+        - name: providerInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditProviderInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
+    delete:
+      tags:
+        - Provider
+      description: Delete provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: name
+          in: path
+          type: string
+          value: AMADEUS
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
 
 definitions:
   Flight:
@@ -718,9 +807,35 @@ definitions:
         type: string
         example: Germany
 
+  ProviderInfo:
+    required:
+      - name
+      - title
+    properties:
+      name:
+        type: string
+        example: AMADEUS
+      title:
+        type: string
+        example: Amadeus
+      isActive:
+        type: boolean
+        example: true
+
+  EditProviderInfo:
+    required:
+      - title
+    properties:
+      title:
+        type: string
+        example: Amadeus
+      isActive:
+        type: boolean
+        example: true
+
 schemes:
-  # - http
-  - https
+  - http
+  # - https
 consumes:
   - application/json
 produces:
