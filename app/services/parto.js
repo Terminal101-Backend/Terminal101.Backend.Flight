@@ -24,7 +24,7 @@ axiosApiInstance.interceptors.response.use(async response => {
   } else {
     const originalRequest = response.config;
 
-    if (!!response.data.Error && ["SessionID cannot be null"].includes(response.data.Error.Message) && !originalRequest._retry) {
+    if (!!response.data.Error && response.data.Error.Message.toLowerCase().split(" ").some(word => ["session", "sessionid"].includes(word)) && !originalRequest._retry) {
       originalRequest._retry = true;
       await createSession();
       const requestData = JSON.parse(originalRequest.data);
