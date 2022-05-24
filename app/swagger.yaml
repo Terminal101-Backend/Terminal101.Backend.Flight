@@ -534,6 +534,7 @@ paths:
         - name: name
           in: path
           type: string
+          enum: [AMADEUS, PARTO]
           value: AMADEUS
           required: true
         - name: providerInfo
@@ -560,6 +561,7 @@ paths:
         - name: name
           in: path
           type: string
+          enum: [AMADEUS, PARTO]
           value: AMADEUS
           required: true
       responses:
@@ -814,6 +816,7 @@ definitions:
     properties:
       name:
         type: string
+        enum: [AMADEUS, PARTO]
         example: AMADEUS
       title:
         type: string
