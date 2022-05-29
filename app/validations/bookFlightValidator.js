@@ -9,6 +9,10 @@ class BookFlight extends BaseValidator {
       flightDetailsCode: Joi.number().required(),
       paymentMethodName: Joi.string().required(),
       payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+      leader: Joi.object({
+        documentCode: Joi.string().required(),
+        documentIssuedAt: Joi.string().required(),
+      }),
       passengers: Joi.array().items(Joi.object({
         documentCode: Joi.string().required(),
         documentIssuedAt: Joi.string().required(),

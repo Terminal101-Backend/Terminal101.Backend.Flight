@@ -2,6 +2,41 @@ const axios = require("axios");
 const axiosApiInstance = axios.create();
 let sessionId = "";
 
+/**
+ * @typedef {Object} LeaderInfo
+ * @property {String} phoneNumber
+ * @property {String} email
+ */
+/**
+ * @typedef {Object} TravelerInfo
+ * @property {String} dateOfBirth
+ * @property {Number} gender
+ * @property {Number} passengerType
+ * @property {NameInfo} passengerName
+ * @property {PassportInfo} passport
+ * @property {String} nationalId
+ * @property {String} nationality
+ * @property {String[]} extraServiceIds
+ * @property {String[]} mealTypeServiceIds
+ * @property {Number} seatPreference
+ * @property {Number} mealPreference
+ * @property {Boolean} wheelchair
+ */
+/**
+ * @typedef {Object} NameInfo
+ * @property {String} firstName
+ * @property {String} middleName
+ * @property {String} lastName
+ * @property {Number} title
+ */
+/**
+ * @typedef {Object} PassportInfo
+ * @property {String} issuedAt
+ * @property {String} expirationDate
+ * @property {String} issueDate
+ * @property {String} number
+ */
+
 // Request interceptor for API calls
 // axiosApiInstance.interceptors.request.use(
 //   async config => {
@@ -57,7 +92,7 @@ const createSession = async () => {
   return response;
 };
 
-const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD") => {
+const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass = "ECONOMY", includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD") => {
   let cabinType = 1;
   let airTripType = 1;
 
@@ -142,7 +177,99 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
   return response.data.PricedItineraries;
 };
 
+/**
+ * 
+ * @param {String} fareSourceCode 
+ * @param {LeaderInfo} leader 
+ * @param {TravelerInfo[]} travelers 
+ * @returns 
+ */
+const airBook = async (fareSourceCode, leader, travelers) => {
+  const params = {
+    FareSourceCode: fareSourceCode,
+    SessionId: sessionId,
+    // ClientUniqueId: clientUniqueId,
+    // MarkupForAdult: 0.0,
+    // MarkupForChild: 0.0,
+    // MarkupForInfant: 0.0,
+    TravelerInfo: {
+      PhoneNumber: leader.phoneNumber,
+      Email: leader.email,
+      AirTravelers: travelers.map(traveler => ({
+        DateOfBirth: traveler.dateOfBirth,
+        Gender: traveler.gender,
+        passengerType: traveler.passengerType,
+        NationalId: traveler.nationalId,
+        Nationality: traveler.nationality,
+        ExtraServiceId: traveler.extraServiceIds ?? [],
+        MealTypeServiceId: traveler.mealTypeServiceIds ?? [],
+        Wheelchair: traveler.wheelchair,
+        PassengerName: {
+          PassengerFirstName: traveler.passengerName.firstName,
+          PassengerMiddleName: traveler.passengerName.middleName,
+          PassengerLastName: traveler.passengerName.lastName,
+          PassengerTitle: traveler.passengerName.title,
+        },
+        Passport: {
+          Country: traveler.passport.issuedAt,
+          ExpiryDate: traveler.passport.expirationDate,
+          // IssueDate: traveler.passport.issueDate,
+          PassportNumber: traveler.passport.number,
+        },
+      })),
+    },
+  };
+
+  const {
+    data: response
+  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {
+  });
+
+  return response;
+};
+
+/**
+ * 
+ * @param {String} bookId 
+ * @returns 
+ */
+const airBookData = async bookId => {
+  const params = {
+    UniqueId: bookId,
+    SessionId: sessionId,
+  };
+
+  const {
+    data: response
+  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {
+  });
+
+  return response;
+};
+
+/**
+ * 
+ * @param {String} bookId 
+ * @returns 
+ */
+const airBookCancel = async bookId => {
+  const params = {
+    UniqueId: bookId,
+    SessionId: sessionId,
+  };
+
+  const {
+    data: response
+  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {
+  });
+
+  return response;
+};
+
 module.exports = {
   createSession,
   airLowFareSearch,
+  airBook,
+  airBookData,
+  airBookCancel,
 };
