@@ -20,12 +20,12 @@ module.exports.popularFlight = done => {
             origin: expect.objectContaining({
               code: expect.any(String),
               name: expect.any(String),
-              description: expect.any(String),
+              // description: expect.any(String),
             }),
             destination: expect.objectContaining({
               code: expect.any(String),
               name: expect.any(String),
-              description: expect.any(String),
+              // description: expect.any(String),
             }),
             time: expect.any(String),
           })
@@ -51,8 +51,12 @@ module.exports.searchOnewayFlight = (done, vars) => {
       expect(res.body.data).toEqual(
         expect.objectContaining({
           code: expect.any(String),
-          originCode: "SYD",
-          destinationCode: "DUB",
+          origin: expect.objectContaining({
+            code: "SYD"
+          }),
+          destination: expect.objectContaining({
+            code: "DUB"
+          }),
           time: departureDate + "T00:00:00.000Z",
         })
       );
@@ -80,8 +84,12 @@ module.exports.searchRoundTripFlight = (done, vars) => {
       expect(res.body.data).toEqual(
         expect.objectContaining({
           code: expect.any(String),
-          originCode: "SYD",
-          destinationCode: "DUB",
+          origin: expect.objectContaining({
+            code: "SYD"
+          }),
+          destination: expect.objectContaining({
+            code: "DUB"
+          }),
           time: departureDate + "T00:00:00.000Z",
         })
       );
@@ -116,8 +124,12 @@ module.exports.searchMultiCityFlight = (done, vars) => {
       expect(res.body.data).toEqual(
         expect.objectContaining({
           code: expect.any(String),
-          originCode: "SYD",
-          destinationCode: "DUB",
+          origin: expect.objectContaining({
+            code: "SYD"
+          }),
+          destination: expect.objectContaining({
+            code: "DUB"
+          }),
           time: departureDate + "T00:00:00.000Z",
         })
       );

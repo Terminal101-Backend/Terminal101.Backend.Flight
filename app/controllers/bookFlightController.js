@@ -1,9 +1,17 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const token = require("../helpers/tokenHelper");
-const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { wallet, amadeus } = require("../services");
-const { EBookedFlightStatus } = require("../constants");
+const {
+  flightInfoRepository,
+  bookedFlightRepository
+} = require("../repositories");
+const {
+  wallet,
+  amadeus
+} = require("../services");
+const {
+  EBookedFlightStatus
+} = require("../constants");
 
 // NOTE: Book Flight
 // NOTE: Success payment callback
@@ -11,7 +19,9 @@ module.exports.payForFlight = async (req, res) => {
   try {
     let result = {};
 
-    const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
+    const bookedFlight = await bookedFlightRepository.findOne({
+      transactionId: req.body.externalTransactionId
+    });
     if (!!bookedFlight) {
       bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
       await bookedFlight.save();
@@ -35,6 +45,7 @@ module.exports.bookFlight = async (req, res) => {
 
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     // TODO: Get last flight's price from provider
+    // TODO: Reserve flight by provider
 
     let amount = 0;
     let result = {};

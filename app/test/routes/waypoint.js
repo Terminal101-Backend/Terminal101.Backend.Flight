@@ -19,7 +19,7 @@ module.exports.popularWaypointOrigin = done => {
           expect.objectContaining({
             code: expect.any(String),
             name: expect.any(String),
-            description: expect.any(String),
+            // description: expect.any(String),
             count: expect.any(Number),
           })
         ])
@@ -37,7 +37,7 @@ module.exports.popularWaypointDestination = done => {
           expect.objectContaining({
             code: expect.any(String),
             name: expect.any(String),
-            description: expect.any(String),
+            // description: expect.any(String),
             count: expect.any(Number),
           })
         ])
