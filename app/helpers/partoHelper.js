@@ -1,7 +1,14 @@
 const dateTimeHelper = require("./dateTimeHelper");
-const { parto } = require("../services");
-const { countryRepository, airlineRepository } = require("../repositories");
-const { EProvider } = require("../constants");
+const {
+  parto
+} = require("../services");
+const {
+  countryRepository,
+  airlineRepository
+} = require("../repositories");
+const {
+  EProvider
+} = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -30,9 +37,18 @@ const makeSegmentStopsArray = airports => {
     duration: Math.floor((new Date(stop.DepartureDateTime) - new Date(stop.ArrivalDateTime)) / 60 / 1000),
     arrivalAt: stop.ArrivalDateTime,
     departureAt: stop.DepartureDateTime,
-    airport: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].airport : { code: stop.ArrivalAirport, name: "UNKNOWN" },
-    city: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].city : { code: "UNKNOWN", name: "UNKNOWN" },
-    country: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].country : { code: "UNKNOWN", name: "UNKNOWN" },
+    airport: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].airport : {
+      code: stop.ArrivalAirport,
+      name: "UNKNOWN"
+    },
+    city: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
+    country: !!airports[stop.ArrivalAirport] ? airports[stop.ArrivalAirport].country : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
   });
 };
 
@@ -45,15 +61,33 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
       airline: airlines[segment.MarketingAirlineCode],
       stops: (segment.TechnicalStops ?? []).map(makeSegmentStopsArray(airports)),
       departure: {
-        airport: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].airport : { code: segment.DepartureAirportLocationCode, name: "UNKNOWN" },
-        city: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
+        airport: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].airport : {
+          code: segment.DepartureAirportLocationCode,
+          name: "UNKNOWN"
+        },
+        city: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].city : {
+          code: "UNKNOWN",
+          name: "UNKNOWN"
+        },
+        country: !!airports[segment.DepartureAirportLocationCode] ? airports[segment.DepartureAirportLocationCode].country : {
+          code: "UNKNOWN",
+          name: "UNKNOWN"
+        },
         at: segment.DepartureDateTime,
       },
       arrival: {
-        airport: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].airport : { code: segment.ArrivalAirportLocationCode, name: "UNKNOWN" },
-        city: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
+        airport: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].airport : {
+          code: segment.ArrivalAirportLocationCode,
+          name: "UNKNOWN"
+        },
+        city: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].city : {
+          code: "UNKNOWN",
+          name: "UNKNOWN"
+        },
+        country: !!airports[segment.ArrivalAirportLocationCode] ? airports[segment.ArrivalAirportLocationCode].country : {
+          code: "UNKNOWN",
+          name: "UNKNOWN"
+        },
         at: segment.ArrivalDateTime,
       },
     };
@@ -108,7 +142,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   }),
 });
 
-const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass) => {
+const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
   return (flight, index) => {
     result = {
       code: `PRT-${index}`,
@@ -153,7 +187,10 @@ module.exports.searchFlights = async params => {
   const stops = Object.keys(partoSearchResult
     .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
     .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-    .reduce((res, cur) => ({ ...res, [cur.ArrivalAirportLocationCode]: 1 }), {}));
+    .reduce((res, cur) => ({
+      ...res,
+      [cur.ArrivalAirportLocationCode]: 1
+    }), {}));
   // .filter(segment => !!segment.TechnicalStops && (segment.TechnicalStops.length > 0))
   // .reduce((res, cur) => [...res, ...cur.TechnicalStops], [])
   // .map(stop => stop.ArrivalAirport);
@@ -162,14 +199,20 @@ module.exports.searchFlights = async params => {
     partoSearchResult
       .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
       .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-      .reduce((res, cur) => ({ ...res, [cur.MarketingAirlineCode]: 1 }), {})
+      .reduce((res, cur) => ({
+        ...res,
+        [cur.MarketingAirlineCode]: 1
+      }), {})
   );
 
   const aircrafts = partoSearchResult
     .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
     .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
     .filter(segment => !!segment.OperatingAirline.Equipment)
-    .reduce((res, cur) => ({ ...res, [cur.OperatingAirline.Equipment]: cur.OperatingAirline.Equipment }), {});
+    .reduce((res, cur) => ({
+      ...res,
+      [cur.OperatingAirline.Equipment]: cur.OperatingAirline.Equipment
+    }), {});
 
   const airports = await countryRepository.getAirportsByCode([params.origin, params.destination, ...stops]);
   const airlines = await airlineRepository.getAirlinesByCode(carriers);
@@ -179,11 +222,17 @@ module.exports.searchFlights = async params => {
   let destination = await countryRepository.getCityByCode(params.destination);
 
   if (!origin) {
-    origin = !!airports[params.origin] ? airports[params.origin].city : { code: "UNKNOWN", name: "UNKNOWN" };
+    origin = !!airports[params.origin] ? airports[params.origin].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
   }
 
   if (!destination) {
-    destination = !!airports[params.destination] ? airports[params.destination].city : { code: "UNKNOWN", name: "UNKNOWN" };
+    destination = !!airports[params.destination] ? airports[params.destination].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
 
   }
 

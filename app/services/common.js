@@ -14,7 +14,8 @@ axiosApiInstance.interceptors.request.use(
     return config;
   },
   error => {
-    Promise.reject(error)
+    // Promise.reject(error)
+    throw error;
   });
 
 // Response interceptor for API calls
@@ -27,7 +28,8 @@ axiosApiInstance.interceptors.response.use((response) => {
   //   originalRequest._retry = true;
   //   return axiosApiInstance(originalRequest);
   // }
-  return Promise.reject(error);
+  // return Promise.reject(error);
+  throw error;
 });
 
 module.exports.translate = async (input, language) => {
