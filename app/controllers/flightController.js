@@ -12,10 +12,12 @@ const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } 
 module.exports.searchOriginDestination = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
+    const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
+        // const ip = request.getRequestIpAddress(req);
+        const ip = "146.70.18.112"
         ipInfo = await getIpInfo(ip);
         console.log({ ip, ipInfo });
         // const ipInfo = await getIpInfo("24.48.0.1");
@@ -29,6 +31,13 @@ module.exports.searchOriginDestination = async (req, res) => {
     }
 
     let result = await countryRepository.search(keyword, 5);
+    if (!!isKeywordEmpty && (result.airports.length === 0)) {
+      result = await countryRepository.search(keyword.replace(/-/g, " "), 5);
+    }
+    if (!!isKeywordEmpty && (result.airports.length === 0)) {
+      keyword = ipInfo.country;
+      result = await countryRepository.search(keyword, 5)
+    }
     response.success(res, result);
   } catch (e) {
     response.exception(res, e);
