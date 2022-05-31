@@ -16,8 +16,7 @@ module.exports.searchOriginDestination = async (req, res) => {
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        // const ip = request.getRequestIpAddress(req);
-        const ip = "146.70.18.112"
+        const ip = request.getRequestIpAddress(req);
         ipInfo = await getIpInfo(ip);
         console.log({ ip, ipInfo });
         // const ipInfo = await getIpInfo("24.48.0.1");
@@ -107,23 +106,30 @@ module.exports.searchFlights = async (req, res) => {
     const activeProviders = await providerRepository.getActiveProviders();
     const activeProviderCount = activeProviders.length;
     const lastSearch = [];
+    let hasResult = false;
     let providerNumber = 0;
     let searchCode;
+    let result;
 
     activeProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
         lastSearch.push(...flight.flightDetails);
-        const result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+        result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
         searchCode = result.code;
+        hasResult = true;
 
         if (++providerNumber === activeProviderCount) {
           response.success(res, result);
         }
       }).catch(e => {
         if (++providerNumber === activeProviderCount) {
-          response.exception(res, e);
+          if (!hasResult) {
+            response.exception(res, e);
+          } else {
+            response.success(res, result);
+          }
         }
       });
     });

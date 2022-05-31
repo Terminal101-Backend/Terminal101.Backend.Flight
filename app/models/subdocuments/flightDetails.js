@@ -10,6 +10,10 @@ const flightDetails = new Schema({
     type: String,
     required: true,
   },
+  providerData: {
+    type: Object,
+    default: {},
+  },
   itineraries: {
     type: [Itinerary],
     default: [],

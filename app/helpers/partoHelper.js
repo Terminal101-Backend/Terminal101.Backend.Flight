@@ -152,6 +152,9 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
       currencyCode: flight.AirItineraryPricingInfo.ItinTotalFare.Currency,
       travelClass,
       provider: EProvider.get("PARTO"),
+      providerData: {
+        fareSourceCode: flight.FareSourceCode,
+      },
       price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare, flight.AirItineraryPricingInfo.PtcFareBreakdown),
       itineraries: flight.OriginDestinationOptions.map(itinerary => {
         let result = {
