@@ -14,42 +14,49 @@ module.exports.getFlightTickets = async (req, res) => {
   try {
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
     // TODO: Get lead and passengers' informations by account management service
+    const filePath = path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`);
 
-    let templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
-    let template = fs.readFileSync(templatePath, "utf8");
-
-    let options = {
-      phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
-      format: "A4",
-      orientation: "portrait",
-      border: "10mm",
-      header: {
-        height: "45mm",
-        contents: '<div style="text-align: center;">Test</div>'
-      },
-      footer: {
-        height: "28mm",
-        contents: {
-          first: 'Cover page',
-          2: 'Second page', // Any page number is working. 1-based index
-          default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>', // fallback value
-          last: 'Last Page'
-        }
+    if (true || !fs.existsSync(filePath)) {
+      if (fs.existsSync(filePath)) {
+        fs.rmSync(filePath);
       }
-    };
 
-    let document = {
-      html: template,
-      data: {
-        passengers: bookedFlight.passengers
-      },
-      path: path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`),
-      type: "",
-    };
+      let templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
+      let template = fs.readFileSync(templatePath, "utf8");
 
-    await pdf.create(document, options);
+      let options = {
+        phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
+        format: "A5",
+        orientation: "portrait",
+        border: "10mm",
+        // header: {
+        //   height: "45mm",
+        //   contents: '<div style="text-align: center;">Test</div>'
+        // },
+        footer: {
+          height: "28mm",
+          contents: {
+            // first: 'Cover page',
+            // 2: 'Second page',
+            default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
+            // last: 'Last Page'
+          }
+        }
+      };
 
-    res.sendFile(path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`));
+      let document = {
+        html: template,
+        data: {
+          passengers: bookedFlight.passengers
+        },
+        path: filePath,
+        type: "",
+      };
+
+      await pdf.create(document, options);
+    }
+
+    res.sendFile(filePath);
   } catch (e) {
     response.exception(res, e);
   }
