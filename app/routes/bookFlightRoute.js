@@ -37,6 +37,17 @@ router
 //     bookFlightValidator.getUserBookedFlights.check(),
 //     bookFlightController.getUserBookedFlights);
 
+// NOTE: Generate new payment information
+router
+  .patch("/pay/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Generate new payment information", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["CLIENT"]),
+    bookFlightValidator.generateNewPaymentInfo.check(),
+    bookFlightController.generateNewPaymentInfo);
+
 // NOTE: Get all booked flight's details by user
 router
   .get("/:bookedFlightCode",

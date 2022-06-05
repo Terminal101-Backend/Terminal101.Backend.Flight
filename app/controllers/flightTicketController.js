@@ -15,10 +15,11 @@ module.exports.getFlightTickets = async (req, res) => {
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
     // TODO: Get lead and passengers' informations by account management service
 
-    let templatePath = path.join(path.resolve("app/static/templates"), "ticket.html");
+    let templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
     let template = fs.readFileSync(templatePath, "utf8");
 
     let options = {
+      phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
       format: "A4",
       orientation: "portrait",
       border: "10mm",

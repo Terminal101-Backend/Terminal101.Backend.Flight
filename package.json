@@ -21,6 +21,7 @@
     "express": "^4.17.1",
     "express-validator": "^6.10.0",
     "jsonwebtoken": "^8.5.1",
+    "markdown-pdf": "^10.0.0",
     "md5": "^2.3.0",
     "mongoose": "^5.11.18",
     "pdf-creator-node": "^2.3.4",

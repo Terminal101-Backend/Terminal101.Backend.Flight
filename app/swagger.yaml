@@ -432,6 +432,34 @@ paths:
           schema:
             $ref: "#/definitions/BookFlightResult"
 
+  /flight/book/pay/{bookedFlightCode}:
+    # NOTE: Generate new payment info for selected flight
+    patch:
+      tags:
+        - Book
+      description: Generate new payment info for selected flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+        - name: Payment Info
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/BookFlightPaymenInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
   /flight/ticket/{bookedFlightCode}:
     # NOTE: Get booked flight's tickets
     get:
@@ -810,6 +838,16 @@ definitions:
       externalTransactionId:
         type: string
         example: askjfh23h31i2uyuf93h4ifyh78934y3i
+
+  BookFlightPaymenInfo:
+    properties:
+      paymentMethodName:
+        type: string
+        example: credit-card
+      payWay:
+        type: string
+        enum: [PAY, WALLET]
+        example: WALLET
 
   BookFlightPassenger:
     required:

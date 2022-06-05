@@ -60,6 +60,22 @@ class GetUserBookedFlights extends BaseValidator {
   }
 };
 
+class GenerateNewPaymentInfo extends BaseValidator {
+  constructor() {
+    const body = {
+      paymentMethodName: Joi.string().required(),
+      payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+    };
+
+    const params = {
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class GetBookedFlight extends BaseValidator {
   constructor() {
     const body = {
@@ -107,6 +123,7 @@ module.exports = {
   getBookedFlights: new GetBookedFlights(),
   getUserBookedFlights: new GetUserBookedFlights(),
   getBookedFlight: new GetBookedFlight(),
+  generateNewPaymentInfo: new GenerateNewPaymentInfo(),
   getUserBookedFlight: new GetUserBookedFlight(),
   payForFlight: new PayForFlight(),
 };
