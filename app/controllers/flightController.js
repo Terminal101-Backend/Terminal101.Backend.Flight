@@ -183,6 +183,12 @@ module.exports.filterFlights = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
+    const now = new Date();
+
+    if (now - flightInfo.searchedTime > process.env.SEARCH_TIMEOUT * 60 * 1000) {
+      throw "search_expired";
+    }
+
     const flights = flightInfo.flights.map(flight => {
       let itineraries = [];
       if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
