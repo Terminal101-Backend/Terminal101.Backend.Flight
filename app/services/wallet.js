@@ -12,7 +12,10 @@ axiosApiInstance.interceptors.request.use(
       'Accept': 'application/json',
       // 'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Type': 'application/json',
-    }
+    };
+    config.paramsSerializer = params => {
+      return JSON.stringify(params, { arrayFormat: 'brackets' })
+    };
     return config;
   },
   error => {

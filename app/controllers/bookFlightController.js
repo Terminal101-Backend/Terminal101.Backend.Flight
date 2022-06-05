@@ -1,17 +1,10 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
+const { partoHelper, amadeusHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
-const {
-  flightInfoRepository,
-  bookedFlightRepository
-} = require("../repositories");
-const {
-  wallet,
-  amadeus
-} = require("../services");
-const {
-  EBookedFlightStatus
-} = require("../constants");
+const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
+const { wallet, amadeus } = require("../services");
+const { EBookedFlightStatus } = require("../constants");
 
 // NOTE: Book Flight
 // NOTE: Success payment callback
@@ -41,11 +34,14 @@ module.exports.bookFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const flightInfo = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
-
+    const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
+    // TODO: Get user
     // TODO: Get last flight's price from provider
     // TODO: Reserve flight by provider
+    const providerName = flightDetails.flights.provider.toLowerCase();
+    const providerHelper = eval(providerName + "Helper");
+    await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
 
     let amount = 0;
     let result = {};
@@ -53,11 +49,11 @@ module.exports.bookFlight = async (req, res) => {
     switch (req.body.payWay) {
       case "WALLET":
         const userWallet = await wallet.getUserWallet(decodedToken.user);
-        amount = Math.max(0, flightInfo.flight.price.total - userWallet.credit);
+        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
         break;
 
       case "PAY":
-        amount = flightInfo.flight.price.total;
+        amount = flightDetails.flights.price.total;
         break;
 
       default:

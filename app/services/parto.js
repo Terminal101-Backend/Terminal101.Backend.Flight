@@ -180,11 +180,11 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 /**
  * 
  * @param {String} fareSourceCode 
- * @param {LeaderInfo} leader 
+ * @param {LeaderInfo} contact 
  * @param {TravelerInfo[]} travelers 
  * @returns 
  */
-const airBook = async (fareSourceCode, leader, travelers) => {
+const airBook = async (fareSourceCode, contact, travelers) => {
   const params = {
     FareSourceCode: fareSourceCode,
     SessionId: sessionId,
@@ -193,36 +193,48 @@ const airBook = async (fareSourceCode, leader, travelers) => {
     // MarkupForChild: 0.0,
     // MarkupForInfant: 0.0,
     TravelerInfo: {
-      PhoneNumber: leader.phoneNumber,
-      Email: leader.email,
-      AirTravelers: travelers.map(traveler => ({
-        DateOfBirth: traveler.dateOfBirth,
-        Gender: traveler.gender,
-        passengerType: traveler.passengerType,
-        NationalId: traveler.nationalId,
-        Nationality: traveler.nationality,
-        ExtraServiceId: traveler.extraServiceIds ?? [],
-        MealTypeServiceId: traveler.mealTypeServiceIds ?? [],
-        Wheelchair: traveler.wheelchair,
-        PassengerName: {
-          PassengerFirstName: traveler.passengerName.firstName,
-          PassengerMiddleName: traveler.passengerName.middleName,
-          PassengerLastName: traveler.passengerName.lastName,
-          PassengerTitle: traveler.passengerName.title,
-        },
-        Passport: {
-          Country: traveler.passport.issuedAt,
-          ExpiryDate: traveler.passport.expirationDate,
-          // IssueDate: traveler.passport.issueDate,
-          PassportNumber: traveler.passport.number,
-        },
-      })),
+      PhoneNumber: contact.mobileNumber,
+      Email: contact.email,
+      AirTravelers: travelers.map(traveler => {
+        const infant = 2 * 365 * 24 * 3600 * 1000;
+        const child = 12 * 365 * 24 * 3600 * 1000
+        const age = new Date() - new Date(traveler.birthDate);
+        if ((traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
+          traveler.gender = "MALE";
+        }
+        const passengerType = (age < infant) ? 3 : (age < child) ? 2 : 1;
+        const passengerTitle = (passengerType === 1) ? ((traveler.gender === "MALE") ? 0 : 2) : ((traveler.gender === "MALE") ? 4 : 3);
+
+
+        return {
+          DateOfBirth: traveler.birthDate,
+          Gender: traveler.gender,
+          PassengerType: passengerType,
+          NationalId: traveler.nationalId,
+          Nationality: traveler.document.issuedAt,
+          ExtraServiceId: traveler.extraServiceIds ?? [],
+          MealTypeServiceId: traveler.mealTypeServiceIds ?? [],
+          Wheelchair: !!traveler.wheelchair,
+          PassengerName: {
+            PassengerFirstName: traveler.firstName,
+            PassengerMiddleName: traveler.middleName,
+            PassengerLastName: traveler.lastName,
+            PassengerTitle: passengerTitle,
+          },
+          Passport: {
+            Country: traveler.document.issuedAt,
+            ExpiryDate: traveler.document.expirationDate,
+            // IssueDate: traveler.document.issueDate,
+            PassportNumber: traveler.document.code,
+          },
+        }
+      }),
     },
   };
 
   const {
     data: response
-  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {
   });
 
   return response;
@@ -241,7 +253,7 @@ const airBookData = async bookId => {
 
   const {
     data: response
-  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {
   });
 
   return response;
@@ -260,7 +272,7 @@ const airBookCancel = async bookId => {
 
   const {
     data: response
-  } = await axios.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {
   });
 
   return response;

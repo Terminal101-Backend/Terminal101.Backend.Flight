@@ -758,7 +758,7 @@ definitions:
         type: string
         example: asdfhkadfhdksaa
       flightDetailsCode:
-        type: number
+        type: string
         example: 2
       paymentMethodName:
         type: string
@@ -767,10 +767,24 @@ definitions:
         type: string
         enum: [PAY, WALLET]
         example: WALLET
+      contact:
+        $ref: "#/definitions/ContactInfo"
       passengers:
         type: array
         items:
           $ref: "#/definitions/BookFlightPassenger"
+
+  ContactInfo:
+    required:
+      - email
+      - mobileNumber
+    properties:
+      email:
+        type: string
+        example: a@a.com
+      mobileNumber:
+        type: string
+        example: +1987654321
 
   BookFlightResult:
     properties:

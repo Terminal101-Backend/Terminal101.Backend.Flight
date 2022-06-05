@@ -30,7 +30,7 @@ const bookedFlight = new Schema({
         required: true,
     },
     flightDetailsCode: {
-        type: Number,
+        type: String,
         required: true,
     },
     transactionId: {

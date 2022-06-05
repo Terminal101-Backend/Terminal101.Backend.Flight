@@ -26,7 +26,7 @@ exports.error = (res, message, statusCode = 404, data = []) => {
 // convert Exception error to user error response
 exports.exception = (res, error) => {
     let data = [];
-    let message = error.message;
+    let message = error.message ?? error;
     if (error instanceof ValidationException) {
         data = error.data
         message = error.message

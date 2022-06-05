@@ -41,31 +41,27 @@ module.exports.airLowFareSearch = async (done, vars) => {
 module.exports.airBook = async (done, vars) => {
   try {
     const leader = {
-      phoneNumber: "00442081234287",
+      mobileNumber: "00442081234287",
       email: "Sales@Partocrs.com",
     };
     const travelers = [{
       dateOfBirth: "1990-11-01T00:00:00",
-      gender: 0,
-      passengerType: 1,
-      passengerName: {
-        firstName: "Joe",
-        middleName: "",
-        lastName: "Smith",
-        title: 0,
-      },
-      passport: {
-        country: "US",
+      gender: "MALE",
+      firstName: "Joe",
+      middleName: "",
+      lastName: "Smith",
+      document: {
+        issuedAt: "US",
         expirationDate: "2025-11-01T00:00:00",
-        number: "AB1234567",
+        code: "AB1234567",
       },
-      nationalId: "4900104132",
-      nationality: "US",
-      extraServiceIds: [],
-      mealTypeServiceIds: [],
-      seatPreference: 0,
-      mealPreference: 0,
-      wheelchair: false,
+      // nationalId: "4900104132",
+      // nationality: "US",
+      // extraServiceIds: [],
+      // mealTypeServiceIds: [],
+      // seatPreference: 0,
+      // mealPreference: 0,
+      // wheelchair: false,
     }];
     const response = await parto.airBook(vars.searchCode, leader, travelers);
 

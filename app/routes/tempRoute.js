@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
+router.get("/params/array", (req, res) => {
+  res.status(200).send(req.query);
+})
+
 router.post("/parto/session", async (req, res) => {
   const { parto } = require("../services");
 

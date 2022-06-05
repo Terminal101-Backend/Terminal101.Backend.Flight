@@ -1,14 +1,8 @@
 const dateTimeHelper = require("./dateTimeHelper");
-const {
-  parto
-} = require("../services");
-const {
-  countryRepository,
-  airlineRepository
-} = require("../repositories");
-const {
-  EProvider
-} = require("../constants");
+const { parto } = require("../services");
+const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
+const { accountManagement } = require("../services");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -244,4 +238,60 @@ module.exports.searchFlights = async params => {
     destination,
     flightDetails,
   };
+};
+
+/**
+ *  
+ * @param {Object} params 
+ * @param {FlightInfo} params.flightDetails
+ */
+module.exports.bookFlight = async params => {
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
+
+  const travelers = params.passengers.map(passenger => {
+    if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+      return {
+        birthDate: user.info.birthDate,
+        gender: user.info.gender,
+        // nationalId: user.info.nationalId,
+        // nationality: user.info.nationality,
+        firstName: user.info.firstName,
+        middleName: user.info.middleName,
+        lastName: user.info.lastName,
+        document: {
+          issuedAt: user.info.document.issuedAt,
+          expirationDate: user.info.document.expirationDate,
+          code: user.info.document.code,
+        },
+      };
+    } else {
+      const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt));
+
+      if (!person) {
+        throw "passenger_not_found";
+      }
+
+      return {
+        birthDate: person.birthDate,
+        gender: person.gender,
+        // nationalId: person.nationalId,
+        // nationality: person.nationality,
+        firstName: person.firstName,
+        middleName: person.middleName,
+        lastName: person.lastName,
+        document: {
+          issuedAt: person.document.issuedAt,
+          expirationDate: person.document.expirationDate,
+          code: person.document.code,
+        },
+      };
+    }
+  });
+
+  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
+  const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
+
+  const { data: bookedFlight } = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
+  await flightInfo.save();
 };

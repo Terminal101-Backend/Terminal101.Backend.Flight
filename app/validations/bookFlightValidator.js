@@ -6,17 +6,17 @@ class BookFlight extends BaseValidator {
   constructor() {
     const body = {
       searchedFlightCode: Joi.string().required(),
-      flightDetailsCode: Joi.number().required(),
+      flightDetailsCode: Joi.string().required(),
       paymentMethodName: Joi.string().required(),
       payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
-      leader: Joi.object({
-        documentCode: Joi.string().required(),
-        documentIssuedAt: Joi.string().required(),
-      }),
+      contact: Joi.object({
+        email: Joi.string().required(),
+        mobileNumber: Joi.string().required(),
+      }).required(),
       passengers: Joi.array().items(Joi.object({
         documentCode: Joi.string().required(),
         documentIssuedAt: Joi.string().required(),
-      })).default([]),
+      })).min(1).required(),
     };
 
     super(body);
