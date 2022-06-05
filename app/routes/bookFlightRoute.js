@@ -39,7 +39,7 @@ router
 
 // NOTE: Get all booked flight's details by user
 router
-  .get("/:searchedFlightCode/:flightDetailsCode",
+  .get("/:bookedFlightCode",
     (req, res, next) => {
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();

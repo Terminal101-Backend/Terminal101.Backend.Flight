@@ -126,10 +126,10 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     DepartureDateTime: departureDate,
   });
 
-  if (!segments || (segments.length === 0)) {
-    airTripType = 1;
-  } else if (!!returnDate) {
+  if (!!returnDate && (!segments || (segments.length === 0))) {
     airTripType = 2;
+  } else if (!segments || (segments.length === 0)) {
+    airTripType = 1;
   } else {
     airTripType = 4;
   }
@@ -145,13 +145,23 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
   }
 
   if (!!returnDate) {
-    originDestinations.push({
-      OriginLocationCode: segments[segments.length - 1].destinationCode,
-      DestinationLocationCode: originLocationCode,
-      OriginType: 0,
-      DestinationType: 0,
-      DepartureDateTime: returnDate,
-    });
+    if (!!segments && (segments.length > 0)) {
+      originDestinations.push({
+        OriginLocationCode: segments[segments.length - 1].destinationCode,
+        DestinationLocationCode: originLocationCode,
+        OriginType: 0,
+        DestinationType: 0,
+        DepartureDateTime: returnDate,
+      });
+    } else {
+      originDestinations.push({
+        OriginLocationCode: destinationLocationCode,
+        DestinationLocationCode: originLocationCode,
+        OriginType: 0,
+        DestinationType: 0,
+        DepartureDateTime: returnDate,
+      });
+    }
   }
 
 
