@@ -94,6 +94,11 @@ module.exports.bookFlight = async (req, res) => {
 
     const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
+
+    if (!paymentMethod.isActive) {
+      throw "payment_method_inactive";
+    }
+
     // TODO: Get user
     // TODO: Get last flight's price from provider
     // TODO: Reserve flight by provider

@@ -60,22 +60,22 @@ module.exports.getFlightTickets = async (req, res) => {
       //   }
       // });
 
-      htmlPdf
-        .create(template, {
-          format: 'A2',
-          httpHeaders: { 'content-type': 'application/pdf' },
-          quality: '100',
-          orientation: 'landscape',
-          type: 'pdf'
-        })
-        .toFile(filePath, (e, response) => {
-          if (!!e) {
-            throw e;
-          } else {
-            res.sendFile(filePath);
-            console.log(response);
-          }
-        });
+      // htmlPdf
+      //   .create(template, {
+      //     format: 'A2',
+      //     httpHeaders: { 'content-type': 'application/pdf' },
+      //     quality: '100',
+      //     orientation: 'landscape',
+      //     type: 'pdf'
+      //   })
+      //   .toFile(filePath, (e, response) => {
+      //     if (!!e) {
+      //       throw e;
+      //     } else {
+      //       res.sendFile(filePath);
+      //       console.log(response);
+      //     }
+      //   });
 
       // let options = {
       //   phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
@@ -107,6 +107,7 @@ module.exports.getFlightTickets = async (req, res) => {
       // };
 
       // await pdf.create(document, options);
+      res.send(template)
     } else {
       res.sendFile(filePath);
     }
