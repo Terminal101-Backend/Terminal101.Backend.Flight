@@ -2,7 +2,7 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { wallet, amadeus } = require("../services");
+const { wallet, accountManagement, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 let pdf = require("pdf-creator-node");
 let htmlPdf = require("html-pdf");
@@ -15,14 +15,39 @@ let path = require("path");
 // NOTE: Get flight tickets
 module.exports.getFlightTickets = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+    const passengers = bookedFlight.passengers.map(passenger => {
+      if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+        return {
+          firstName: user.info.firstName,
+          middleName: user.info.middleName,
+          nickName: user.info.nickName,
+          lastName: user.info.lastName,
+          birthDate: user.info.birthDate,
+          gender: user.info.gender,
+        }
+      } else {
+        const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
+        return {
+          firstName: userPerson.firstName,
+          middleName: userPerson.middleName,
+          nickName: userPerson.nickName,
+          lastName: userPerson.lastName,
+          birthDate: userPerson.birthDate,
+          gender: userPerson.gender,
+        }
+      }
+    });
+
     // TODO: Get lead and passengers' informations by account management service
-    const filePath = path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`);
+    // const filePath = path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`);
 
     if (true || !fs.existsSync(filePath)) {
-      if (fs.existsSync(filePath)) {
-        fs.rmSync(filePath);
-      }
+      // if (fs.existsSync(filePath)) {
+      //   fs.rmSync(filePath);
+      // }
 
       const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
       // const template = fs.readFileSync(templatePath, "utf8");
@@ -30,17 +55,8 @@ module.exports.getFlightTickets = async (req, res) => {
       const template = await ejs.renderFile(
         templatePath,
         {
-          invoiceNumber: 201543502291,
-          date: new Date().toLocaleDateString(),
-          pickUpDatetime: new Date().toLocaleDateString(),
-          returnDatetime: new Date().toLocaleDateString(),
-          pickUpLocation: 'jakarta',
-          returnLocation: 'jakarta',
-          payments: [{ description: 'oke', durationPerHours: 20, rentPerHours: 10, amount: 2000 }],
-          discount: 'RM ' + 1000,
-          totalPayment: 'RM ' + 5000,
-          fullName: 'john doe',
-          phoneNumber: '+6287887242891'
+          contact: bookedFlight.contact,
+          passengers,
         },
         {
           beautify: true,

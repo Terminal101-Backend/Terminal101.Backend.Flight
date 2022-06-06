@@ -16,7 +16,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
    */
-  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, status) {
+  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status) {
     let bookedFlight = await this.findOne({ transactionId });
 
     if (!bookedFlight) {
@@ -31,7 +31,7 @@ class BookedFlightRepository extends BaseRepository {
         }
       }
 
-      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId });
+      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status });
       await bookedFlight.save();
     }
 
@@ -97,24 +97,24 @@ class BookedFlightRepository extends BaseRepository {
       $lookup: {
         from: 'flightinfos',
         localField: 'searchedFlightCode',
-        foreignField: 'searches.code',
+        foreignField: 'code',
         as: 'flightInfo'
       }
     });
     agrBookedFlight.append({ $unwind: "$flightInfo" });
-    agrBookedFlight.append({ $unwind: "$flightInfo.searches" });
-    agrBookedFlight.append({ $unwind: "$flightInfo.searches.flights" });
+    // agrBookedFlight.append({ $unwind: "$flightInfo.searches" });
+    agrBookedFlight.append({ $unwind: "$flightInfo.flights" });
     agrBookedFlight.append({
       $match: {
         $expr: {
-          $eq: ["$searchedFlightCode", "$flightInfo.searches.code"]
+          $eq: ["$searchedFlightCode", "$flightInfo.code"]
         }
       }
     });
     agrBookedFlight.append({
       $match: {
         $expr: {
-          $eq: ["$flightDetailsCode", "$flightInfo.searches.flights.code"]
+          $eq: ["$flightDetailsCode", "$flightInfo.flights.code"]
         }
       }
     });

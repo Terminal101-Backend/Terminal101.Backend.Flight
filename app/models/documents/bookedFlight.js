@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const { EBookedFlightStatus } = require("../../constants");
 const Person = require("../subdocuments/person");
+const Contact = require("../subdocuments/contact");
 
 const bookedFlight = new Schema({
 
@@ -36,6 +37,10 @@ const bookedFlight = new Schema({
     transactionId: {
         type: String,
         required: true,
+    },
+    contact: {
+        type: Contact,
+        default: {},
     },
     passengers: {
         type: [Person],
