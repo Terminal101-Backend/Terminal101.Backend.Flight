@@ -8,6 +8,7 @@ let pdf = require("pdf-creator-node");
 let fs = require("fs");
 let path = require("path");
 
+
 // NOTE: Flight tickets
 // NOTE: Get flight tickets
 module.exports.getFlightTickets = async (req, res) => {
@@ -26,8 +27,8 @@ module.exports.getFlightTickets = async (req, res) => {
 
       let options = {
         phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
-        format: "A5",
-        orientation: "portrait",
+        format: "A4",
+        orientation: "landscape",
         border: "10mm",
         // header: {
         //   height: "45mm",
