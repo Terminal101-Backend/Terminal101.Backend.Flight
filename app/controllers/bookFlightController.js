@@ -117,19 +117,25 @@ module.exports.bookFlight = async (req, res) => {
       default:
     }
 
-    switch (paymentMethod.type) {
-      case "STRIPE":
-        result = await wallet.chargeUserWalletByCreditCard(decodedToken.user, amount);
-        break;
+    if (amount >= 1) {
+      switch (paymentMethod.type) {
+        case "STRIPE":
+          result = await wallet.chargeUserWalletByCreditCard(decodedToken.user, amount);
+          break;
 
-      case "CRYPTOCURRENCY":
-        // TODO: Create payment info and make transaction by crypto currency
-        break;
+        case "CRYPTOCURRENCY":
+          // TODO: Create payment info and make transaction by crypto currency
+          break;
 
-      default:
+        default:
+      }
+    } else {
+      result = {
+        value: 0,
+      }
     }
 
-    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId);
+    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, result.value === 0 ? "INPROGRESS" : "PAYING");
 
     response.success(res, {
       code: bookedFlight.code,

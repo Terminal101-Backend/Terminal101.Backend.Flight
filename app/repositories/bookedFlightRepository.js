@@ -16,7 +16,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
    */
-  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId) {
+  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, status) {
     let bookedFlight = await this.findOne({ transactionId });
 
     if (!bookedFlight) {
