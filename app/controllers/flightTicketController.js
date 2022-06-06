@@ -5,6 +5,8 @@ const { flightInfoRepository, bookedFlightRepository } = require("../repositorie
 const { wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 let pdf = require("pdf-creator-node");
+let htmlPdf = require("html-pdf");
+let ejs = require("ejs");
 let fs = require("fs");
 let path = require("path");
 
@@ -22,42 +24,92 @@ module.exports.getFlightTickets = async (req, res) => {
         fs.rmSync(filePath);
       }
 
-      let templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
-      let template = fs.readFileSync(templatePath, "utf8");
+      const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
+      // const template = fs.readFileSync(templatePath, "utf8");
 
-      let options = {
-        phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
-        format: "A4",
-        orientation: "landscape",
-        border: "10mm",
-        // header: {
-        //   height: "45mm",
-        //   contents: '<div style="text-align: center;">Test</div>'
-        // },
-        footer: {
-          height: "28mm",
-          contents: {
-            // first: 'Cover page',
-            // 2: 'Second page',
-            default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
-            // last: 'Last Page'
-          }
-        }
-      };
-
-      let document = {
-        html: template,
-        data: {
-          passengers: bookedFlight.passengers
+      const template = await ejs.renderFile(
+        templatePath,
+        {
+          invoiceNumber: 201543502291,
+          date: new Date().toLocaleDateString(),
+          pickUpDatetime: new Date().toLocaleDateString(),
+          returnDatetime: new Date().toLocaleDateString(),
+          pickUpLocation: 'jakarta',
+          returnLocation: 'jakarta',
+          payments: [{ description: 'oke', durationPerHours: 20, rentPerHours: 10, amount: 2000 }],
+          discount: 'RM ' + 1000,
+          totalPayment: 'RM ' + 5000,
+          fullName: 'john doe',
+          phoneNumber: '+6287887242891'
         },
-        path: filePath,
-        type: "",
-      };
+        {
+          beautify: true,
+          async: true
+        }
+      );
 
-      await pdf.create(document, options);
+      // res.pdfFromHTML({
+      //   filename: filePath,
+      //   htmlContent: template,
+      //   options: {
+      //     format: 'A5',
+      //     // httpHeaders: { 'content-type': 'application/pdf' },
+      //     // quality: '100',
+      //     orientation: 'landscape',
+      //     // type: 'pdf'
+      //   }
+      // });
+
+      htmlPdf
+        .create(template, {
+          format: 'A2',
+          httpHeaders: { 'content-type': 'application/pdf' },
+          quality: '100',
+          orientation: 'landscape',
+          type: 'pdf'
+        })
+        .toFile(filePath, (e, response) => {
+          if (!!e) {
+            throw e;
+          } else {
+            res.sendFile(filePath);
+            console.log(response);
+          }
+        });
+
+      // let options = {
+      //   phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
+      //   format: "A4",
+      //   orientation: "landscape",
+      //   border: "10mm",
+      //   // header: {
+      //   //   height: "45mm",
+      //   //   contents: '<div style="text-align: center;">Test</div>'
+      //   // },
+      //   footer: {
+      //     height: "28mm",
+      //     contents: {
+      //       // first: 'Cover page',
+      //       // 2: 'Second page',
+      //       default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
+      //       // last: 'Last Page'
+      //     }
+      //   }
+      // };
+
+      // let document = {
+      //   html: template,
+      //   data: {
+      //     passengers: bookedFlight.passengers
+      //   },
+      //   path: filePath,
+      //   type: "",
+      // };
+
+      // await pdf.create(document, options);
+    } else {
+      res.sendFile(filePath);
     }
-
-    res.sendFile(filePath);
   } catch (e) {
     response.exception(res, e);
   }
