@@ -58,6 +58,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
           break;
 
         default:
+          throw "pay_way_invalid";
       }
 
       switch (paymentMethod.type) {
@@ -70,6 +71,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
           break;
 
         default:
+          throw "payment_method_invalid";
       }
 
       bookedFlight.transactionId = result.externalTransactionId;
