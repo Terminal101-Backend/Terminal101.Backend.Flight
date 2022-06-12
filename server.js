@@ -21,7 +21,7 @@ const io = require('socket.io')(server, {
 io.on('connection', function (socket) {
   console.log(`User connected: ${socket.id}`);
 
-  socketMessages(global.io, socket);
+  socketMessages(io, socket);
 });
 
 mongo.startDatabase();
