@@ -6,7 +6,7 @@ let token = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.WALLET_SERVICE;
+    config.baseURL = process.env.WALLET_SERVICE_URL;
     config.headers = {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',

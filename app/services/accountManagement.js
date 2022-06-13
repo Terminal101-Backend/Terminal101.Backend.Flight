@@ -5,7 +5,7 @@ let token = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.ACCOUNT_MANAGEMENT_SERVICE;
+    config.baseURL = process.env.ACCOUNT_MANAGEMENT_SERVICE_URL;
     config.headers = {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
@@ -45,7 +45,7 @@ const loginAsService = async () => {
   };
   delete axios.defaults.headers.common['Authorization'];
 
-  const { data: response } = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE + "/user/login/email", params, {
+  const { data: response } = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE_URL + "/user/login/email", params, {
     headers: {
       "Service-Name": "wallet",
       "User-Type": "SERVICE",
