@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-const request = require("../helpers/requestHelper");
 const { bookFlightController } = require("../controllers");
 const { bookFlightValidator } = require("../validations");
 const { checkAccess } = require("../middlewares");
@@ -80,7 +79,6 @@ router
     },
     checkAccess.checkUserType(["CLIENT"]),
     bookFlightValidator.bookFlight.check(),
-    request.extendTimeoutMiddleware,
     bookFlightController.bookFlight);
 
 // NOTE: Book a flight for a user

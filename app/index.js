@@ -7,6 +7,7 @@ const cors = require("cors");
 const yaml = require('yamljs');
 const fs = require("fs");
 const { l10n } = require("./middlewares");
+const { extendTimeoutMiddleware } = require("./helpers/requestHelper");
 // const pdf = require("express-pdf");
 
 require("dotenv").config();
@@ -24,6 +25,7 @@ app.use(express.urlencoded({
 app.use(express.json({
     type: "application/json"
 }));
+app.use(extendTimeoutMiddleware);
 // app.use(pdf);
 
 // NOTE: Swagger
