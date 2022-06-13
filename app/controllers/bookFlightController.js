@@ -106,7 +106,7 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Reserve flight by provider
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
+    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
 
     let amount = 0;
     let result = {};
