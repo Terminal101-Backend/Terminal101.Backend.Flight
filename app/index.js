@@ -25,7 +25,7 @@ app.use(express.urlencoded({
 app.use(express.json({
     type: "application/json"
 }));
-app.use(timeout("5s"));
+app.use(timeout("50s"));
 // app.use(pdf);
 
 // NOTE: Swagger
