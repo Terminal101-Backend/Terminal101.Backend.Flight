@@ -78,9 +78,9 @@ router
       console.log("Book a flight by user", req.params, req.body, req.query);
       next();
     },
-    request.extendTimeoutMiddleware,
     checkAccess.checkUserType(["CLIENT"]),
     bookFlightValidator.bookFlight.check(),
+    request.extendTimeoutMiddleware,
     bookFlightController.bookFlight);
 
 // NOTE: Book a flight for a user
