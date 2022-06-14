@@ -39,7 +39,7 @@ axiosApiInstance.interceptors.response.use((response) => {
 });
 
 const chargeUserWalletByCreditCard = async (userCode, amount) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/charge-by-credit-card/${userCode}`, {
+  const { data: response } = await axiosApiInstance.post(`/wallet/credit-card/charge/${userCode}`, {
     amount,
     serviceName: "FLIGHT"
   });
