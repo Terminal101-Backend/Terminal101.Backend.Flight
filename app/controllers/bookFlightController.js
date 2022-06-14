@@ -128,6 +128,9 @@ module.exports.bookFlight = async (req, res) => {
       switch (paymentMethod.type) {
         case "STRIPE":
           result = await wallet.chargeUserWalletByCreditCard(decodedToken.user, amount);
+          if (!result) {
+            throw "wallet_error";
+          }
           break;
 
         case "CRYPTOCURRENCY":
