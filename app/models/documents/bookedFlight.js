@@ -36,7 +36,7 @@ const bookedFlight = new Schema({
     },
     transactionId: {
         type: String,
-        required: true,
+        // required: true,
     },
     contact: {
         type: Contact,

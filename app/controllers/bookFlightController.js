@@ -106,7 +106,10 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Reserve flight by provider
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
+    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers }).catch(e => {
+      console.error("Provider error: ", e);
+      // TODO: Cancel book
+    });
 
     let amount = 0;
     let result = {};
