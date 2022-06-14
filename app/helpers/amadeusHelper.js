@@ -297,5 +297,6 @@ module.exports.searchFlights = async params => {
     origin,
     destination,
     flightDetails,
+    bookFlight: () => { },
   };
 };
