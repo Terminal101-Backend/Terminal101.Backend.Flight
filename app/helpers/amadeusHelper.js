@@ -292,11 +292,19 @@ module.exports.searchFlights = async params => {
 
   }
 
-
   return {
     origin,
     destination,
     flightDetails,
-    bookFlight: () => { },
   };
+};
+
+
+/**
+ *  
+ * @param {Object} params 
+ * @param {FlightInfo} params.flightDetails
+ */
+module.exports.bookFlight = async params => {
+  console.log(params);
 };
