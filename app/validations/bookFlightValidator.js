@@ -37,6 +37,34 @@ class BookFlightForUser extends BaseValidator {
   }
 };
 
+class EditUserBookedFlight extends BaseValidator {
+  constructor() {
+    const body = {
+      contact: Joi.object({
+        email: Joi.string(),
+        mobileNumber: Joi.string(),
+      }),
+      passengers: Joi.array().items(Joi.object({
+        documentCode: Joi.string().required(),
+        documentIssuedAt: Joi.string().required(),
+      })).min(1).required(),
+      // removePassengers: Joi.array().items(Joi.object({
+      //   documentCode: Joi.string().required(),
+      //   documentIssuedAt: Joi.string().required(),
+      // })),
+      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|CANCEL|REMOVE|BOOKED|REJECTED/),
+    };
+
+    const params = {
+      userCode: Joi.string().required(),
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class GetBookedFlights extends BaseValidator {
   constructor() {
     const body = {
@@ -120,6 +148,7 @@ class PayForFlight extends BaseValidator {
 module.exports = {
   bookFlight: new BookFlight(),
   bookFlightForUser: new BookFlightForUser(),
+  editUserBookedFlight: new EditUserBookedFlight(),
   getBookedFlights: new GetBookedFlights(),
   getUserBookedFlights: new GetUserBookedFlights(),
   getBookedFlight: new GetBookedFlight(),

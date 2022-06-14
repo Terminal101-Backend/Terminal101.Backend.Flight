@@ -410,6 +410,42 @@ paths:
             items:
               $ref: "#/definitions/BookedFlightDetails"
 
+  /flight/book/{userCode}/{bookedFlightCode}:
+    # NOTE: Edit user's booked flight
+    patch:
+      tags:
+        - Book
+      description: Edit user's booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          type: string
+          value: 12345zxdhds1234
+          required: true
+        - name: bookedFlightCode
+          in: path
+          type: string
+          value: dsgiqw4378rfh234iyf3
+          required: true
+        - name: Booked Flight Details
+          in: body
+          required: true
+          schema:
+            type: object
+            $ref: "#/definitions/EditBookedFlight"
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
+
     # NOTE: Book flight
     post:
       tags:
@@ -802,6 +838,20 @@ definitions:
         items:
           $ref: "#/definitions/BookFlightPassenger"
 
+  EditBookedFlight:
+    required:
+      - passengers
+    properties:
+      contact:
+        $ref: "#/definitions/ContactInfo"
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+      status:
+        type: string
+        enum: PAYING|INPROGRESS|BOOKED|CANCEL|REJECT|REFUND
+
   ContactInfo:
     required:
       - email
@@ -859,7 +909,7 @@ definitions:
         example: 231aweiW2
       documentIssuedAt:
         type: string
-        example: Germany
+        example: DE
 
   ProviderInfo:
     required:

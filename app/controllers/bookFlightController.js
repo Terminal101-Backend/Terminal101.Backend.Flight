@@ -3,7 +3,7 @@ const request = require("../helpers/requestHelper");
 const { partoHelper, amadeusHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { wallet, amadeus } = require("../services");
+const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 
 // NOTE: Book Flight
@@ -159,11 +159,71 @@ module.exports.bookFlight = async (req, res) => {
   }
 };
 
+// NOTE: Book flight for user
 module.exports.bookFlightForUser = async (req, res) => {
   try {
-    // TODO: Use wallet's service and create a transaction
-
     response.success(res, result);
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Edit user's booked flight
+module.exports.editUserBookedFlight = async (req, res) => {
+  try {
+    const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
+    const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
+
+    if (!user) {
+      throw "user_not_found";
+    }
+
+    if (!bookedFlight) {
+      throw "flight_not_found";
+    }
+
+    if (!!req.body.contact && !!req.body.contact.email && (req.body.contact.email !== bookedFlight.contact.email)) {
+      bookedFlight.contact.email = req.body.contact.email;
+    }
+
+    if (!!req.body.contact && !!req.body.contact.mobileNumber && (req.body.contact.mobileNumber !== bookedFlight.contact.mobileNumber)) {
+      bookedFlight.contact.mobileNumber = req.body.contact.mobileNumber;
+    }
+
+    if (!!req.body.status && (!EBookedFlightStatus.check(req.body.status, bookedFlight.status))) {
+      bookedFlight.status = req.body.status;
+    }
+
+    bookedFlight.passengers = req.body.passengers.filter(passenger => ((user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) || user.persons.some(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt)));
+
+    if (bookedFlight.passengers.length === 0) {
+      throw "passengers_not_valid";
+    }
+
+    await bookedFlight.save();
+
+    const result = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    response.success(res, {
+      // bookedBy: bookedFlight.bookedBy,
+      code: result.code,
+      status: EBookedFlightStatus.find(result.status) ?? result.status,
+      time: result.time,
+      passengers: result.passengers.map(passenger => ({
+        documentCode: passenger.documentCode,
+        documentIssuedAt: passenger.documentIssuedAt,
+      })),
+      origin: {
+        code: result.flightInfo.origin.code,
+        name: result.flightInfo.origin.name,
+      },
+      destination: {
+        code: result.flightInfo.destination.code,
+        name: result.flightInfo.destination.name,
+      },
+      travelClass: result.flightInfo.travelClass,
+      price: result.flightInfo.flights.price.total,
+      currencyCode: result.flightInfo.flights.currencyCode
+    });
   } catch (e) {
     response.exception(res, e);
   }
@@ -194,6 +254,7 @@ module.exports.getBookedFlights = async (req, res) => {
       },
       travelClass: bookedFlight.flightInfo.travelClass,
       price: bookedFlight.flightInfo.flights.price.total,
+      currencyCode: bookedFlight.flightInfo.flights.currencyCode
     })));
   } catch (e) {
     response.exception(res, e);
@@ -203,7 +264,31 @@ module.exports.getBookedFlights = async (req, res) => {
 // NOTE: Get specific user's booked flights list
 module.exports.getUserBookedFlights = async (req, res) => {
   try {
-    response.success(res, result);
+    const result = await bookedFlightRepository.getBookedFlights(req.params.userCode);
+    if (!result) {
+      throw "not_found";
+    }
+
+    response.success(res, result.map(bookedFlight => ({
+      // bookedBy: bookedFlight.bookedBy,
+      code: bookedFlight.code,
+      status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+      time: bookedFlight.time,
+      passengers: bookedFlight.passengers.map(passenger => ({
+        documentCode: passenger.documentCode,
+        documentIssuedAt: passenger.documentIssuedAt,
+      })),
+      origin: {
+        code: bookedFlight.flightInfo.origin.code,
+        name: bookedFlight.flightInfo.origin.name,
+      },
+      destination: {
+        code: bookedFlight.flightInfo.destination.code,
+        name: bookedFlight.flightInfo.destination.name,
+      },
+      travelClass: bookedFlight.flightInfo.travelClass,
+      price: bookedFlight.flightInfo.flights.price.total,
+    })));
   } catch (e) {
     response.exception(res, e);
   }

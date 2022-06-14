@@ -48,7 +48,7 @@ router
     bookFlightValidator.generateNewPaymentInfo.check(),
     bookFlightController.generateNewPaymentInfo);
 
-// NOTE: Get all booked flight's details by user
+// NOTE: Get specific booked flight's details by user
 router
   .get("/:bookedFlightCode",
     (req, res, next) => {
@@ -59,16 +59,38 @@ router
     bookFlightValidator.getBookedFlight.check(),
     bookFlightController.getBookedFlight);
 
+// NOTE: Get specific user's booked flights
+router
+  .get("/:userCode",
+    (req, res, next) => {
+      console.log("Get specific user's booked flights", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    bookFlightValidator.getUserBookedFlights.check(),
+    bookFlightController.getUserBookedFlights);
+
+// NOTE: Edit specific user's booked flight
+router
+  .patch("/:userCode/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Edit specific user's booked flight", req.params, req.body, req.query);
+      next();
+    },
+    // checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    bookFlightValidator.editUserBookedFlight.check(),
+    bookFlightController.editUserBookedFlight);
+
 // NOTE: Get specific user's booked flight's details
-// router
-//   .get("/:userCode/:searchedFlightCode/:flightDetailsCode",
-//     (req, res, next) => {
-//       console.log("Get specific user's booked flights", req.params, req.body, req.query);
-//       next();
-//     },
-//     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-//     bookFlightValidator.getUserBookedFlight.check(),
-//     bookFlightController.getUserBookedFlight);
+router
+  .get("/:userCode/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Get specific user's booked flights", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    bookFlightValidator.getUserBookedFlight.check(),
+    bookFlightController.getUserBookedFlight);
 
 // NOTE: Book a flight by user
 router

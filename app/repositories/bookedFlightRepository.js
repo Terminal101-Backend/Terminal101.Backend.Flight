@@ -54,25 +54,15 @@ class BookedFlightRepository extends BaseRepository {
       $lookup: {
         from: 'flightinfos',
         localField: 'searchedFlightCode',
-        // foreignField: 'searches.code',
         foreignField: 'code',
         as: 'flightInfo'
       }
     });
     agrBookedFlight.append({ $unwind: "$flightInfo" });
-    // agrBookedFlight.append({ $unwind: "$flightInfo.searches" });
     agrBookedFlight.append({ $unwind: "$flightInfo.flights" });
-    // agrBookedFlight.append({
-    //   $match: {
-    //     $expr: {
-    //       $eq: ["$searchedFlightCode", "$flightInfo.searches.code"],
-    //     }
-    //   }
-    // });
     agrBookedFlight.append({
       $match: {
         $expr: {
-          // $eq: ["$flightDetailsCode", "$flightInfo.searches.flights.code"],
           $eq: ["$flightDetailsCode", "$flightInfo.flights.code"],
         }
       }
