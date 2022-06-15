@@ -63,10 +63,11 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 
       switch (paymentMethod.type) {
         case "STRIPE":
-          result = await wallet.chargeUserWalletByCreditCard(decodedToken.user, amount);
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount);
           break;
 
         case "CRYPTOCURRENCY":
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           // TODO: Create payment info and make transaction by crypto currency
           break;
 
@@ -130,14 +131,14 @@ module.exports.bookFlight = async (req, res) => {
     if (amount >= 1) {
       switch (paymentMethod.type) {
         case "STRIPE":
-          result = await wallet.chargeUserWalletByCreditCard(decodedToken.user, amount);
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount);
           if (!result) {
             throw "wallet_error";
           }
           break;
 
         case "CRYPTOCURRENCY":
-          result = await wallet.chargeUserWalletByCryptoCurrency(decodedToken.user, amount);
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           if (!result) {
             throw "wallet_error";
           }
@@ -239,27 +240,31 @@ module.exports.getBookedFlights = async (req, res) => {
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
-    const bookedFlights = await bookedFlightRepository.getBookedFlights(decodedToken.user);
-    response.success(res, bookedFlights.map(bookedFlight => ({
-      // bookedBy: bookedFlight.bookedBy,
-      code: bookedFlight.code,
-      searchedFlightCode: bookedFlight.searchedFlightCode,
-      flightDetailsCode: bookedFlight.flightDetailsCode,
-      status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
-      time: bookedFlight.time,
-      passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
-      origin: {
-        code: bookedFlight.flightInfo.origin.code,
-        name: bookedFlight.flightInfo.origin.name,
-      },
-      destination: {
-        code: bookedFlight.flightInfo.destination.code,
-        name: bookedFlight.flightInfo.destination.name,
-      },
-      travelClass: bookedFlight.flightInfo.travelClass,
-      price: bookedFlight.flightInfo.flights.price.total,
-      currencyCode: bookedFlight.flightInfo.flights.currencyCode
-    })));
+    const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(decodedToken.user, req.header("Page"), req.header("PageSize"));
+
+    response.success(res, {
+      ...result,
+      items: bookedFlights.map(bookedFlight => ({
+        // bookedBy: bookedFlight.bookedBy,
+        code: bookedFlight.code,
+        searchedFlightCode: bookedFlight.searchedFlightCode,
+        flightDetailsCode: bookedFlight.flightDetailsCode,
+        status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+        time: bookedFlight.time,
+        passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
+        origin: {
+          code: bookedFlight.flightInfo.origin.code,
+          name: bookedFlight.flightInfo.origin.name,
+        },
+        destination: {
+          code: bookedFlight.flightInfo.destination.code,
+          name: bookedFlight.flightInfo.destination.name,
+        },
+        travelClass: bookedFlight.flightInfo.travelClass,
+        price: bookedFlight.flightInfo.flights.price.total,
+        currencyCode: bookedFlight.flightInfo.flights.currencyCode
+      }))
+    });
   } catch (e) {
     response.exception(res, e);
   }

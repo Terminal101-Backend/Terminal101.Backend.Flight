@@ -8,6 +8,8 @@ class BookFlight extends BaseValidator {
       searchedFlightCode: Joi.string().required(),
       flightDetailsCode: Joi.string().required(),
       paymentMethodName: Joi.string().required(),
+      currencySource: Joi.string(),
+      currencyTarget: Joi.string(),
       payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
       contact: Joi.object({
         email: Joi.string().required(),
@@ -93,6 +95,8 @@ class GenerateNewPaymentInfo extends BaseValidator {
     const body = {
       paymentMethodName: Joi.string().required(),
       payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+      currencySource: Joi.string(),
+      currencyTarget: Joi.string(),
     };
 
     const params = {

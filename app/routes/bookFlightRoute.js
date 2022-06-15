@@ -23,7 +23,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.getBookedFlights.check(),
+    bookFlightValidator.getBookedFlights.check(true),
     bookFlightController.getBookedFlights);
 
 // NOTE: Get specific user's booked flights list

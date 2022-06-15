@@ -38,8 +38,11 @@ axiosApiInstance.interceptors.response.use((response) => {
   return Promise.reject(error);
 });
 
-const chargeUserWalletByCreditCard = async (userCode, amount) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/credit-card/charge/${userCode}`, {
+const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySource, currencyTarget) => {
+  const { data: response } = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
+    paymentMethodName,
+    currencySource,
+    currencyTarget,
     amount,
     serviceName: "FLIGHT"
   });
@@ -47,14 +50,14 @@ const chargeUserWalletByCreditCard = async (userCode, amount) => {
   return response.data;
 };
 
-const chargeUserWalletByCryptoCurrency = async (userCode, amount) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/crypto-currency/charge/${userCode}`, {
-    amount,
-    serviceName: "FLIGHT"
-  });
+// const chargeUserWalletByCryptoCurrency = async (userCode, amount) => {
+//   const { data: response } = await axiosApiInstance.post(`/wallet/crypto-currency/charge/${userCode}`, {
+//     amount,
+//     serviceName: "FLIGHT"
+//   });
 
-  return response.data;
-};
+//   return response.data;
+// };
 
 const getPaymentMethod = async (userCode, amount) => {
   const { data: response } = await axiosApiInstance.get(`/payment/method/${userCode}`);
@@ -70,7 +73,7 @@ const getUserWallet = async (userCode, amount) => {
 
 module.exports = {
   getUserWallet,
-  chargeUserWalletByCreditCard,
-  chargeUserWalletByCryptoCurrency,
+  chargeUserWallet,
+  // chargeUserWalletByCryptoCurrency,
   getPaymentMethod,
 };

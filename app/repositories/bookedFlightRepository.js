@@ -2,6 +2,7 @@ const BaseRepository = require("../core/baseRepository");
 const { BookedFlight } = require("../models/documents");
 const { EBookedFlightStatus } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
+const { paginationHelper } = require("../helpers");
 
 class BookedFlightRepository extends BaseRepository {
   constructor() {
@@ -43,7 +44,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} bookedBy 
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlights(bookedBy) {
+  async getBookedFlights(bookedBy, page, pageSize) {
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
       $match: {
@@ -68,7 +69,9 @@ class BookedFlightRepository extends BaseRepository {
       }
     });
 
-    return await agrBookedFlight.exec();
+    return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
+
+    // return await agrBookedFlight.exec();
   }
 
   /**
