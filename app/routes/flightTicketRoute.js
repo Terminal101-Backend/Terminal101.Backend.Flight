@@ -15,6 +15,16 @@ router
     flightTicketValidator.getFlightTickets.check(),
     flightTicketController.getFlightTickets);
 
+// NOTE: Get flight tickets pdf
+router
+  .get("/pdf/:bookedBy/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Get flight tickets", req.params, req.body, req.query);
+      next();
+    },
+    flightTicketValidator.getFlightTicketsPdf.check(),
+    flightTicketController.getFlightTicketsPdf);
+
 // NOTE: Get other user's flight tickets
 router
   .get("/:userCode/:bookedFlightCode",

@@ -16,6 +16,21 @@ class GetFlightTickets extends BaseValidator {
   }
 };
 
+class GetFlightTicketsPdf extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      bookedBy: Joi.string().required(),
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class GetUserFlightTickets extends BaseValidator {
   constructor() {
     const body = {
@@ -33,5 +48,6 @@ class GetUserFlightTickets extends BaseValidator {
 
 module.exports = {
   getFlightTickets: new GetFlightTickets(),
+  getFlightTicketsPdf: new GetFlightTicketsPdf(),
   getUserFlightTickets: new GetUserFlightTickets(),
 };

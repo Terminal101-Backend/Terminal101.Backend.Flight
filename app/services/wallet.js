@@ -47,6 +47,15 @@ const chargeUserWalletByCreditCard = async (userCode, amount) => {
   return response.data;
 };
 
+const chargeUserWalletByCryptoCurrency = async (userCode, amount) => {
+  const { data: response } = await axiosApiInstance.post(`/wallet/crypto-currency/charge/${userCode}`, {
+    amount,
+    serviceName: "FLIGHT"
+  });
+
+  return response.data;
+};
+
 const getPaymentMethod = async (userCode, amount) => {
   const { data: response } = await axiosApiInstance.get(`/payment/method/${userCode}`);
 
@@ -62,5 +71,6 @@ const getUserWallet = async (userCode, amount) => {
 module.exports = {
   getUserWallet,
   chargeUserWalletByCreditCard,
+  chargeUserWalletByCryptoCurrency,
   getPaymentMethod,
 };

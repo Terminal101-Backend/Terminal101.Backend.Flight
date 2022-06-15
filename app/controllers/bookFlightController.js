@@ -137,6 +137,10 @@ module.exports.bookFlight = async (req, res) => {
           break;
 
         case "CRYPTOCURRENCY":
+          result = await wallet.chargeUserWalletByCryptoCurrency(decodedToken.user, amount);
+          if (!result) {
+            throw "wallet_error";
+          }
           // TODO: Create payment info and make transaction by crypto currency
           break;
 
