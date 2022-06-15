@@ -77,7 +77,7 @@ router
       console.log("Edit specific user's booked flight", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
     bookFlightValidator.editUserBookedFlight.check(),
     bookFlightController.editUserBookedFlight);
 

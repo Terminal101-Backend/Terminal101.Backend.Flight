@@ -233,17 +233,15 @@ module.exports.editUserBookedFlight = async (req, res) => {
 module.exports.getBookedFlights = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
-    const result = await bookedFlightRepository.getBookedFlights(decodedToken.user);
-    response.success(res, result.map(bookedFlight => ({
+    const bookedFlights = await bookedFlightRepository.getBookedFlights(decodedToken.user);
+    response.success(res, bookedFlights.map(bookedFlight => ({
       // bookedBy: bookedFlight.bookedBy,
       code: bookedFlight.code,
       status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
       time: bookedFlight.time,
-      passengers: bookedFlight.passengers.map(passenger => ({
-        documentCode: passenger.documentCode,
-        documentIssuedAt: passenger.documentIssuedAt,
-      })),
+      passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
       origin: {
         code: bookedFlight.flightInfo.origin.code,
         name: bookedFlight.flightInfo.origin.name,
