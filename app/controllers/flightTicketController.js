@@ -16,7 +16,7 @@ let path = require("path");
 module.exports.getFlightTickets = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    // const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
     // const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
     // const passengers = bookedFlight.passengers.map(passenger => {
     //   if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -106,7 +106,7 @@ module.exports.getFlightTickets = async (req, res) => {
       });
       const page = await browser.newPage();
       // await page.goto("https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox", { waitUntil: 'networkidle0' });
-      await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/pdf/${decodedToken.user}/${req.params.bookedFlightCode}`, { waitUntil: 'networkidle0' });
+      await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${req.header("Authorization")}/${req.params.bookedFlightCode}`, { waitUntil: 'networkidle0' });
       const pdf = await page.pdf({ format: 'A4' });
 
       const fd = fs.openSync(filePath, "w");
@@ -156,10 +156,11 @@ module.exports.getFlightTickets = async (req, res) => {
   }
 };
 // NOTE: Get flight tickets
-module.exports.getFlightTicketsPdf = async (req, res) => {
+module.exports.getFlightTicketsView = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.params.token);
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
-    if (bookedFlight.bookedBy !== req.params.bookedBy) {
+    if (bookedFlight.bookedBy !== decodedToken.user) {
       throw "user_invalid";
     }
 
