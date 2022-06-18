@@ -22,6 +22,10 @@ module.exports.payForFlight = async (req, res) => {
 
     // TODO: Finilize book flight by Amadeus
     // TODO: Send notification to user
+    // TODO: Send an email attached PDF file
+    // TODO: Send a SMS
+    // TODO: Reduce flight price from user's wallet
+    // TODO: If user wallet's credit is less than flight price do what???!!!
 
     response.success(res, result);
   } catch (e) {

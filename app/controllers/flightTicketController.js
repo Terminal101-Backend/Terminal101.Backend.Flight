@@ -41,7 +41,6 @@ module.exports.getFlightTickets = async (req, res) => {
     //   }
     // });
 
-    // TODO: Get lead and passengers' informations by account management service
     const filePath = path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`);
 
     if (true || !fs.existsSync(filePath)) {
@@ -105,7 +104,6 @@ module.exports.getFlightTickets = async (req, res) => {
         args: ['--no-sandbox', '--disable-setuid-sandbox'],
       });
       const page = await browser.newPage();
-      // await page.goto("https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#setting-up-chrome-linux-sandbox", { waitUntil: 'networkidle0' });
       await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${req.header("Authorization")}/${req.params.bookedFlightCode}`, { waitUntil: 'networkidle0' });
       const pdf = await page.pdf({ format: 'A4' });
 
@@ -149,8 +147,6 @@ module.exports.getFlightTickets = async (req, res) => {
     }
 
     res.sendFile(filePath);
-    // TODO: Send an email attached PDF file
-    // TODO: Send a SMS
   } catch (e) {
     response.exception(res, e);
   }

@@ -420,6 +420,7 @@ module.exports.getFlight = async (req, res) => {
           grandTotal: flightInfo.flights.price.grandTotal,
           base: flightInfo.flights.price.base,
           travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
+            type: travelerPrice.travelerType,
             total: travelerPrice.total,
             base: travelerPrice.base,
             fees: travelerPrice.fees.map(fee => ({
