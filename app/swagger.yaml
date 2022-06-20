@@ -410,6 +410,28 @@ paths:
             items:
               $ref: "#/definitions/BookedFlightDetails"
 
+    # NOTE: Book flight
+    post:
+      tags:
+        - Book
+      description: Book flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Flight Info
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/BookFlightInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
   /flight/book/{userCode}/{bookedFlightCode}:
     # NOTE: Edit user's booked flight
     patch:
@@ -445,28 +467,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/BookedFlightDetails"
-
-    # NOTE: Book flight
-    post:
-      tags:
-        - Book
-      description: Book flight
-      parameters:
-        - name: Authorization
-          in: header
-          type: string
-          value: Bearer
-          required: true
-        - name: Flight Info
-          in: body
-          required: true
-          schema:
-            $ref: "#/definitions/BookFlightInfo"
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: "#/definitions/BookFlightResult"
 
   /flight/book/pay/{bookedFlightCode}:
     # NOTE: Generate new payment info for selected flight
