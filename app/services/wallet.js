@@ -59,14 +59,20 @@ const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySou
 //   return response.data;
 // };
 
-const getPaymentMethod = async (userCode, amount) => {
+const getPaymentMethod = async userCode => {
   const { data: response } = await axiosApiInstance.get(`/payment/method/${userCode}`);
 
   return response.data;
 };
 
-const getUserWallet = async (userCode, amount) => {
+const getUserWallet = async userCode => {
   const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}`);
+
+  return response.data;
+};
+
+const getUserTransaction = async (userCode, externalTransactionId) => {
+  const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}/transaction/${externalTransactionId}`);
 
   return response.data;
 };
@@ -74,6 +80,7 @@ const getUserWallet = async (userCode, amount) => {
 module.exports = {
   getUserWallet,
   chargeUserWallet,
+  getUserTransaction,
   // chargeUserWalletByCryptoCurrency,
   getPaymentMethod,
 };

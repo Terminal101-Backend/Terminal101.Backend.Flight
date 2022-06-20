@@ -79,10 +79,11 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} code 
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlight(code) {
+  async getBookedFlight(userCode, code) {
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
       $match: {
+        bookedBy: userCode,
         code,
       }
     });

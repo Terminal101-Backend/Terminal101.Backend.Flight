@@ -146,7 +146,6 @@ module.exports.bookFlight = async (req, res) => {
           if (!result) {
             throw "wallet_error";
           }
-          // TODO: Create payment info and make transaction by crypto currency
           break;
 
         default:
@@ -310,7 +309,51 @@ module.exports.getUserBookedFlights = async (req, res) => {
 // NOTE: Get booked flight's details
 module.exports.getBookedFlight = async (req, res) => {
   try {
-    response.success(res, result);
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
+    const transaction = await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId);
+
+    response.success(res, {
+      // bookedBy: bookedFlight.bookedBy,
+      code: bookedFlight.code,
+      searchedFlightCode: bookedFlight.searchedFlightCode,
+      flightDetailsCode: bookedFlight.flightDetailsCode,
+      status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+      time: bookedFlight.time,
+      passengers: bookedFlight.passengers.map(passenger => {
+        const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
+        return {
+          gender: person.gender,
+          firstName: person.firstName,
+          lastName: person.lastName,
+          middleName: person.middleName,
+          nickName: person.nickName,
+          birthDate: person.birthDate,
+          type: person.type,
+          document: {
+            type: person.document.type,
+            code: person.document.code,
+            issuedAt: person.document.issuedAt,
+            expirationDate: person.document.expirationDate,
+            postCode: person.document.postCode,
+          },
+        };
+      }),
+      origin: {
+        code: bookedFlight.flightInfo.origin.code,
+        name: bookedFlight.flightInfo.origin.name,
+      },
+      destination: {
+        code: bookedFlight.flightInfo.destination.code,
+        name: bookedFlight.flightInfo.destination.name,
+      },
+      travelClass: bookedFlight.flightInfo.travelClass,
+      price: bookedFlight.flightInfo.flights.price.total,
+      currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+      transaction,
+    });
   } catch (e) {
     response.exception(res, e);
   }
