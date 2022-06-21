@@ -25,7 +25,7 @@ module.exports.payForFlight = async (req, res) => {
     // TODO: Send an email attached PDF file
     // TODO: Send a SMS
     // TODO: Reduce flight price from user's wallet
-    // TODO: If user wallet's credit is less than flight price do what???!!!
+    // TODO: If user wallet's credit is less than flight price do... what???!!!
 
     response.success(res, result);
   } catch (e) {
@@ -255,6 +255,10 @@ module.exports.getBookedFlights = async (req, res) => {
         status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
+        contact: {
+          email: bookedFlight.contact.email,
+          mobileNumber: bookedFlight.contact.mobileNumber,
+        },
         origin: {
           code: bookedFlight.flightInfo.origin.code,
           name: bookedFlight.flightInfo.origin.name,
@@ -322,6 +326,10 @@ module.exports.getBookedFlight = async (req, res) => {
       flightDetailsCode: bookedFlight.flightDetailsCode,
       status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
       time: bookedFlight.time,
+      contact: {
+        email: bookedFlight.contact.email,
+        mobileNumber: bookedFlight.contact.mobileNumber,
+      },
       passengers: bookedFlight.passengers.map(passenger => {
         const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
         return {
