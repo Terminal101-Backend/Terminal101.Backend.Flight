@@ -432,6 +432,29 @@ paths:
           schema:
             $ref: "#/definitions/BookFlightResult"
 
+  /flight/book/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
   /flight/book/{userCode}/{bookedFlightCode}:
     # NOTE: Edit user's booked flight
     patch:
