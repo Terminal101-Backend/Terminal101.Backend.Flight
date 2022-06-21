@@ -325,6 +325,7 @@ module.exports.getBookedFlight = async (req, res) => {
       passengers: bookedFlight.passengers.map(passenger => {
         const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
         return {
+          type: person.type,
           gender: person.gender,
           firstName: person.firstName,
           lastName: person.lastName,
