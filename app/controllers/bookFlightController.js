@@ -19,6 +19,9 @@ module.exports.payForFlight = async (req, res) => {
       bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
       await bookedFlight.save();
     }
+    const transaction = await wallet.getUserTransaction(bookedFlight.bookedBy, req.body.externalTransactionId);
+
+    await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -transaction.value, "Book flight; transaction id: " + req.body.externalTransactionId);
 
     // TODO: Finilize book flight by Amadeus
     // TODO: Send notification to user
