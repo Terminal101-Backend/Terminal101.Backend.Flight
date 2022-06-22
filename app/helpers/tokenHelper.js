@@ -14,7 +14,11 @@ exports.decodeToken = token => {
     if (token.startsWith("Bearer ")) {
       token = token.substr("Bearer ".length);
     }
-    return jwt.verify(token, process.env.JWT_SECRET);
+    try {
+      return jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return undefined;
+    }
   }
 }
 

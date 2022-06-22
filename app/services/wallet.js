@@ -59,20 +59,52 @@ const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySou
 //   return response.data;
 // };
 
+/**
+ * 
+ * @param {String} userCode 
+ * @returns {Promise}
+ */
 const getPaymentMethod = async userCode => {
   const { data: response } = await axiosApiInstance.get(`/payment/method/${userCode}`);
 
   return response.data;
 };
 
+/**
+ * 
+ * @param {String} userCode 
+ * @returns {Promise}
+ */
 const getUserWallet = async userCode => {
   const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}`);
 
   return response.data;
 };
 
+/**
+ * 
+ * @param {String} userCode 
+ * @param {String} externalTransactionId
+ * @returns {Promise}
+ */
 const getUserTransaction = async (userCode, externalTransactionId) => {
   const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}/transaction/${externalTransactionId}`);
+
+  return response.data;
+};
+
+/**
+ * 
+ * @param {String} userCode 
+ * @param {String} amount
+ * @returns {Promise}
+ */
+const addAndConfirmUserTransaction = async (userCode, amount) => {
+  const { data: response } = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
+    amount,
+    description: "Book flight",
+    serviceName: "FLIGHT",
+  });
 
   return response.data;
 };
@@ -81,6 +113,7 @@ module.exports = {
   getUserWallet,
   chargeUserWallet,
   getUserTransaction,
+  addAndConfirmUserTransaction,
   // chargeUserWalletByCryptoCurrency,
   getPaymentMethod,
 };
