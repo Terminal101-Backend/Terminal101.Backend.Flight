@@ -155,7 +155,7 @@ module.exports.getFlightTickets = async (req, res) => {
 module.exports.getFlightTicketsView = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.params.token);
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
     if (bookedFlight.bookedBy !== decodedToken.user) {
       throw "user_invalid";
     }

@@ -11,7 +11,7 @@ router
       console.log("Get flight tickets", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.isLogin,
     flightTicketValidator.getFlightTickets.check(),
     flightTicketController.getFlightTickets);
 

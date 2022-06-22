@@ -27,7 +27,7 @@ module.exports.payForFlight = async (req, res) => {
     // TODO: Send notification to user
     // TODO: Send an email attached PDF file
     // TODO: Send a SMS
-    // TODO: Reduce flight price from user's wallet
+    // TODO: Get last flight price from our DB
     // TODO: If user wallet's credit is less than flight price do... what???!!!
 
     response.success(res, result);
@@ -109,8 +109,8 @@ module.exports.bookFlight = async (req, res) => {
       throw "payment_method_inactive";
     }
 
-    // TODO: Get user
     // TODO: Get last flight's price from provider
+    // TODO: Set last flight's price in our DB
     // TODO: Reserve flight by provider
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
