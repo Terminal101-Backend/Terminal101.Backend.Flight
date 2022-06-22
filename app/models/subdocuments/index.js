@@ -16,4 +16,4 @@ module.exports.PriceDetails = require("./priceDetails");
 module.exports.Price = require("./price");
 module.exports.Person = require("./person");
 module.exports.Contact = require("./contact");
-module.exports.FilterCondition = require("./filterCondition");
+module.exports.Condition = require("./condition");

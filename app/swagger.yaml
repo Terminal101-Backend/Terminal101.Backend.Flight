@@ -22,6 +22,8 @@ tags:
     description: Country routes
   - name: Flight
     description: Flight routes
+  - name: FlightCondition
+    description: Flight's conditions routes
   - name: Provider
     description: Provider routes
   - name: Restriction
@@ -658,6 +660,126 @@ paths:
             $ref: "#/definitions/ProviderInfo"
             description: Provider's info
 
+
+  /condition:
+    # NOTE: Get all flight conditions
+    get:
+      tags:
+        - FlightCondition
+      description: Get all flight conditions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/FlightConditionInfo"
+              description: Flight condition info
+    # NOTE: Add new flight conditions
+    post:
+      tags:
+        - FlightCondition
+      description: Add new flight conditions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: condition
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/FlightCondition"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+  /condition/{code}:
+    # NOTE: Get one flight condition
+    get:
+      tags:
+        - FlightCondition
+      description: Get one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+            
+    # NOTE: Delete one flight condition
+    delete:
+      tags:
+        - FlightCondition
+      description: Delete one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+    # NOTE: Edit one flight condition
+    patch:
+      tags:
+        - FlightCondition
+      description: Edit one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+        - name: flightConditionInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditFlightCondition"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+
 definitions:
   Flight:
     required:
@@ -972,6 +1094,76 @@ definitions:
       isActive:
         type: boolean
         example: true
+
+  Condition:
+    required:
+      - items
+      - exclude
+    properties:
+      items:
+        type: array
+        items:
+          type: string
+      exclude:
+        type: boolean
+        example: false
+
+  FlightCondition:
+    required:
+      - origin
+      - destination
+      - airline
+      - providerNames
+      - isRestricted
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isRestricted:
+        type: boolean
+        example: false
+
+  FlightConditionInfo:
+    properties:
+      code:
+        type: number
+        example: 1
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isRestricted:
+        type: boolean
+        example: false
+
+  EditFlightCondition:
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isRestricted:
+        type: boolean
+        example: false
 
 schemes:
   # - http

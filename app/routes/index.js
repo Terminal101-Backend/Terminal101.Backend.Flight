@@ -8,6 +8,7 @@ module.exports = (app) => {
   app.use("/country/:countryCode/city", require("./airportRoute"));
   app.use("/provider", require("./providerRoute"));
   app.use("/restriction", require("./restrictionRoute"));
+  app.use("/condition", require("./flightConditionRoute"));
 
 
   app.use("/temp", require("./tempRoute"));

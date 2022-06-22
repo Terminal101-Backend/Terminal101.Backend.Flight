@@ -25,7 +25,7 @@ router
 
 // NOTE: Add provider
 router
-  .post("",
+  .post("/",
     (req, res, next) => {
       console.log("Add provider", req.params, req.body, req.query);
       next();
