@@ -99,10 +99,10 @@ const getUserTransaction = async (userCode, externalTransactionId) => {
  * @param {String} amount
  * @returns {Promise}
  */
-const addAndConfirmUserTransaction = async (userCode, amount) => {
+const addAndConfirmUserTransaction = async (userCode, amount, description) => {
   const { data: response } = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
     amount,
-    description: "Book flight",
+    description,
     serviceName: "FLIGHT",
   });
 
