@@ -15,18 +15,18 @@ class FlightConditionRepository extends BaseRepository {
 
   /**
    * 
-   * @param {TCondition} origins 
-   * @param {TCondition} destinations
-   * @param {TCondition} airlines
+   * @param {TCondition} origin 
+   * @param {TCondition} destination
+   * @param {TCondition} airline
    * @param {String} providerNames
    * @param Boolean} isRestricted
    * @returns {Promise<FlightCondition>}
    */
-  async createFlightCondition(origins, destinations, airlines, providerNames, isRestricted = false) {
-    const flightCondition = new FlightCondition({ origins, destinations, airlines, providerNames, isRestricted });
+  async createFlightCondition(origin, destination, airline, providerNames, isRestricted = false) {
+    const flightCondition = new FlightCondition({ origin, destination, airline, providerNames, isRestricted });
 
     const lastFlightCondition = await FlightCondition.find().sort({ code: -1 }).limit(1);
-    flightCondition.code = !!lastFlightCondition ? lastFlightCondition.code + 1 : 0;
+    flightCondition.code = !!lastFlightCondition[0] ? lastFlightCondition[0].code + 1 : 0;
 
     await flightCondition.save();
 

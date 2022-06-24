@@ -31,7 +31,7 @@ describe("Random String", () => {
   });
 });
 
-describe("Redis", () => {});
+describe("Redis", () => { });
 
 describe("Enum", () => {
   it("Test symbolic enumerators", done => {
@@ -75,11 +75,33 @@ describe("Model", () => {
     // });
   });
 
+  describe("Flight Condition Model", () => {
+    vars.flightCondition = {};
+
+    it("Add new flight condition", done => {
+      check(done, {
+        test: modelTests.addFlightCondition,
+        params: [vars.flightCondition]
+      });
+    });
+
+    it("Get flight condition", done => {
+      check(done, {
+        test: modelTests.getFlightCondition,
+        params: [vars.flightCondition]
+      });
+    });
+  });
+
   it("Remove test documents", done => {
     check(done, {
       test: modelTests.cleanCountry,
       params: [vars.country]
-    });
+    },
+      {
+        test: modelTests.cleanFlightCondition,
+        params: [vars.flightCondition]
+      });
   });
 });
 

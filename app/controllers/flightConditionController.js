@@ -12,6 +12,7 @@ module.exports.getFlightConditions = async (req, res) => {
     response.success(res, {
       ...result,
       items: flightConditions.map(flightCondition => ({
+        code: flightCondition.code,
         origin: {
           items: flightCondition.origin.items,
           exclude: flightCondition.origin.exculude,
@@ -39,6 +40,7 @@ module.exports.getFlightCondition = async (req, res) => {
     const flightConditions = await flightConditionRepository.getFlightCondition(req.params.code);
 
     response.success(res, {
+      code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
         exclude: flightCondition.origin.exculude,
@@ -95,6 +97,7 @@ module.exports.editFlightCondition = async (req, res) => {
     }
 
     response.success(res, {
+      code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
         exclude: flightCondition.origin.exculude,
@@ -121,6 +124,7 @@ module.exports.deleteFlightCondition = async (req, res) => {
     const flightCondition = await flightConditionRepository.deleteOne({ code: req.params.code });
 
     response.success(res, {
+      code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
         exclude: flightCondition.origin.exculude,
@@ -147,6 +151,7 @@ module.exports.addFlightCondition = async (req, res) => {
     const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.isRestricted);
 
     response.success(res, {
+      code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
         exclude: flightCondition.origin.exculude,

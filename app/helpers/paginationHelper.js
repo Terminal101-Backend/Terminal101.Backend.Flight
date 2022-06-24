@@ -72,7 +72,13 @@ module.exports.rootPagination = async (aggregate, page, pageSize) => {
 
   const result = await aggregate.exec();
 
-  return result[0];
+  return result[0] ?? {
+    page: page ?? 0,
+    pageSize: !!pageSize ? parseInt(pageSize) : config.application.pagination.pageSize,
+    pageCount: 0,
+    count: 0,
+    items: [],
+  };
 };
 
 /**
