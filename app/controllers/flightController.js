@@ -2,7 +2,7 @@ const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../const
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, flightInfoRepository } = require("../repositories");
+const { providerRepository, countryRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
@@ -110,6 +110,8 @@ module.exports.searchFlights = async (req, res) => {
     let providerNumber = 0;
     let searchCode;
     let result;
+
+    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
 
     activeProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
