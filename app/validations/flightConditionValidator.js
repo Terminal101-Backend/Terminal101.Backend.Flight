@@ -83,7 +83,7 @@ class AddFlightCondition extends BaseValidator {
         exclude: Joi.bool().default(false),
       }).default({ items: [], exclude: false }),
       providerNames: Joi.array().items(Joi.string()).default([]),
-      isRestricted: Joi.boolean().default(true),
+      isRestricted: Joi.boolean().default(false),
     };
 
     super(body);
