@@ -15,15 +15,15 @@ module.exports.getFlightConditions = async (req, res) => {
         code: flightCondition.code,
         origin: {
           items: flightCondition.origin.items,
-          exclude: flightCondition.origin.exculude,
+          exclude: !!flightCondition.origin.exculude,
         },
         destination: {
           items: flightCondition.destination.items,
-          exclude: flightCondition.destination.exculude,
+          exclude: !!flightCondition.destination.exculude,
         },
         airline: {
           items: flightCondition.airline.items,
-          exclude: flightCondition.airline.exculude,
+          exclude: !!flightCondition.airline.exculude,
         },
         providerNames: flightCondition.providerNames,
         isRestricted: flightCondition.isRestricted,
