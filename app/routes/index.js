@@ -6,6 +6,7 @@ module.exports = (app) => {
   app.use("/country", require("./countryRoute"));
   app.use("/country", require("./cityRoute"));
   app.use("/country/:countryCode/city", require("./airportRoute"));
+  app.use("/airline", require("./airlineRoute"));
   app.use("/provider", require("./providerRoute"));
   app.use("/restriction", require("./restrictionRoute"));
   app.use("/condition", require("./flightConditionRoute"));

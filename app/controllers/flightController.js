@@ -2,7 +2,7 @@ const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../const
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
+const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
@@ -558,6 +558,17 @@ module.exports.getAirports = async (req, res) => {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
     response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get airlines
+module.exports.getAirlines = async (req, res) => {
+  try {
+    const airline = await airlineRepository.findMany();
+
+    response.success(res, airline.map(airline => ({ code: airline.code, name: airline.name, description: airline.description })));
   } catch (e) {
     response.exception(res, e);
   }

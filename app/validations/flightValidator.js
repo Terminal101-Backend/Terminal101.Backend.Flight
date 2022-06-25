@@ -189,6 +189,15 @@ class GetAirports extends BaseValidator {
   }
 };
 
+class GetAirlines extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    super(body);
+  }
+};
+
 class RestrictionCovid19 extends BaseValidator {
   constructor() {
     const body = {
@@ -216,5 +225,6 @@ module.exports = {
   getCountries: new GetCountries(),
   getCities: new GetCities(),
   getAirports: new GetAirports(),
+  getAirlines: new GetAirlines(),
   restrictionCovid19: new RestrictionCovid19(),
 };

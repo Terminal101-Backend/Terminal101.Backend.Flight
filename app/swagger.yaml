@@ -12,6 +12,8 @@ host: test-terminal101-flight.herokuapp.com
 basePath: /
 
 tags:
+  - name: Airline
+    description: Airline routes
   - name: Airport
     description: Airport routes
   - name: Book
@@ -83,6 +85,23 @@ paths:
             type: array
             items:
               $ref: "#/definitions/City"
+
+
+  # NOTE: Airline
+  /airline:
+    # NOTE: Get all airlines
+    get:
+      tags:
+        - Airline
+      description: Get all airlines.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Airline"
+
 
   # NOTE: Country
   /country:
