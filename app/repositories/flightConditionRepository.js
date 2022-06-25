@@ -41,6 +41,14 @@ class FlightConditionRepository extends BaseRepository {
    */
   async getFlightConditions(page, pageSize) {
     const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $lookup: {
+        from: 'airports',
+        localField: 'origin.items',
+        foreignField: 'code',
+        as: 'origin.items.info'
+      }
+    })
 
     const flightConditions = await pagination.rootPagination(agrFlightCondition, page, pageSize);
     return flightConditions;

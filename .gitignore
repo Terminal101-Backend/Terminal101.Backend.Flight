@@ -5,3 +5,4 @@ package-lock.json
 .vscode
 app/static/tickets/*
 init.sh
+*.mongodb
