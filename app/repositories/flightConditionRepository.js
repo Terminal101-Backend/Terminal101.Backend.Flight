@@ -43,12 +43,132 @@ class FlightConditionRepository extends BaseRepository {
     const agrFlightCondition = FlightCondition.aggregate();
     agrFlightCondition.append({
       $lookup: {
-        from: 'airports',
-        localField: 'origin.items',
-        foreignField: 'code',
-        as: 'origin.items.info'
+        from: 'countries',
+        as: 'originInfo',
+        let: {
+          originItems: "$origin.items",
+        },
+        pipeline: [
+          {
+            $unwind: "$cities"
+          },
+          {
+            $project: {
+              cities: {
+                airports: {
+                  code: 1,
+                  name: 1,
+                  description: 1,
+                }
+              },
+            },
+          },
+          {
+            $project: {
+              originAirports: {
+                $filter: {
+                  input: "$cities.airports",
+                  as: "item",
+                  cond: {
+                    $in: ["$$item.code", "$$originItems"]
+                  }
+                },
+              },
+            },
+          },
+        ]
       }
-    })
+    });
+    agrFlightCondition.append({
+      $lookup: {
+        from: 'countries',
+        as: 'destinationInfo',
+        let: {
+          destinationItems: "$destination.items",
+        },
+        pipeline: [
+          {
+            $unwind: "$cities"
+          },
+          {
+            $project: {
+              cities: {
+                airports: {
+                  code: 1,
+                  name: 1,
+                  description: 1,
+                }
+              },
+            },
+          },
+          {
+            $project: {
+              destinationAirports: {
+                $filter: {
+                  input: "$cities.airports",
+                  as: "item",
+                  cond: {
+                    $in: ["$$item.code", "$$destinationItems"]
+                  }
+                },
+              },
+            },
+          },
+        ]
+      }
+    });
+    agrFlightCondition.append({
+      $lookup: {
+        from: 'airlines',
+        as: 'airlineInfo',
+        localField: "airline.items",
+        foreignField: "code",
+      }
+    });
+    agrFlightCondition.append({
+      $project: {
+        providerNames: 1,
+        isRestricted: 1,
+        "airline.exclude": 1,
+        "airline.items": {
+          $map: {
+            input: "$airlineInfo",
+            as: "item",
+            in: {
+              code: "$$item.code",
+              name: "$$item.name",
+              description: "$$item.description",
+            }
+          }
+        },
+        "origin.exclude": 1,
+        "origin.items": {
+          $reduce: {
+            input: "$originInfo",
+            initialValue: [],
+            in: {
+              $concatArrays: [
+                "$$value",
+                "$$this.originAirports"
+              ]
+            }
+          }
+        },
+        "destination.exclude": 1,
+        "destination.items": {
+          $reduce: {
+            input: "$destinationInfo",
+            initialValue: [],
+            in: {
+              $concatArrays: [
+                "$$value",
+                "$$this.destinationAirports"
+              ]
+            }
+          }
+        },
+      },
+    });
 
     const flightConditions = await pagination.rootPagination(agrFlightCondition, page, pageSize);
     return flightConditions;
