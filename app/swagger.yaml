@@ -592,6 +592,30 @@ paths:
             type: file
             description: "A pdf file contains flight's tickets"
 
+  /flight/ticket/view/{token}/{bookedFlightCode}:
+    # NOTE: View booked flight's tickets
+    get:
+      tags:
+        - Ticket
+      description: View booked flight's tickets
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          value: Bearer
+        - name: bookedFlightCode
+          in: path
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
   /provider:
     get:
       tags:
