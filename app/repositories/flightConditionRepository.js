@@ -127,6 +127,7 @@ class FlightConditionRepository extends BaseRepository {
     });
     agrFlightCondition.append({
       $project: {
+        code: 1,
         providerNames: 1,
         isRestricted: 1,
         "airline.exclude": 1,
