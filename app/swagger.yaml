@@ -553,6 +553,7 @@ paths:
           value: Bearer
           required: true
         - name: bookedFlightCode
+          in: path
           type: string
           required: true
           value: ge234f42g42r2
