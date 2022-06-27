@@ -112,6 +112,7 @@ module.exports.searchFlights = async (req, res) => {
     let result;
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    console.log(flightConditions.map(condition => condition.toJSON()));
 
     // TODO: Affect flight conditions on searchs
 
