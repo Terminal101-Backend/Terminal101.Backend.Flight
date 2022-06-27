@@ -199,8 +199,8 @@ class FlightConditionRepository extends BaseRepository {
       origin_destination: { "origin.items": origin, "origin.exclude": false, "destination.items": destination, "destination.exclude": false },
       not: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": { $ne: destination }, "destination.exclude": true },
     };
-    const condition = Object.values(conditions).reduce((condition, current) => ({ $or: [condition, current] }), {});
-    const flightConditions = await this.findMany(condition);
+    // const condition = Object.values(conditions).reduce((condition, current) => ({ $or: [condition, current] }), {});
+    const flightConditions = await this.findMany({ $or: Object.values(conditions) });
 
     return flightConditions;
   }
