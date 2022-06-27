@@ -41,7 +41,7 @@ module.exports.getFlightTickets = async (req, res) => {
     //   }
     // });
 
-    const filePath = path.join(path.resolve("app/static/tickets"), `${req.params.bookedFlightCode}.pdf`);
+    const filePath = path.join(path.resolve("app/static/tickets"), req.params.bookedFlightCode + ".pdf");
 
     if (true || !fs.existsSync(filePath)) {
       if (fs.existsSync(filePath)) {
@@ -146,7 +146,6 @@ module.exports.getFlightTickets = async (req, res) => {
       // res.send(template)
     }
 
-    console.log(filePath);
     res.sendFile(filePath);
   } catch (e) {
     response.exception(res, e);
