@@ -109,6 +109,7 @@ module.exports.bookFlight = async (req, res) => {
       throw "payment_method_inactive";
     }
 
+    // TODO: Get user info and persons to check request body data for passengers
     // TODO: Get last flight's price from provider
     // TODO: Set last flight's price in our DB
     // TODO: Reserve flight by provider

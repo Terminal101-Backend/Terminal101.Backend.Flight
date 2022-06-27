@@ -146,6 +146,7 @@ module.exports.getFlightTickets = async (req, res) => {
       // res.send(template)
     }
 
+    console.log(filePath);
     res.sendFile(filePath);
   } catch (e) {
     response.exception(res, e);
