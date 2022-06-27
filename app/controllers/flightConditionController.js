@@ -1,12 +1,13 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { flightConditionRepository } = require("../repositories");
-const { EFlightCondition } = require("../constants");
+const { flightConditionRepository, providerRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 // NOTE: FlightCondition tickets
 // NOTE: Get all flight conditions
 module.exports.getFlightConditions = async (req, res) => {
   try {
+    const providers = await providerRepository.findMany();
     const { items: flightConditions, ...result } = await flightConditionRepository.getFlightConditions(req.header("Page"), req.header("PageSize"));
 
     response.success(res, {
@@ -25,7 +26,14 @@ module.exports.getFlightConditions = async (req, res) => {
           items: flightCondition.airline.items,
           exclude: flightCondition.airline.exclude,
         },
-        providerNames: flightCondition.providerNames,
+        providerNames: flightCondition.providerNames.map(providerName => {
+          const provider = providers.find(p => EProvider.check(p.name, providerName));
+          return {
+            name: providerName,
+            title: provider.title,
+            isActive: provider.isActive,
+          }
+        }),
         isRestricted: flightCondition.isRestricted,
       }))
     });
@@ -37,7 +45,7 @@ module.exports.getFlightConditions = async (req, res) => {
 // NOTE: Get one flight condition
 module.exports.getFlightCondition = async (req, res) => {
   try {
-    const flightConditions = await flightConditionRepository.getFlightCondition(req.params.code);
+    const flightCondition = await flightConditionRepository.getFlightCondition(req.params.code);
 
     response.success(res, {
       code: flightCondition.code,
