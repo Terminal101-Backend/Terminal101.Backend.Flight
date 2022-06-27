@@ -90,6 +90,20 @@ class GetUserBookedFlights extends BaseValidator {
   }
 };
 
+class CancelBookedFlight extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 class GenerateNewPaymentInfo extends BaseValidator {
   constructor() {
     const body = {
@@ -153,6 +167,7 @@ module.exports = {
   bookFlight: new BookFlight(),
   bookFlightForUser: new BookFlightForUser(),
   editUserBookedFlight: new EditUserBookedFlight(),
+  cancelBookedFlight: new CancelBookedFlight(),
   getBookedFlights: new GetBookedFlights(),
   getUserBookedFlights: new GetUserBookedFlights(),
   getBookedFlight: new GetBookedFlight(),

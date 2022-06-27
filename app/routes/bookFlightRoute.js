@@ -26,6 +26,17 @@ router
     bookFlightValidator.getBookedFlights.check(true),
     bookFlightController.getBookedFlights);
 
+// NOTE: Change booked flight's status
+router
+  .delete("/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Change booked flight's status", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["CLIENT"]),
+    bookFlightValidator.cancelBookedFlight.check(),
+    bookFlightController.cancelBookedFlight);
+
 // NOTE: Get specific user's booked flights list
 // router
 //   .get("/:userCode",

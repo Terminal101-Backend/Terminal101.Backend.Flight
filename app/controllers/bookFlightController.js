@@ -180,6 +180,54 @@ module.exports.bookFlightForUser = async (req, res) => {
   }
 };
 
+// NOTE: Edit booked flight's status
+module.exports.cancelBookedFlight = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+    const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
+
+    if (!user) {
+      throw "user_not_found";
+    }
+
+    if (!bookedFlight) {
+      throw "flight_not_found";
+    }
+
+    if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], bookedFlight.status)) {
+      bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
+
+      await bookedFlight.save();
+    }
+
+    const result = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
+    response.success(res, {
+      // bookedBy: bookedFlight.bookedBy,
+      code: result.code,
+      status: EBookedFlightStatus.find(result.status) ?? result.status,
+      time: result.time,
+      passengers: result.passengers.map(passenger => ({
+        documentCode: passenger.documentCode,
+        documentIssuedAt: passenger.documentIssuedAt,
+      })),
+      origin: {
+        code: result.flightInfo.origin.code,
+        name: result.flightInfo.origin.name,
+      },
+      destination: {
+        code: result.flightInfo.destination.code,
+        name: result.flightInfo.destination.name,
+      },
+      travelClass: result.flightInfo.travelClass,
+      price: result.flightInfo.flights.price.total,
+      currencyCode: result.flightInfo.flights.currencyCode
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
@@ -214,7 +262,7 @@ module.exports.editUserBookedFlight = async (req, res) => {
 
     await bookedFlight.save();
 
-    const result = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    const result = await bookedFlightRepository.getBookedFlight(req.params.userCode, req.params.bookedFlightCode);
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
       code: result.code,
