@@ -6,6 +6,7 @@ const { flightController } = require("../controllers");
 module.exports = (io, socket) => {
   socket.on("searchFlight", async req => {
     try {
+      console.log(req);
       const activeProviders = await providerRepository.getActiveProviders();
       const activeProviderCount = activeProviders.length;
       const lastSearch = [];
