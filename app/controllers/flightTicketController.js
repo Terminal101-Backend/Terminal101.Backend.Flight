@@ -15,8 +15,12 @@ let path = require("path");
 // NOTE: Get flight tickets
 module.exports.getFlightTickets = async (req, res) => {
   try {
-    const decodedToken = token.decodeToken(req.header("Authorization"));
+    // const decodedToken = token.decodeToken(req.header("Authorization"));
     // const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
+    // if (bookedFlight.bookedBy !== decodedToken.user) {
+    //   throw "flight_not_found";
+    // }
+
     // const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
     // const passengers = bookedFlight.passengers.map(passenger => {
     //   if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
