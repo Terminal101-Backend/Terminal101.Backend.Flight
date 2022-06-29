@@ -12,16 +12,26 @@ module.exports.payForFlight = async (req, res) => {
   try {
     let result = {};
 
-    const bookedFlight = await bookedFlightRepository.findOne({
-      transactionId: req.body.externalTransactionId
-    });
+    const bookedFlight = await bookedFlightRepository.findOne(
+      !!req.body.externalTransactionId ? {
+        transactionId: req.body.externalTransactionId
+      } : {
+        code: req.body.bookedFlightCode
+      }
+    );
+    const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
     if (!!bookedFlight) {
       bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
       await bookedFlight.save();
+    } else {
+      throw "flight_not_found";
     }
-    const transaction = await wallet.getUserTransaction(bookedFlight.bookedBy, req.body.externalTransactionId);
 
-    await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -transaction.value, "Book flight; transaction id: " + req.body.externalTransactionId);
+    if (!!req.body.externalTransactionId) {
+      await wallet.getUserTransaction(bookedFlight.bookedBy, req.body.externalTransactionId);
+    }
+
+    await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; " + (!!req.body.externalTransactionId ? "transaction id: " + req.body.externalTransactionId : "code: " + req.body.bookedFlightCode));
 
     // TODO: Finilize book flight by Amadeus
     // TODO: Send notification to user
@@ -161,6 +171,9 @@ module.exports.bookFlight = async (req, res) => {
     }
 
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, result.value === 0 ? "INPROGRESS" : "PAYING");
+    if (amount === 0) {
+      await this.payForFlight({ body: { bookedFlightCode: bookedFlight.code } }, res);
+    }
 
     response.success(res, {
       code: bookedFlight.code,
