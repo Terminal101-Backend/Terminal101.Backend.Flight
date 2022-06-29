@@ -56,7 +56,7 @@ module.exports = (io, socket) => {
             },
             body: result,
           };
-          console.log(response.headers);
+          console.log(provider.title, response.headers);
 
           socket.emit("searchFlightResult", await socketHelper.success(response, language));
         }).catch(async e => {
@@ -67,6 +67,13 @@ module.exports = (io, socket) => {
               activeProviderCount,
             }
           }));
+          console.log(provider.title, {
+            headers: {
+              language,
+              providerNumber: ++providerNumber,
+              activeProviderCount,
+            }
+          }, e.message ?? e);
         });
       });
     } catch (e) {
