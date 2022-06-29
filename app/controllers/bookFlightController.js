@@ -26,15 +26,7 @@ const pay = async (bookedFlight) => {
 // NOTE: Success payment callback
 module.exports.payForFlight = async (req, res) => {
   try {
-    let result = {};
-
-    const bookedFlight = await bookedFlightRepository.findOne(
-      !!req.body.externalTransactionId ? {
-        transactionId: req.body.externalTransactionId
-      } : {
-        code: req.body.bookedFlightCode
-      }
-    );
+    const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
     await pay(bookedFlight);
 
     // TODO: Finilize book flight by Amadeus
