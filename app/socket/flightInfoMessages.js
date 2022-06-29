@@ -55,6 +55,7 @@ module.exports = (io, socket) => {
             },
             body: result,
           };
+          console.log(response.headers);
 
           socket.emit("searchFlightResult", await socketHelper.success(response, language));
         }).catch(async e => {
