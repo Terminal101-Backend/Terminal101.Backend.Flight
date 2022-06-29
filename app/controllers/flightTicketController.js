@@ -17,8 +17,11 @@ module.exports.getFlightTickets = async (req, res) => {
   try {
     // const decodedToken = token.decodeToken(req.header("Authorization"));
     // const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
-    // if (bookedFlight.bookedBy !== decodedToken.user) {
+    // if (!bookedFlight) {
     //   throw "flight_not_found";
+    // }
+    // if (bookedFlight.bookedBy !== decodedToken.user) {
+    //   throw "user_invalid";
     // }
 
     // const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
@@ -160,6 +163,9 @@ module.exports.getFlightTicketsView = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.params.token);
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
+    if (!bookedFlight) {
+      throw "flight_not_found";
+    }
     if (bookedFlight.bookedBy !== decodedToken.user) {
       throw "user_invalid";
     }
@@ -177,6 +183,9 @@ module.exports.getFlightTicketsView = async (req, res) => {
         }
       } else {
         const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
+        if (!userPerson) {
+          throw "passenger_not_found";
+        }
         return {
           firstName: userPerson.firstName,
           middleName: userPerson.middleName,

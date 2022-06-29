@@ -18,7 +18,7 @@ class BookedFlightRepository extends BaseRepository {
    * @returns {Promise<BookedFlight>}
    */
   async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status) {
-    let bookedFlight = await this.findOne({ transactionId });
+    let bookedFlight = !!transactionId ? await this.findOne({ transactionId }) : undefined;
 
     if (!bookedFlight) {
       let code;

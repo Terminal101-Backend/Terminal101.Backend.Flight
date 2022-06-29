@@ -7,6 +7,22 @@ const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 
 // NOTE: Book Flight
+const pay = async (bookedFlight) => {
+  const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+  if (!!bookedFlight) {
+    bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
+    await bookedFlight.save();
+  } else {
+    throw "flight_not_found";
+  }
+
+  if (!!bookedFlight.transactionId) {
+    await wallet.getUserTransaction(bookedFlight.bookedBy, bookedFlight.transactionId);
+  }
+
+  await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; " + (!!bookedFlight.transactionId ? "transaction id: " + bookedFlight.transactionId : "code: " + bookedFlight.code));
+};
+
 // NOTE: Success payment callback
 module.exports.payForFlight = async (req, res) => {
   try {
@@ -19,19 +35,7 @@ module.exports.payForFlight = async (req, res) => {
         code: req.body.bookedFlightCode
       }
     );
-    const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
-    if (!!bookedFlight) {
-      bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
-      await bookedFlight.save();
-    } else {
-      throw "flight_not_found";
-    }
-
-    if (!!req.body.externalTransactionId) {
-      await wallet.getUserTransaction(bookedFlight.bookedBy, req.body.externalTransactionId);
-    }
-
-    await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; " + (!!req.body.externalTransactionId ? "transaction id: " + req.body.externalTransactionId : "code: " + req.body.bookedFlightCode));
+    await pay(bookedFlight);
 
     // TODO: Finilize book flight by Amadeus
     // TODO: Send notification to user
@@ -40,7 +44,7 @@ module.exports.payForFlight = async (req, res) => {
     // TODO: Get last flight price from our DB
     // TODO: If user wallet's credit is less than flight price do... what???!!!
 
-    response.success(res, result);
+    response.success(res, true);
   } catch (e) {
     response.exception(res, e);
   }
@@ -114,9 +118,40 @@ module.exports.bookFlight = async (req, res) => {
 
     const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
     if (!paymentMethod.isActive) {
       throw "payment_method_inactive";
+    }
+
+    const passengers = req.body.passengers.map(passenger => {
+      if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+        return {
+          firstName: user.info.firstName,
+          middleName: user.info.middleName,
+          nickName: user.info.nickName,
+          lastName: user.info.lastName,
+          birthDate: user.info.birthDate,
+          gender: user.info.gender,
+        }
+      } else {
+        const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
+        if (!userPerson) {
+          throw "passenger_not_found";
+        }
+        return {
+          firstName: userPerson.firstName,
+          middleName: userPerson.middleName,
+          nickName: userPerson.nickName,
+          lastName: userPerson.lastName,
+          birthDate: userPerson.birthDate,
+          gender: userPerson.gender,
+        }
+      }
+    });
+
+    if (!passengers || (passengers.length === 0)) {
+      throw "passenger_not_found";
     }
 
     // TODO: Get user info and persons to check request body data for passengers
@@ -172,7 +207,7 @@ module.exports.bookFlight = async (req, res) => {
 
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, result.value === 0 ? "INPROGRESS" : "PAYING");
     if (amount === 0) {
-      await this.payForFlight({ body: { bookedFlightCode: bookedFlight.code } }, res);
+      await pay(bookedFlight);
     }
 
     response.success(res, {
