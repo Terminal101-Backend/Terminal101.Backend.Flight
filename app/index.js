@@ -8,10 +8,12 @@ const yaml = require('yamljs');
 const fs = require("fs");
 const { l10n } = require("./middlewares");
 // const pdf = require("express-pdf");
+const { twilio } = require("./services");
 
 require("dotenv").config();
-
 global.config = require("./config");
+
+twilio.initialize();
 
 const apiRouter = require("./routes");
 const BaseValidator = require("./core/baseValidator");

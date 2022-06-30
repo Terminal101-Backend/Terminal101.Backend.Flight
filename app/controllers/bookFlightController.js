@@ -1,10 +1,12 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, emailHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
+const { twilio } = require("../services");
+const flightTicketController = require("./flightTicketController");
 
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {
@@ -20,6 +22,11 @@ const pay = async (bookedFlight) => {
     await wallet.getUserTransaction(bookedFlight.bookedBy, bookedFlight.transactionId);
   }
 
+  const userToken = token.newToken({ user: bookedFlight.bookedBy });
+  await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+  await twilio.sendTicket(bookedFlight.contact.mobileNumber);
+  await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+
   await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; " + (!!bookedFlight.transactionId ? "transaction id: " + bookedFlight.transactionId : "code: " + bookedFlight.code));
 };
 
@@ -31,8 +38,6 @@ module.exports.payForFlight = async (req, res) => {
 
     // TODO: Finilize book flight by Amadeus
     // TODO: Send notification to user
-    // TODO: Send an email attached PDF file
-    // TODO: Send a SMS
     // TODO: Get last flight price from our DB
     // TODO: If user wallet's credit is less than flight price do... what???!!!
 
