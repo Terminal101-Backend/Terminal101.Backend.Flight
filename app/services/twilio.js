@@ -28,6 +28,6 @@ module.exports.sendVerificationCode = async (to, code) => {
 };
 
 module.exports.sendTicket = async to => {
-  const response = await send(to, `Your ticket is reader\nhttps://terminal101.co`);
+  const response = await send(to, `Your ticket is ready\nhttps://terminal101.co`);
   console.log(response);
 };
