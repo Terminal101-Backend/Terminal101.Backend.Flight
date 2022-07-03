@@ -70,7 +70,7 @@ module.exports = (io, socket) => {
           console.log(provider.title, {
             headers: {
               language,
-              providerNumber: ++providerNumber,
+              providerNumber: providerNumber,
               activeProviderCount,
             }
           }, e.message ?? e);

@@ -109,7 +109,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
       cabinType = 3;
       break;
 
-    case "FIRST_CLASS":
+    case "FIRST":
       cabinType = 5;
       break;
 
