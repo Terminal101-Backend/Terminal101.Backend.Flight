@@ -7,7 +7,7 @@ class EFlightWaypoint extends Enum {
 
     this.add("DEEP_DISCOUNTED");
     this.add("ECONOMY");
-    this.add("PERMIUM_ECONOMY");
+    this.add("PREMIUM_ECONOMY");
     this.add("BUSINESS");
     this.add("FIRST");
 
