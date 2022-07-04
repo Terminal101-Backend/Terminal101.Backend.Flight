@@ -27,7 +27,7 @@ const pay = async (bookedFlight) => {
   await twilio.sendTicket(bookedFlight.contact.mobileNumber);
   await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
 
-  await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
+  await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
 };
 
 // NOTE: Success payment callback
