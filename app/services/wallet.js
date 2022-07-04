@@ -104,7 +104,7 @@ const addAndConfirmUserTransaction = async (userCode, amount, description) => {
     amount,
     description,
     serviceName: "FLIGHT",
-    type: "TEST"
+    type: "PAY"
   });
 
   return response.data;
