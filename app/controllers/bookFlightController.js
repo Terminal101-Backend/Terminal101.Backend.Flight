@@ -165,17 +165,11 @@ module.exports.bookFlight = async (req, res) => {
     let amount = 0;
     let result = {};
 
-    switch (req.body.payWay) {
-      case "WALLET":
-        const userWallet = await wallet.getUserWallet(decodedToken.user);
-        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-        break;
-
-      case "PAY":
-        amount = flightDetails.flights.price.total;
-        break;
-
-      default:
+    if (!!req.body.useWallet) {
+      const userWallet = await wallet.getUserWallet(decodedToken.user);
+      amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
+    } else {
+      amount = flightDetails.flights.price.total;
     }
 
     if (amount >= 1) {
