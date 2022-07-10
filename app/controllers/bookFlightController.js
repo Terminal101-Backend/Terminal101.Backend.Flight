@@ -157,10 +157,14 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Reserve flight by provider
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers }).catch(e => {
-      console.error("Provider error: ", e);
-      // TODO: Cancel book
-    });
+    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+      .then(res => {
+        console.log("Flight booked by ", providerName, res);
+      })
+      .catch(e => {
+        console.error("Provider error: ", e);
+        // TODO: Cancel book
+      });
 
     let amount = 0;
     let result = {};
@@ -175,7 +179,7 @@ module.exports.bookFlight = async (req, res) => {
     if (amount >= 1) {
       switch (paymentMethod.type) {
         case "STRIPE":
-          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount);
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           if (!result) {
             throw "wallet_error";
           }

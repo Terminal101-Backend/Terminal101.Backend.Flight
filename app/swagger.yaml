@@ -1044,10 +1044,9 @@ definitions:
       paymentMethodName:
         type: string
         example: credit-card
-      payWay:
-        type: string
-        enum: [PAY, WALLET]
-        example: WALLET
+      useWallet:
+        type: boolean
+        example: false
       contact:
         $ref: "#/definitions/ContactInfo"
       passengers:

@@ -294,4 +294,6 @@ module.exports.bookFlight = async params => {
   const { data: bookedFlight } = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
+
+  return bookedFlight;
 };
