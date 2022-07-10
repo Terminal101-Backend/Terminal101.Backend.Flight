@@ -27,7 +27,7 @@ const pay = async (bookedFlight) => {
   await twilio.sendTicket(bookedFlight.contact.mobileNumber);
   await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
 
-  await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, flightInfo.flights.price.total, "Book flight; " + (!!bookedFlight.transactionId ? "transaction id: " + bookedFlight.transactionId : "code: " + bookedFlight.code));
+  await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
 };
 
 // NOTE: Success payment callback
@@ -157,31 +157,29 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Reserve flight by provider
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers }).catch(e => {
-      console.error("Provider error: ", e);
-      // TODO: Cancel book
-    });
+    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+      .then(res => {
+        console.log("Flight booked by ", providerName, res);
+      })
+      .catch(e => {
+        console.error("Provider error: ", e);
+        // TODO: Cancel book
+      });
 
     let amount = 0;
     let result = {};
 
-    switch (req.body.payWay) {
-      case "WALLET":
-        const userWallet = await wallet.getUserWallet(decodedToken.user);
-        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-        break;
-
-      case "PAY":
-        amount = flightDetails.flights.price.total;
-        break;
-
-      default:
+    if (!!req.body.useWallet) {
+      const userWallet = await wallet.getUserWallet(decodedToken.user);
+      amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
+    } else {
+      amount = flightDetails.flights.price.total;
     }
 
     if (amount >= 1) {
       switch (paymentMethod.type) {
         case "STRIPE":
-          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount);
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           if (!result) {
             throw "wallet_error";
           }

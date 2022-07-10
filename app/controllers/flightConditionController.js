@@ -28,12 +28,15 @@ module.exports.getFlightConditions = async (req, res) => {
         },
         providerNames: flightCondition.providerNames.map(providerName => {
           const provider = providers.find(p => EProvider.check(p.name, providerName));
+          if (!provider) {
+            return undefined;
+          }
           return {
             name: providerName,
             title: provider.title,
             isActive: provider.isActive,
           }
-        }),
+        }).filter(provider => !!provider),
         isRestricted: flightCondition.isRestricted,
       }))
     });
@@ -45,6 +48,7 @@ module.exports.getFlightConditions = async (req, res) => {
 // NOTE: Get one flight condition
 module.exports.getFlightCondition = async (req, res) => {
   try {
+    const providers = await providerRepository.findMany();
     const flightCondition = await flightConditionRepository.getFlightCondition(req.params.code);
 
     response.success(res, {
@@ -61,7 +65,17 @@ module.exports.getFlightCondition = async (req, res) => {
         items: flightCondition.airline.items,
         exclude: flightCondition.airline.exculude,
       },
-      providerNames: flightCondition.providerNames,
+      providerNames: flightCondition.providerNames.map(providerName => {
+        const provider = providers.find(p => EProvider.check(p.name, providerName));
+        if (!provider) {
+          return undefined;
+        }
+        return {
+          name: providerName,
+          title: provider.title,
+          isActive: provider.isActive,
+        }
+      }).filter(provider => !!provider),
       isRestricted: flightCondition.isRestricted,
     });
   } catch (e) {

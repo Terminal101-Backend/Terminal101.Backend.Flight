@@ -226,11 +226,9 @@ module.exports.getFlightTicketsView = async (req, res) => {
 // NOTE: Get other user's flight tickets
 module.exports.getUserFlightTickets = async (req, res) => {
   try {
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
-
-    response.success(res, {
-
-    });
+    const userToken = token.newToken({ user: req.params.userCode });
+    const filePath = await this.generatePdfTicket(userToken, req.params.bookedFlightCode);
+    res.sendFile(filePath);
   } catch (e) {
     response.exception(res, e);
   }
