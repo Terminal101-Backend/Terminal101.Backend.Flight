@@ -537,7 +537,7 @@ module.exports.getPopularFlights = async (req, res) => {
 // NOTE: Get countries
 module.exports.getCountries = async (req, res) => {
   try {
-    const countries = await countryRepository.findMany();
+    const countries = await countryRepository.findMany({}, "name");
     response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
   } catch (e) {
     response.exception(res, e);
