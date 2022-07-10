@@ -117,6 +117,8 @@ module.exports.bookFlight = async (req, res) => {
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
+    // TODO: Check if the user has not booked this flight before
+
     if (!paymentMethod.isActive) {
       throw "payment_method_inactive";
     }
