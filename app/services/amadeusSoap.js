@@ -56,66 +56,54 @@ axiosApiInstance.interceptors.request.use(
 const searchFlight = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
   const originDestinations = [];
   originDestinations.push({
-    id: 0,
-    originLocationCode,
-    destinationLocationCode,
-    departureDateTimeRange: {
+    departure: {
+      airportCode: originLocationCode,
       date: departureDate,
+    },
+    arrival: {
+      airportCode: destinationLocationCode,
     },
   });
 
   for (let index = 0; index < segments.length; index++) {
     originDestinations.push({
-      id: index + 1,
-      originLocationCode: segments[index].originCode,
-      destinationLocationCode: segments[index].destinationCode,
-      departureDateTimeRange: {
+      departure: {
+        airportCode: segments[index].originCode,
         date: segments[index].date,
+      },
+      arrival: {
+        airportCode: segments[index].destinationCode,
       },
     });
   }
 
   if (!!returnDate) {
     originDestinations.push({
-      id: segments.length + 1,
-      originLocationCode: segments[segments.length - 1].destinationCode,
-      destinationLocationCode: originLocationCode,
-      departureDateTimeRange: {
+      departure: {
+        airportCode: segments[segments.length - 1].originCode,
         date: returnDate,
+      },
+      arrival: {
+        airportCode: originLocationCode,
       },
     });
   }
 
-  const travelers = [];
-  let travelersCount = 0;
-  for (let i = 0; i < adults; i++) {
-    travelers.push({
-      id: travelersCount++,
-      travelerType: "ADULT",
-    })
-  }
-  for (let i = 0; i < children; i++) {
-    travelers.push({
-      id: travelersCount++,
-      travelerType: "CHILD",
-    })
-  }
-  for (let i = 0; i < infants; i++) {
-    travelers.push({
-      id: travelersCount++,
-      travelerType: "INFANT",
-    })
-  }
-
-  // console.log({ travelers, originDestinations });
-
   const {
     data: response
-  } = await axiosApiInstance.post("/v2/shopping/flight-offers", {
-    currencyCode,
+  } = await axiosApiInstance.post("/Flight/Search", {
+    prefrences: {
+      cabin: [
+        5,
+      ],
+      nonStop,
+    },
     originDestinations,
-    travelers,
-    sources: ["GDS"],
+    travelers: {
+      adt: adults,
+      chd: children,
+      inf: infants,
+    },
   });
 
   return response;
@@ -124,7 +112,7 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
 const bookFlight = async (flightOffer, travelers) => {
   const {
     data: response
-  } = await axiosApiInstance.post("/v1/booking/flight-orders", {
+  } = await axiosApiInstance.post("/Flight/AirBook", {
     data: {
       type: "flight-order",
       flightOffers: [flightOffer],
