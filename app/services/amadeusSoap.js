@@ -109,14 +109,13 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
   return response;
 };
 
-const bookFlight = async (flightOffer, travelers) => {
+const bookFlight = async (flight, travelers) => {
   const {
     data: response
   } = await axiosApiInstance.post("/Flight/AirBook", {
     data: {
-      type: "flight-order",
-      flightOffers: [flightOffer],
-      travelers,
+      flightOffers: flight,
+      passengers: travelers,
     }
   });
 

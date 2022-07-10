@@ -102,41 +102,6 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
       },
     };
 
-    // if (!filter.airlines.some(airline => airline.code === segment.carrierCode)) {
-    //   filter.airlines.push({
-    //     code: segment.carrierCode,
-    //     name: airlines[segment.carrierCode]
-    //   });
-    // }
-
-    // if (!filter.airports.some(airport => airport.code === segment.departure.iataCode)) {
-    //   filter.airports.push(
-    //     !!airports[segment.departure.iataCode]
-    //       ? airports[segment.departure.iataCode].airport
-    //       : {
-    //         code: segment.departure.iataCode,
-    //         name: "UNKNOWN"
-    //       });
-    // }
-
-    // if (!filter.airports.some(airport => airport.code === segment.arrival.iataCode)) {
-    //   filter.airports.push(
-    //     !!airports[segment.arrival.iataCode]
-    //       ? airports[segment.arrival.iataCode].airport
-    //       : {
-    //         code: segment.arrival.iataCode,
-    //         name: "UNKNOWN"
-    //       });
-    // }
-
-    // if (!filter.aircrafts.includes(aircrafts[segment.aircraft.code])) {
-    //   filter.aircrafts.push(aircrafts[segment.aircraft.code]);
-    // }
-
-    // if (!filter.stops.includes(result.stops.length)) {
-    //   filter.stops.push(result.stops.length);
-    // }
-
     return result;
   };
 };
@@ -204,37 +169,9 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
           segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
         };
 
-        // if (result.duration < filter.duration.min) {
-        //   filter.duration.min = result.duration;
-        // }
-        // if (result.duration > filter.duration.max) {
-        //   filter.duration.max = result.duration;
-        // }
-
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : dateTimeHelper.getMinutesFromIsoString(filter.departureTime.min))) {
-        //   filter.departureTime.min = result.segments[0].departure.at;
-        // }
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTime.max ? 0 : dateTimeHelper.getMinutesFromIsoString(filter.departureTime.max))) {
-        //   filter.departureTime.max = result.segments[0].departure.at;
-        // }
-
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.min))) {
-        //   filter.arrivalTime.min = result.segments[0].arrival.at;
-        // }
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTime.max ? 0 : dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.max))) {
-        //   filter.arrivalTime.max = result.segments[0].arrival.at;
-        // }
-
         return result;
       }),
     };
-
-    // if (result.price < filter.price.min) {
-    //   filter.price.min = result.price;
-    // }
-    // if (result.price > filter.price.max) {
-    //   filter.price.max = result.price;
-    // }
 
     return result;
   };
