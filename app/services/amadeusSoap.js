@@ -7,10 +7,12 @@ axiosApiInstance.interceptors.request.use(
   async config => {
     config.baseURL = process.env.AMADEUS_SERVICE_BASE_URL;
     config.headers = {
-      // 'Authorization': `Bearer ${accessToken}`,
-      'Accept': 'application/json',
-      // 'Content-Type': 'application/x-www-form-urlencoded',
-      'Content-Type': 'application/json',
+      // "Authorization": `Bearer ${accessToken}`,
+      "Accept": "application/json",
+      "Client-Secret": process.env.AMADEUS_SERVICE_CLIENT_SECRET,
+      "Client-Key": process.env.AMADEUS_SERVICE_CLIENT_KEY,
+      "Content-Type": "application/json-patch+json",
+      // "Content-Type": "application/json",
     }
     return config;
   },
@@ -27,7 +29,7 @@ axiosApiInstance.interceptors.request.use(
 //   if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
 //     originalRequest._retry = true;
 //     await getAccessToken();
-//     axios.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
+//     axios.defaults.headers.common["Authorization"] = "Bearer " + accessToken;
 //     return axiosApiInstance(originalRequest);
 //   }
 //   return Promise.reject(error);
@@ -38,13 +40,13 @@ axiosApiInstance.interceptors.request.use(
 //   params.append("grant_type", "client_credentials");
 //   params.append("client_id", process.env.AMADEUS_API_KEY);
 //   params.append("client_secret", process.env.AMADEUS_API_SECRET);
-//   delete axios.defaults.headers.common['Authorization'];
+//   delete axios.defaults.headers.common["Authorization"];
 
 //   const {
 //     data: response
 //   } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
 //     headers: {
-//       'content-type': 'application/x-www-form-urlencoded'
+//       "content-type": "application/x-www-form-urlencoded"
 //     },
 //   });
 
@@ -89,35 +91,32 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
     });
   }
 
-  const {
-    data: response
-  } = await axiosApiInstance.post("/Flight/Search", {
-    prefrences: {
+  const requestData = {
+    preferences: {
       cabin: [
-        5,
+        "5",
       ],
-      nonStop,
+      nonStop: nonStop ?? 0,
     },
     originDestinations,
     travelers: {
       adt: adults,
-      chd: children,
-      inf: infants,
+      chd: children ?? 0,
+      inf: infants ?? 0,
     },
-  });
+  };
+
+  const { data: response } = await axiosApiInstance.post("/Flight/Search", requestData);
 
   return response;
 };
 
 const bookFlight = async (flight, travelers) => {
-  const {
-    data: response
-  } = await axiosApiInstance.post("/Flight/AirBook", {
-    data: {
+  const { data: response } = await axiosApiInstance.post("/Flight/AirBook",
+    {
       flightOffers: flight,
       passengers: travelers,
-    }
-  });
+    });
 
   return response;
 };

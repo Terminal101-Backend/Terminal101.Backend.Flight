@@ -1,13 +1,7 @@
 const dateTimeHelper = require("./dateTimeHelper");
-const {
-  amadeus
-} = require("../services");
-const {
-  countryRepository
-} = require("../repositories");
-const {
-  EProvider
-} = require("../constants");
+const { amadeus, amadeusSoap } = require("../services");
+const { countryRepository, flightInfoRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -177,7 +171,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   };
 };
 
-module.exports.searchFlights = async params => {
+module.exports.searchFlights_____OLD = async params => {
   let segments = makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
@@ -236,6 +230,60 @@ module.exports.searchFlights = async params => {
   };
 };
 
+module.exports.searchFlights = async params => {
+  let segments = makeSegmentsArray(params.segments);
+
+  params.departureDate = new Date(params.departureDate);
+  params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
+
+  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+
+  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+
+  if (!amadeusSearchResult) {
+    return {
+      flightDetails: [],
+    };
+  }
+
+  const stops = amadeusSearchResult
+    .reduce((res, cur) => [...res, ...cur.itineraries], [])
+    .reduce((res, cur) => [...res, ...cur.segments], [])
+    .filter(segment => !!segment.stops)
+    .reduce((res, cur) => [...res, ...cur.stops], [])
+    .map(stop => stop.iataCode);
+
+  const airports = !!amadeusSearchResult.dictionaries ? await countryRepository.getAirportsByCode([...Object.keys(amadeusSearchResult.dictionaries.locations), ...stops]) : [];
+  const aircrafts = !!amadeusSearchResult.dictionaries ? amadeusSearchResult.dictionaries.aircraft : [];
+  const carriers = !!amadeusSearchResult.dictionaries ? amadeusSearchResult.dictionaries.carriers : [];
+  const flightDetails = amadeusSearchResult.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
+
+  let origin = await countryRepository.getCityByCode(params.origin);
+  let destination = await countryRepository.getCityByCode(params.destination);
+
+  if (!origin) {
+    origin = !!airports[params.origin] ? airports[params.origin].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+  }
+
+  if (!destination) {
+    destination = !!airports[params.destination] ? airports[params.destination].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+
+  }
+
+  return {
+    origin,
+    destination,
+    flightDetails,
+  };
+};
+
 
 /**
  *  
@@ -243,5 +291,54 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  console.log(params);
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
+
+  const travelers = params.passengers.map(passenger => {
+    if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+      return {
+        birthDate: user.info.birthDate,
+        gender: user.info.gender,
+        // nationalId: user.info.nationalId,
+        // nationality: user.info.nationality,
+        firstName: user.info.firstName,
+        middleName: user.info.middleName,
+        lastName: user.info.lastName,
+        document: {
+          issuedAt: user.info.document.issuedAt,
+          expirationDate: user.info.document.expirationDate,
+          code: user.info.document.code,
+        },
+      };
+    } else {
+      const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt));
+
+      if (!person) {
+        throw "passenger_not_found";
+      }
+
+      return {
+        birthDate: person.birthDate,
+        gender: person.gender,
+        // nationalId: person.nationalId,
+        // nationality: person.nationality,
+        firstName: person.firstName,
+        middleName: person.middleName,
+        lastName: person.lastName,
+        document: {
+          issuedAt: person.document.issuedAt,
+          expirationDate: person.document.expirationDate,
+          code: person.document.code,
+        },
+      };
+    }
+  });
+
+  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
+  const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
+
+  const { data: bookedFlight } = await amadeusSoap.bookFlight(flightInfoRepository.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
+  await flightInfo.save();
+
+  return bookedFlight;
 };
