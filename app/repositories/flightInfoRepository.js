@@ -3,6 +3,7 @@ const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 const pagination = require("../helpers/paginationHelper");
+const dateTime = require("../helpers/dateTimeHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -325,36 +326,50 @@ class FlightInfoRepository extends BaseRepository {
     }
 
     return {
-      type: "flight-offer",
-      id: "1",
-      source: "GDS",
-      itineraries: flightInfo.flight.itineraries.map((itinerary, itineraryIndex) => ({
-        segments: itinerary.segments.map((segment, segmentIndex) => ({
-          departure: {
-            iataCode: segment.departure.airport.code,
-            at: dateToIsoString(segment.departure.at),
+      offerID: flightInfo.flight.providerData.offerId,
+      price: {
+        offerPrices: flightInfo.flight.price.travelerPrices.map(price => ({
+          baseAmount: 0,
+          taxesAmount: 0,
+          passengerType: price.travelerType,
+          numberOfUnits: 1,
+        }))
+      },
+      Owner: "",
+      fareType: "RP",
+      flights: flightInfo.flight.itineraries.map(itinerary => ({
+        flightSegments: itinerary.segments.map(segment => ({
+          originDestination: {
+            departure: {
+              airportCode: segment.departure.airport.code,
+              date: dateTime.excludeDateFromIsoString(segment.departure.at),
+              time: dateTime.excludeTimeFromIsoString(segment.departure.at),
+            },
+            arrival: {
+              airportCode: segment.arrival.airport.code,
+              date: dateTime.excludeDateFromIsoString(segment.arrival.at),
+              time: dateTime.excludeTimeFromIsoString(segment.arrival.at),
+            },
+            marketingCarrier: {
+              airlineID: segment.airline.code,
+              flightNumber: segment.flightNumber,
+            },
+            operatingCarrier: {
+              airlineID: segment.airline.code,
+            },
+            flightDetail: {
+              classOfService: {
+                code: travelClass,
+              }
+            },
           },
-          arrival: {
-            iataCode: segment.arrival.airport.code,
-            at: dateToIsoString(segment.arrival.at),
-          },
-          carrierCode: segment.airline.code,
-          number: segment.flightNumber,
-          id: `${itineraryIndex + 1}-${segmentIndex + 1}`,
         })),
-      })),
-      validatingAirlineCodes: flightInfo.flight.itineraries.reduce((res, cur) => [...res, ...cur.segments.map(segment => segment.airline.code)], []),
-      travelerPricings: flightInfo.flight.price.travelerPrices.map((price, travelerIndex) => ({
-        travelerId: `${travelerIndex + 1}`,
-        fareOption: "STANDARD",
-        travelerType: price.travelerType,
-        price: {
-          currency: flightInfo.flight.currencyCode,
+        departure: {
+          airportCode: "",
         },
-        fareDetailsBySegment: flightInfo.flight.itineraries.reduce((res, cur, itineraryIndex) => [...res, ...cur.segments.map((segment, segmentIndex) => ({
-          segmentId: `${itineraryIndex + 1}-${segmentIndex + 1}`,
-          class: travelClass,
-        }))], [])
+        arrival: {
+          airportCode: "",
+        }
       })),
     }
   }
