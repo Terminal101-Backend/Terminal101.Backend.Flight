@@ -304,9 +304,9 @@ class FlightInfoRepository extends BaseRepository {
 
     // const flightInfo = await this.getFlight(searchCode, flightCode);
     let travelClass;
-    switch (flightInfo.flight.travelClass) {
+    switch (flightInfo.flights.travelClass) {
       case "ECONOMY":
-        travelClass = "Y";
+        travelClass = "M";
         break;
 
       case "PERMIUM_ECONOMY":
@@ -314,7 +314,7 @@ class FlightInfoRepository extends BaseRepository {
         break;
 
       case "BUSINESS":
-        travelClass = "J";
+        travelClass = "C";
         break;
 
       case "FIRST":
@@ -322,46 +322,46 @@ class FlightInfoRepository extends BaseRepository {
         break;
 
       default:
-        travelClass = "T";
+        travelClass = "L";
     }
 
     return {
-      offerID: flightInfo.flight.providerData.offerId,
+      offerID: flightInfo.flights.providerData.offerId,
       price: {
-        offerPrices: flightInfo.flight.price.travelerPrices.map(price => ({
+        offerPrices: flightInfo.flights.price.travelerPrices.map(price => ({
           baseAmount: 0,
           taxesAmount: 0,
-          passengerType: price.travelerType,
+          passengerType: (price.travelerType === "ADULT" ? "ADT" : (price.travelerType === "CHILD" ? "CHD" : "INF")),
           numberOfUnits: 1,
         }))
       },
-      Owner: "",
+      owner: "",
       fareType: "RP",
-      flights: flightInfo.flight.itineraries.map(itinerary => ({
+      flights: flightInfo.flights.itineraries.map(itinerary => ({
         flightSegments: itinerary.segments.map(segment => ({
           originDestination: {
             departure: {
               airportCode: segment.departure.airport.code,
-              date: dateTime.excludeDateFromIsoString(segment.departure.at),
-              time: dateTime.excludeTimeFromIsoString(segment.departure.at),
+              date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.departure.at)),
+              time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.departure.at)),
             },
             arrival: {
               airportCode: segment.arrival.airport.code,
-              date: dateTime.excludeDateFromIsoString(segment.arrival.at),
-              time: dateTime.excludeTimeFromIsoString(segment.arrival.at),
+              date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.arrival.at)),
+              time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.arrival.at)),
             },
-            marketingCarrier: {
-              airlineID: segment.airline.code,
-              flightNumber: segment.flightNumber,
-            },
-            operatingCarrier: {
-              airlineID: segment.airline.code,
-            },
-            flightDetail: {
-              classOfService: {
-                code: travelClass,
-              }
-            },
+          },
+          marketingCarrier: {
+            airlineID: segment.airline.code,
+            flightNumber: segment.flightNumber,
+          },
+          operatingCarrier: {
+            airlineID: segment.airline.code,
+          },
+          flightDetail: {
+            classOfService: {
+              code: travelClass,
+            }
           },
         })),
         departure: {

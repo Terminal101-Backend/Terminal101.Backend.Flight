@@ -1,5 +1,5 @@
-const dateTimeHelper = require("./dateTimeHelper");
-const { amadeus, amadeusSoap } = require("../services");
+const dateTime = require("./dateTimeHelper");
+const { accountManagement, amadeus, amadeusSoap } = require("../services");
 const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
 const { EProvider } = require("../constants");
 
@@ -27,7 +27,7 @@ const makeSegmentsArray = segments => {
 const makeSegmentStopsArray = airports => {
   return stop => ({
     description: stop.description,
-    duration: dateTimeHelper.convertAmadeusTime(stop.duration),
+    duration: dateTime.convertAmadeusTime(stop.duration),
     arrivalAt: stop.arrivalAt,
     departureAt: stop.departureAt,
     airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : {
@@ -48,7 +48,7 @@ const makeSegmentStopsArray = airports => {
 const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   return segment => {
     let result = {
-      duration: dateTimeHelper.convertAmadeusTime(segment.flightDetail.flightDuration),
+      duration: dateTime.convertAmadeusTime(segment.flightDetail.flightDuration),
       flightNumber: segment.marketingCarrier.flightNumber,
       aircraft: aircrafts[segment.equipment.aircraftCode],
       airline: airlines[segment.marketingCarrier.airlineID],
@@ -175,8 +175,8 @@ module.exports.searchFlights_____OLD = async params => {
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
 
-  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
   let amadeusSearchResult;
   if (!segments || (segments.length === 0)) {
@@ -234,8 +234,8 @@ module.exports.searchFlights = async params => {
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
 
-  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
   let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
@@ -310,17 +310,22 @@ module.exports.bookFlight = async params => {
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
       return {
-        birthDate: user.info.birthDate,
-        gender: user.info.gender,
-        // nationalId: user.info.nationalId,
-        // nationality: user.info.nationality,
-        firstName: user.info.firstName,
-        middleName: user.info.middleName,
-        lastName: user.info.lastName,
+        passenger: {
+          birthdate: dateTime.excludeDateFromIsoString(user.info.birthDate),
+          emailContact: user.email,
+          gender: user.info.gender,
+          nameGiven: user.info.firstName,
+          surname: user.info.lastName,
+          passengerType: (user.info.type === "ADULT" ? "ADT" : (user.info.type === "CHILD" ? "CHD" : "INF")),
+          // passengerType: user.info.type,
+          phone: {
+            areaCode: "",
+            countryCode: "",
+            number: user.mobileNumber,
+          },
+        },
         document: {
-          issuedAt: user.info.document.issuedAt,
-          expirationDate: user.info.document.expirationDate,
-          code: user.info.document.code,
+          expirationDate: dateTime.excludeDateFromIsoString(user.info.document.expirationDate),
         },
       };
     } else {
@@ -331,17 +336,22 @@ module.exports.bookFlight = async params => {
       }
 
       return {
-        birthDate: person.birthDate,
-        gender: person.gender,
-        // nationalId: person.nationalId,
-        // nationality: person.nationality,
-        firstName: person.firstName,
-        middleName: person.middleName,
-        lastName: person.lastName,
+        passenger: {
+          birthdate: dateTime.excludeDateFromIsoString(person.birthDate),
+          gender: person.gender,
+          nameGiven: person.firstName,
+          surname: person.lastName,
+          emailContact: user.email,
+          passengerType: (person.type === "ADULT" ? "ADT" : (person.type === "CHILD" ? "CHD" : "INF")),
+          // passengerType: person.type,
+          phone: {
+            areaCode: "",
+            countryCode: "",
+            number: user.mobileNumber,
+          },
+        },
         document: {
-          issuedAt: person.document.issuedAt,
-          expirationDate: person.document.expirationDate,
-          code: person.document.code,
+          expirationDate: dateTime.excludeDateFromIsoString(person.document.expirationDate),
         },
       };
     }
@@ -350,8 +360,9 @@ module.exports.bookFlight = async params => {
   const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const { data: bookedFlight } = await amadeusSoap.bookFlight(flightInfoRepository.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
+  const { result: bookedFlight } = await amadeusSoap.bookFlight(flightInfoRepository.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  flightInfo.flights[flightIndex].providerData.pnr = bookedFlight.pnr;
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.flight.shoppingResponseID;
   await flightInfo.save();
 
   return bookedFlight;

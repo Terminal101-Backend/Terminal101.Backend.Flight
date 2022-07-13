@@ -8,7 +8,7 @@ axiosApiInstance.interceptors.request.use(
     config.baseURL = process.env.AMADEUS_SERVICE_BASE_URL;
     config.headers = {
       // "Authorization": `Bearer ${accessToken}`,
-      "Accept": "application/json",
+      "Accept": "*/*",
       "Client-Secret": process.env.AMADEUS_SERVICE_CLIENT_SECRET,
       "Client-Key": process.env.AMADEUS_SERVICE_CLIENT_KEY,
       "Content-Type": "application/json-patch+json",
@@ -111,12 +111,13 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
   return response;
 };
 
-const bookFlight = async (flight, travelers) => {
+const bookFlight = async (flight, passengers) => {
   const { data: response } = await axiosApiInstance.post("/Flight/AirBook",
     {
-      flightOffers: flight,
-      passengers: travelers,
-    });
+      passengers,
+      flight,
+    }
+  );
 
   return response;
 };
