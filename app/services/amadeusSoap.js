@@ -80,15 +80,27 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
   }
 
   if (!!returnDate) {
-    originDestinations.push({
-      departure: {
-        airportCode: segments[segments.length - 1].originCode,
-        date: returnDate,
-      },
-      arrival: {
-        airportCode: originLocationCode,
-      },
-    });
+    if (!!segments && (segments.length > 0)) {
+      originDestinations.push({
+        departure: {
+          airportCode: segments[segments.length - 1].originCode,
+          date: returnDate,
+        },
+        arrival: {
+          airportCode: originLocationCode,
+        },
+      });
+    } else {
+      originDestinations.push({
+        departure: {
+          airportCode: destinationLocationCode,
+          date: returnDate,
+        },
+        arrival: {
+          airportCode: originLocationCode,
+        },
+      });
+    }
   }
 
   const requestData = {
