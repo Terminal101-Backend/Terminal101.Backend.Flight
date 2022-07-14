@@ -302,9 +302,6 @@ class FlightConditionRepository extends BaseRepository {
    * @returns {Promise<FlightCondition>}
    */
   async getFlightCondition(code) {
-    // const flightCondition = await this.findOne({ code });
-    // return flightCondition;
-
     const agrFlightCondition = FlightCondition.aggregate();
     agrFlightCondition.append({
       $match: {
@@ -334,14 +331,34 @@ class FlightConditionRepository extends BaseRepository {
    * @returns {Promise<FlightCondition>}
    */
   async findFlightCondition(origin, destination) {
-    const conditions = {
-      origin: { "origin.items": origin, "origin.exclude": false, "destination.items": { $ne: destination }, "destination.exclude": true },
-      destination: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": destination, "destination.exclude": false },
-      origin_destination: { "origin.items": origin, "origin.exclude": false, "destination.items": destination, "destination.exclude": false },
-      not: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": { $ne: destination }, "destination.exclude": true },
-    };
-    // const condition = Object.values(conditions).reduce((condition, current) => ({ $or: [condition, current] }), {});
-    const flightConditions = await this.findMany({ $or: Object.values(conditions) });
+    const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $lookup: {
+        from: "countries",
+        localField: "origin.items",
+        foreignField: "code",
+        as: "origin.countries",
+      }
+    });
+    agrFlightCondition.append({
+      $lookup: {
+        from: "countries",
+        localField: "destination.items",
+        foreignField: "code",
+        as: "destination.countries",
+      }
+    });
+
+    const flightConditions = await agrFlightCondition.exec();
+
+
+    // const conditions = {
+    //   origin: { "origin.items": origin, "origin.exclude": false, "destination.items": { $ne: destination }, "destination.exclude": true },
+    //   destination: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": destination, "destination.exclude": false },
+    //   origin_destination: { "origin.items": origin, "origin.exclude": false, "destination.items": destination, "destination.exclude": false },
+    //   not: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": { $ne: destination }, "destination.exclude": true },
+    // };
+    // const flightConditions = await this.findMany({ $or: Object.values(conditions) });
 
     return flightConditions;
   }
