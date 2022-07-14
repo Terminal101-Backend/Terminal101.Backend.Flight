@@ -59,15 +59,15 @@ module.exports.getFlightCondition = async (req, res) => {
       code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
-        exclude: flightCondition.origin.exculude,
+        exclude: flightCondition.origin.exclude,
       },
       destination: {
         items: flightCondition.destination.items,
-        exclude: flightCondition.destination.exculude,
+        exclude: flightCondition.destination.exclude,
       },
       airline: {
         items: flightCondition.airline.items,
-        exclude: flightCondition.airline.exculude,
+        exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames.map(providerName => {
         const provider = providers.find(p => EProvider.check(p.name, providerName));
@@ -126,15 +126,15 @@ module.exports.editFlightCondition = async (req, res) => {
       code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
-        exclude: flightCondition.origin.exculude,
+        exclude: flightCondition.origin.exclude,
       },
       destination: {
         items: flightCondition.destination.items,
-        exclude: flightCondition.destination.exculude,
+        exclude: flightCondition.destination.exclude,
       },
       airline: {
         items: flightCondition.airline.items,
-        exclude: flightCondition.airline.exculude,
+        exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
       isRestricted: flightCondition.isRestricted,
@@ -153,15 +153,15 @@ module.exports.deleteFlightCondition = async (req, res) => {
       code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
-        exclude: flightCondition.origin.exculude,
+        exclude: flightCondition.origin.exclude,
       },
       destination: {
         items: flightCondition.destination.items,
-        exclude: flightCondition.destination.exculude,
+        exclude: flightCondition.destination.exclude,
       },
       airline: {
         items: flightCondition.airline.items,
-        exclude: flightCondition.airline.exculude,
+        exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
       isRestricted: flightCondition.isRestricted,
@@ -180,15 +180,15 @@ module.exports.addFlightCondition = async (req, res) => {
       code: flightCondition.code,
       origin: {
         items: flightCondition.origin.items,
-        exclude: flightCondition.origin.exculude,
+        exclude: flightCondition.origin.exclude,
       },
       destination: {
         items: flightCondition.destination.items,
-        exclude: flightCondition.destination.exculude,
+        exclude: flightCondition.destination.exclude,
       },
       airline: {
         items: flightCondition.airline.items,
-        exclude: flightCondition.airline.exculude,
+        exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
       isRestricted: flightCondition.isRestricted,
