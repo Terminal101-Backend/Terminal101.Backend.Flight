@@ -17,7 +17,7 @@ class GetFlightCondition extends BaseValidator {
     };
 
     const params = {
-      code: Joi.string().required(),
+      code: Joi.number().required(),
     };
 
     super(body);

@@ -302,9 +302,29 @@ class FlightConditionRepository extends BaseRepository {
    * @returns {Promise<FlightCondition>}
    */
   async getFlightCondition(code) {
-    const flightCondition = await this.findOne({ code });
+    // const flightCondition = await this.findOne({ code });
+    // return flightCondition;
 
-    return flightCondition;
+    const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $match: {
+        code,
+      }
+    });
+    agrFlightCondition.append(this.#getCountryPipeline(true));
+    agrFlightCondition.append(this.#getCityPipeline(true));
+    agrFlightCondition.append(this.#getAirportPipeline(true));
+
+    agrFlightCondition.append(this.#getCountryPipeline(false));
+    agrFlightCondition.append(this.#getCityPipeline(false));
+    agrFlightCondition.append(this.#getAirportPipeline(false));
+
+    agrFlightCondition.append(this.#getAirlinePipeline());
+
+    agrFlightCondition.append(this.#getFinalProjection());
+
+    const flightCondition = await agrFlightCondition.exec();
+    return flightCondition[0];
   }
 
   /**

@@ -51,6 +51,10 @@ module.exports.getFlightCondition = async (req, res) => {
     const providers = await providerRepository.findMany();
     const flightCondition = await flightConditionRepository.getFlightCondition(req.params.code);
 
+    if (!flightCondition) {
+      throw "condition_not_found";
+    }
+
     response.success(res, {
       code: flightCondition.code,
       origin: {
