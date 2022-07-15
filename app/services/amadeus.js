@@ -44,7 +44,7 @@ getAccessToken = async () => {
 
   accessToken = response.access_token;
 
-  return response;
+  return accessToken;
 };
 
 airlineCodeLookup = async code => {
@@ -68,8 +68,22 @@ searchAirportAndCity = async keyword => {
   return response;
 };
 
+searchAirportAndCityWithAccessToken = async keyword => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = {'Authorization': 'Bearer '+ accessToken};
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/reference-data/locations", {
+    params: {
+      subType: "AIRPORT,CITY",
+      keyword
+    },
+  });
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
   searchAirportAndCity,
+  searchAirportAndCityWithAccessToken,
 };

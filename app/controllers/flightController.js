@@ -3,6 +3,7 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
 const { countryRepository, flightInfoRepository } = require("../repositories");
+const { amadeus } = require("../services");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -118,3 +119,73 @@ module.exports.getAirports = async (req, res) => {
   }
 };
 
+// NOTE: Flight
+// NOTE: Search origin or destination by Amadeus
+module.exports.searchOriginDestinationAmadeus = async (req, res) => {
+  try {
+    let keyword = req.query.keyword ?? "";
+    if (!keyword) {
+      if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
+        const ip = request.getRequestIpAddress(req);
+        const ipInfo = await getIpInfo("24.48.0.1");
+        if (ipInfo.status === "success") {
+          keyword = ipInfo.city;
+        }
+      } else {
+        response.error(res, "keyword_required", 400);
+        return;
+      }
+    }
+
+    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+    const resultTransformed = await transformDataAmadeus(result);
+    response.success(res, resultTransformed);
+  } catch (e) {
+    response.exception(res, e);
+  }
+
+
+};
+
+//Internal Function
+function transformDataAmadeus(data) {
+  const cities = [];
+  const airports = [];
+  const countries = [];
+  var countriesDuplicated = [];
+
+  data.forEach(element => {
+    countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+  });
+  var countriesClean = countriesDuplicated.filter((arr, index, self) =>
+    index === self.findIndex((t) => (t.code === arr.code)))
+
+  data.forEach(element => {
+    if (element.subType === 'AIRPORT') {
+      airports.push({ name: element.name, code: element.iataCode });
+    }
+  });
+
+  data.forEach(element => {
+    if (element.subType === 'CITY') {
+      const subAirports = [];
+      airports.forEach(el => {
+        if (el.code === element.iataCode) {
+          subAirports.push({ name: el.name, code: el.code });
+        }
+      });
+      cities.push({ name: element.name, code: element.iataCode, airports: subAirports });
+      countriesClean.forEach(el => {
+        if(element.address.countryCode === el.code){
+          countries.push({name: el.name, code: el.code, cities: cities})
+        }
+      });
+    }
+  });
+
+  return {
+    countries,
+    cities,
+    airports
+  };
+}

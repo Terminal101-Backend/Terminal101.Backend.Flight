@@ -23,4 +23,15 @@ router
     flightValidator.getPopularWaypoints.check(),
     flightController.getPopularWaypoints);
 
+//NOTE: Search flight origin/destination by Amadeus API
+router
+  .get("/:waypointType/reference-data",
+    (req, res, next) => {
+      console.log("Search waypoint reference data ", req.params, req.body, req.query);
+      next()
+    },
+    // flightValidator.SearchOriginDestinationAmadeus.check(),
+    flightController.searchOriginDestinationAmadeus);
+
+
 module.exports = router;

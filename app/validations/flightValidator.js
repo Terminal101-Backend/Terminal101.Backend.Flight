@@ -102,6 +102,25 @@ class GetAirports extends BaseValidator {
   }
 };
 
+class SearchOriginDestinationAmadeus extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      waypointType: Joi.string().required(),
+    };
+
+    const query = {
+      keyword: Joi.string(),
+    };
+
+    super(body);
+    this.params(params);
+    this.query(query);
+  }
+};
+
 module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
@@ -110,4 +129,5 @@ module.exports = {
   getCountries: new GetCountries(),
   getCities: new GetCities(),
   getAirports: new GetAirports(),
+  SearchOriginDestinationAmadeus: new SearchOriginDestinationAmadeus(),
 };
