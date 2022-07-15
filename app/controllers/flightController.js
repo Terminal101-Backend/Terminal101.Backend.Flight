@@ -151,7 +151,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
 function transformDataAmadeus(data) {
   const cities = [];
   const airports = [];
-  const countries = [];
+  const countriesFinal = [];
   var countriesDuplicated = [];
 
   data.forEach(element => {
@@ -170,18 +170,20 @@ function transformDataAmadeus(data) {
     if (element.subType === 'CITY') {
       const subAirports = [];
       airports.forEach(el => {
-        if (el.code === element.iataCode) {
+        if (element.iataCode === el.code) {
           subAirports.push({ name: el.name, code: el.code });
         }
       });
       cities.push({ name: element.name, code: element.iataCode, airports: subAirports });
       countriesClean.forEach(el => {
         if(element.address.countryCode === el.code){
-          countries.push({name: el.name, code: el.code, cities: cities})
+          countriesFinal.push({name: el.name, code: el.code, cities: cities})
         }
       });
     }
   });
+  var countries = countriesFinal.filter((arr, index, self) =>
+  index === self.findIndex((t) => (t.code === arr.code)))
 
   return {
     countries,
