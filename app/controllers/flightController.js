@@ -138,7 +138,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
     }
 
     const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const resultTransformed = await transformDataAmadeus(result);
+    const resultTransformed = transformDataAmadeus(result);
     response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
@@ -155,16 +155,15 @@ function transformDataAmadeus(data) {
   var countriesDuplicated = [];
 
   data.forEach(element => {
-    countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+    if (element.subType === 'AIRPORT') {
+      airports.push({ name: element.name, code: element.iataCode });
+      countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+    } else {
+      countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+    }
   });
   var countriesClean = countriesDuplicated.filter((arr, index, self) =>
     index === self.findIndex((t) => (t.code === arr.code)))
-
-  data.forEach(element => {
-    if (element.subType === 'AIRPORT') {
-      airports.push({ name: element.name, code: element.iataCode });
-    }
-  });
 
   data.forEach(element => {
     if (element.subType === 'CITY') {
@@ -176,14 +175,14 @@ function transformDataAmadeus(data) {
       });
       cities.push({ name: element.name, code: element.iataCode, airports: subAirports });
       countriesClean.forEach(el => {
-        if(element.address.countryCode === el.code){
-          countriesFinal.push({name: el.name, code: el.code, cities: cities})
+        if (element.address.countryCode === el.code) {
+          countriesFinal.push({ name: el.name, code: el.code, cities: cities })
         }
       });
     }
   });
   var countries = countriesFinal.filter((arr, index, self) =>
-  index === self.findIndex((t) => (t.code === arr.code)))
+    index === self.findIndex((t) => (t.code === arr.code)))
 
   return {
     countries,
