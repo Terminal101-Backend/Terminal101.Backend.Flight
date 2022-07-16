@@ -25,12 +25,12 @@ router
 
 //NOTE: Search flight origin/destination by Amadeus API
 router
-  .get("/:waypointType/reference-data",
+  .get("/:waypointType/flight-waypoint",
     (req, res, next) => {
       console.log("Search waypoint reference data ", req.params, req.body, req.query);
       next()
     },
-    // flightValidator.SearchOriginDestinationAmadeus.check(),
+    flightValidator.SearchOriginDestinationAmadeus.check(),
     flightController.searchOriginDestinationAmadeus);
 
 

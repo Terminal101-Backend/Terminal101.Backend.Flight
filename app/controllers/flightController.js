@@ -138,7 +138,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
     }
 
     const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const resultTransformed = transformDataAmadeus(result);
+    const {data: resultTransformed} = transformDataAmadeus(result);
     response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
@@ -149,44 +149,62 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
 
 //Internal Function
 function transformDataAmadeus(data) {
-  const cities = [];
-  const airports = [];
-  const countriesFinal = [];
-  var countriesDuplicated = [];
+  const newData = [];
 
   data.forEach(element => {
-    if (element.subType === 'AIRPORT') {
-      airports.push({ name: element.name, code: element.iataCode });
-      countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
-    } else {
-      countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
-    }
+    newData.push({
+      subType: element.subType,
+      name: element.name,
+      iataCode: element.name,
+      geoCode: element.geoCode,
+      address: element.address
+    })
   });
-  var countriesClean = countriesDuplicated.filter((arr, index, self) =>
-    index === self.findIndex((t) => (t.code === arr.code)))
 
-  data.forEach(element => {
-    if (element.subType === 'CITY') {
-      const subAirports = [];
-      airports.forEach(el => {
-        if (element.iataCode === el.code) {
-          subAirports.push({ name: el.name, code: el.code });
-        }
-      });
-      cities.push({ name: element.name, code: element.iataCode, airports: subAirports });
-      countriesClean.forEach(el => {
-        if (element.address.countryCode === el.code) {
-          countriesFinal.push({ name: el.name, code: el.code, cities: cities })
-        }
-      });
-    }
-  });
-  var countries = countriesFinal.filter((arr, index, self) =>
-    index === self.findIndex((t) => (t.code === arr.code)))
 
   return {
-    countries,
-    cities,
-    airports
+    data: newData
   };
 }
+// function transformDataAmadeus(data) {
+//   const cities = [];
+//   const airports = [];
+//   const countriesFinal = [];
+//   var countriesDuplicated = [];
+
+//   data.forEach(element => {
+//     if (element.subType === 'AIRPORT') {
+//       airports.push({ name: element.name, code: element.iataCode });
+//       countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+//     } else {
+//       countriesDuplicated.push({ name: element.address.countryName, code: element.address.countryCode });
+//     }
+//   });
+//   var countriesClean = countriesDuplicated.filter((arr, index, self) =>
+//     index === self.findIndex((t) => (t.code === arr.code)))
+
+//   data.forEach(element => {
+//     if (element.subType === 'CITY') {
+//       const subAirports = [];
+//       airports.forEach(el => {
+//         if (element.iataCode === el.code) {
+//           subAirports.push({ name: el.name, code: el.code });
+//         }
+//       });
+//       cities.push({ name: element.name, code: element.iataCode, airports: subAirports });
+//       countriesClean.forEach(el => {
+//         if (element.address.countryCode === el.code) {
+//           countriesFinal.push({ name: el.name, code: el.code, cities: cities })
+//         }
+//       });
+//     }
+//   });
+//   var countries = countriesFinal.filter((arr, index, self) =>
+//     index === self.findIndex((t) => (t.code === arr.code)))
+
+//   return {
+//     countries,
+//     cities,
+//     airports
+//   };
+// }
