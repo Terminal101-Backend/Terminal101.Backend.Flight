@@ -1,13 +1,7 @@
-const dateTimeHelper = require("./dateTimeHelper");
-const {
-  amadeus
-} = require("../services");
-const {
-  countryRepository
-} = require("../repositories");
-const {
-  EProvider
-} = require("../constants");
+const dateTime = require("./dateTimeHelper");
+const { accountManagement, amadeus, amadeusSoap } = require("../services");
+const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -33,7 +27,7 @@ const makeSegmentsArray = segments => {
 const makeSegmentStopsArray = airports => {
   return stop => ({
     description: stop.description,
-    duration: dateTimeHelper.convertAmadeusTime(stop.duration),
+    duration: dateTime.convertAmadeusTime(stop.duration),
     arrivalAt: stop.arrivalAt,
     departureAt: stop.departureAt,
     airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : {
@@ -54,119 +48,80 @@ const makeSegmentStopsArray = airports => {
 const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   return segment => {
     let result = {
-      duration: dateTimeHelper.convertAmadeusTime(segment.duration),
-      flightNumber: segment.number,
-      aircraft: aircrafts[segment.aircraft.code],
-      airline: {
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode],
-      },
+      duration: dateTime.convertAmadeusTime(segment.flightDetail.flightDuration),
+      flightNumber: segment.marketingCarrier.flightNumber,
+      aircraft: aircrafts[segment.equipment.aircraftCode],
+      airline: airlines[segment.marketingCarrier.airlineID],
       stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
       departure: {
-        airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : {
-          code: segment.departure.iataCode,
+        airport: !!airports[segment.originDestination.departure.airportCode] ? airports[segment.originDestination.departure.airportCode].airport : {
+          code: segment.originDestination.departure.airportCode,
           name: "UNKNOWN"
         },
-        city: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].city : {
+        city: !!airports[segment.originDestination.departure.airportCode] ? airports[segment.originDestination.departure.airportCode].city : {
           code: "UNKNOWN",
           name: "UNKNOWN"
         },
-        country: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].country : {
+        country: !!airports[segment.originDestination.departure.airportCode] ? airports[segment.originDestination.departure.airportCode].country : {
           code: "UNKNOWN",
           name: "UNKNOWN"
         },
-        terminal: segment.departure.terminal,
-        at: segment.departure.at,
+        terminal: segment.originDestination.departure.terminalName,
+        at: segment.originDestination.departure.date + "T" + segment.originDestination.departure.time,
       },
       arrival: {
-        airport: !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].airport : {
-          code: segment.arrival.iataCode,
+        airport: !!airports[segment.originDestination.arrival.airportCode] ? airports[segment.originDestination.arrival.airportCode].airport : {
+          code: segment.originDestination.arrival.airportCode,
           name: "UNKNOWN"
         },
-        city: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].city : {
-          code: segment.arrival.iataCode,
+        city: !!airports[segment.originDestination.arrival.airportCode] ? !!airports[segment.originDestination.arrival.airportCode] ? airports[segment.originDestination.arrival.airportCode].city : {
+          code: segment.originDestination.arrival.airportCode,
           name: "UNKNOWN"
         } : {
           code: "UNKNOWN",
           name: "UNKNOWN"
         },
-        country: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].country : {
-          code: segment.arrival.iataCode,
+        country: !!airports[segment.originDestination.arrival.airportCode] ? !!airports[segment.originDestination.arrival.airportCode] ? airports[segment.originDestination.arrival.airportCode].country : {
+          code: segment.originDestination.arrival.airportCode,
           name: "UNKNOWN"
         } : {
           code: "UNKNOWN",
           name: "UNKNOWN"
         },
-        terminal: segment.arrival.terminal,
-        at: segment.arrival.at,
+        terminal: segment.originDestination.arrival.terminalName,
+        at: segment.originDestination.arrival.date + "T" + segment.originDestination.arrival.time,
       },
     };
-
-    // if (!filter.airlines.some(airline => airline.code === segment.carrierCode)) {
-    //   filter.airlines.push({
-    //     code: segment.carrierCode,
-    //     name: airlines[segment.carrierCode]
-    //   });
-    // }
-
-    // if (!filter.airports.some(airport => airport.code === segment.departure.iataCode)) {
-    //   filter.airports.push(
-    //     !!airports[segment.departure.iataCode]
-    //       ? airports[segment.departure.iataCode].airport
-    //       : {
-    //         code: segment.departure.iataCode,
-    //         name: "UNKNOWN"
-    //       });
-    // }
-
-    // if (!filter.airports.some(airport => airport.code === segment.arrival.iataCode)) {
-    //   filter.airports.push(
-    //     !!airports[segment.arrival.iataCode]
-    //       ? airports[segment.arrival.iataCode].airport
-    //       : {
-    //         code: segment.arrival.iataCode,
-    //         name: "UNKNOWN"
-    //       });
-    // }
-
-    // if (!filter.aircrafts.includes(aircrafts[segment.aircraft.code])) {
-    //   filter.aircrafts.push(aircrafts[segment.aircraft.code]);
-    // }
-
-    // if (!filter.stops.includes(result.stops.length)) {
-    //   filter.stops.push(result.stops.length);
-    // }
 
     return result;
   };
 };
 
 const makePriceObject = (flightPrice, travelerPricings) => ({
-  total: parseFloat(flightPrice.total),
-  grandTotal: parseFloat(flightPrice.grandTotal),
-  base: parseFloat(flightPrice.base),
-  fees: (flightPrice.fees ?? []).map(fee => ({
-    amount: parseFloat(fee.amount),
-    type: fee.type,
-  })),
-  taxes: (flightPrice.taxes ?? []).map(tax => ({
-    amount: parseFloat(tax.amount),
-    code: tax.code,
-  })),
+  total: parseFloat(flightPrice.totalPrice),
+  grandTotal: parseFloat(flightPrice.totalPrice),
+  base: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.baseAmount), 0),
+  fees: [],
+  taxes: [
+    {
+      amount: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.taxesAmount), 0),
+      code: "Tax",
+    }
+  ],
   travelerPrices: travelerPricings.map(travelerPrice => {
     let travelerType;
-    switch (travelerPrice.travelerType) {
-      case "CHILD":
+    switch (travelerPrice.passengerType) {
+      case "CHD":
         travelerType = "CHILD";
         break;
 
-      case "HELD_INFANT":
-      case "SEATED_INFANT":
+      case "INF":
+        // case "SEATED_INFANT":
         travelerType = "INFANT";
         break;
 
-      case "ADULT":
-      case "SENIOR":
+      case "ADT":
+        // case "SENIOR":
         travelerType = "ADULT";
         break;
 
@@ -174,17 +129,14 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
     }
 
     return {
-      total: parseFloat(travelerPrice.price.total),
-      base: parseFloat(travelerPrice.price.base),
+      total: parseFloat(travelerPrice.baseAmount + travelerPrice.taxesAmount),
+      base: parseFloat(travelerPrice.baseAmount),
       travelerType,
-      fees: (travelerPrice.price.fees ?? []).map(fee => ({
-        amount: parseFloat(fee.amount),
-        type: fee.type,
-      })),
-      taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
-        amount: parseFloat(tax.amount),
-        code: tax.code,
-      })),
+      fees: [],
+      taxes: {
+        amount: parseFloat(travelerPrice.taxesAmount),
+        code: "Tax",
+      },
     }
   }),
 });
@@ -193,61 +145,38 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   return (flight, index) => {
     result = {
       code: `AMD-${index}`,
-      availableSeats: flight.numberOfBookableSeats,
+      availableSeats: 0,
       currencyCode: flight.price.currency,
       travelClass,
       provider: EProvider.get("AMADEUS"),
-      price: makePriceObject(flight.price, flight.travelerPricings),
-      itineraries: flight.itineraries.map(itinerary => {
+      providerData: {
+        offerId: flight.offerID,
+      },
+      price: makePriceObject(flight.price, flight.price.offerPrices),
+      itineraries: flight.flights.map(itinerary => {
+        const segments = itinerary.flightSegments.map(makeFlightSegmentsArray(aircrafts, airlines, airports));
+        const duration = segments.reduce((total, segment) => total + segment.duration, 0);
         let result = {
-          duration: dateTimeHelper.convertAmadeusTime(itinerary.duration),
-          segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+          duration,
+          segments,
         };
-
-        // if (result.duration < filter.duration.min) {
-        //   filter.duration.min = result.duration;
-        // }
-        // if (result.duration > filter.duration.max) {
-        //   filter.duration.max = result.duration;
-        // }
-
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : dateTimeHelper.getMinutesFromIsoString(filter.departureTime.min))) {
-        //   filter.departureTime.min = result.segments[0].departure.at;
-        // }
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTime.max ? 0 : dateTimeHelper.getMinutesFromIsoString(filter.departureTime.max))) {
-        //   filter.departureTime.max = result.segments[0].departure.at;
-        // }
-
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.min))) {
-        //   filter.arrivalTime.min = result.segments[0].arrival.at;
-        // }
-        // if (dateTimeHelper.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTime.max ? 0 : dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.max))) {
-        //   filter.arrivalTime.max = result.segments[0].arrival.at;
-        // }
 
         return result;
       }),
     };
 
-    // if (result.price < filter.price.min) {
-    //   filter.price.min = result.price;
-    // }
-    // if (result.price > filter.price.max) {
-    //   filter.price.max = result.price;
-    // }
-
     return result;
   };
 };
 
-module.exports.searchFlights = async params => {
+module.exports.searchFlights_____OLD = async params => {
   let segments = makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
 
-  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
   let amadeusSearchResult;
   if (!segments || (segments.length === 0)) {
@@ -299,6 +228,76 @@ module.exports.searchFlights = async params => {
   };
 };
 
+module.exports.searchFlights = async params => {
+  let segments = makeSegmentsArray(params.segments);
+
+  params.departureDate = new Date(params.departureDate);
+  params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
+
+  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+
+  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+
+  if (!amadeusSearchResult) {
+    return {
+      flightDetails: [],
+    };
+  }
+
+  // const stops = amadeusSearchResult
+  //   .reduce((res, cur) => [...res, ...cur.itineraries], [])
+  //   .reduce((res, cur) => [...res, ...cur.segments], [])
+  //   .filter(segment => !!segment.stops)
+  //   .reduce((res, cur) => [...res, ...cur.stops], [])
+  //   .map(stop => stop.iataCode);
+
+  const airportCodes = {};
+  const aircraftCodes = {};
+  const carrierCodes = {};
+
+  amadeusSearchResult.flights.forEach(flight => {
+    flight.flights.forEach(details => {
+      details.flightSegments.forEach(segment => {
+        airportCodes[segment.originDestination.departure.airportCode] = segment.originDestination.departure.airportCode;
+        airportCodes[segment.originDestination.arrival.airportCode] = segment.originDestination.arrival.airportCode;
+        carrierCodes[segment.marketingCarrier.airlineID] = segment.marketingCarrier.airlineID;
+        aircraftCodes[segment.equipment.aircraftCode] = segment.equipment.aircraftCode;
+      });
+    });
+  });
+
+  const airports = await countryRepository.getAirportsByCode(Object.keys(airportCodes));
+  const aircrafts = Object.keys(aircraftCodes);
+  const carriers = await airlineRepository.getAirlinesByCode(Object.keys(carrierCodes));
+
+  const flightDetails = amadeusSearchResult.flights.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
+
+  let origin = await countryRepository.getCityByCode(params.origin);
+  let destination = await countryRepository.getCityByCode(params.destination);
+
+  if (!origin) {
+    origin = !!airports[params.origin] ? airports[params.origin].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+  }
+
+  if (!destination) {
+    destination = !!airports[params.destination] ? airports[params.destination].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+
+  }
+
+  return {
+    origin,
+    destination,
+    flightDetails,
+  };
+};
+
 
 /**
  *  
@@ -306,5 +305,65 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  console.log(params);
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
+
+  const travelers = params.passengers.map(passenger => {
+    if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+      return {
+        passenger: {
+          birthdate: dateTime.excludeDateFromIsoString(user.info.birthDate),
+          emailContact: user.email,
+          gender: user.info.gender,
+          nameGiven: user.info.firstName,
+          surname: user.info.lastName,
+          passengerType: (user.info.type === "ADULT" ? "ADT" : (user.info.type === "CHILD" ? "CHD" : "INF")),
+          // passengerType: user.info.type,
+          phone: {
+            areaCode: "",
+            countryCode: "",
+            number: user.mobileNumber,
+          },
+        },
+        document: {
+          expirationDate: dateTime.excludeDateFromIsoString(user.info.document.expirationDate),
+        },
+      };
+    } else {
+      const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt));
+
+      if (!person) {
+        throw "passenger_not_found";
+      }
+
+      return {
+        passenger: {
+          birthdate: dateTime.excludeDateFromIsoString(person.birthDate),
+          gender: person.gender,
+          nameGiven: person.firstName,
+          surname: person.lastName,
+          emailContact: user.email,
+          passengerType: (person.type === "ADULT" ? "ADT" : (person.type === "CHILD" ? "CHD" : "INF")),
+          // passengerType: person.type,
+          phone: {
+            areaCode: "",
+            countryCode: "",
+            number: user.mobileNumber,
+          },
+        },
+        document: {
+          expirationDate: dateTime.excludeDateFromIsoString(person.document.expirationDate),
+        },
+      };
+    }
+  });
+
+  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
+  const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
+
+  const { result: bookedFlight } = await amadeusSoap.bookFlight(flightInfoRepository.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  flightInfo.flights[flightIndex].providerData.pnr = bookedFlight.pnr;
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.flight.shoppingResponseID;
+  await flightInfo.save();
+
+  return bookedFlight;
 };

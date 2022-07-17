@@ -342,7 +342,7 @@ class CountryRepository extends BaseRepository {
 
   /**
    * 
-   * @param {String} airportCodes 
+   * @param {String[]} airportCodes 
    * @returns {Promise<Airport>}
    */
   async getAirportsByCode(airportCodes) {

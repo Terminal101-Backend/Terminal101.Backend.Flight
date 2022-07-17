@@ -1,5 +1,6 @@
 module.exports.accountManagement = require("./accountManagement");
 module.exports.amadeus = require("./amadeus");
+module.exports.amadeusSoap = require("./amadeusSoap");
 module.exports.parto = require("./parto");
 module.exports.wallet = require("./wallet");
 module.exports.common = require("./common");
