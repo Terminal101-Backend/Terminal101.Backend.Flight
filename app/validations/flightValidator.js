@@ -223,7 +223,7 @@ class SearchOriginDestinationAmadeus extends BaseValidator {
     };
 
     const query = {
-      keyword: Joi.string(),
+      keyword: Joi.string().allow(null, ''),
     };
 
     super(body);

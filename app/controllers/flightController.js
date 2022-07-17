@@ -11,7 +11,7 @@ const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } 
 // NOTE: Search origin or destination
 module.exports.searchOriginDestination = async (req, res) => {
   try {
-    let keyword = req.query.keyword ?? "";
+    let keyword = (req.query.keyword).trim() ?? "";
     const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
@@ -600,14 +600,15 @@ module.exports.flightCreateOrder = async (req, res) => {
 // NOTE: Search origin or destination by Amadeus
 module.exports.searchOriginDestinationAmadeus = async (req, res) => {
   try {
-    let keyword = req.query.keyword ?? "";
+    let irregularKeyword = req.query.keyword ?? "";
+    let keyword = irregularKeyword.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "").trim();
     const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
         const ip = request.getRequestIpAddress(req);
-        ipInfo = await getIpInfo(ip);
-        // ipInfo = await getIpInfo("5.239.149.82");
+        // ipInfo = await getIpInfo(ip);
+        ipInfo = await getIpInfo("5.239.149.82");
         console.log({ ip, ipInfo });
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
@@ -618,32 +619,44 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
       }
     }
     const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const {data: resultTransformed} = transformDataAmadeus(result);
+    const { data: resultTransformed } = transformDataAmadeus(result);
     response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
   }
-
 
 };
 
 //Internal Function
 function transformDataAmadeus(data) {
   const newData = [];
-
+  //address: element.address
   data.forEach(element => {
     newData.push({
       subType: element.subType,
-      name: element.name,
+      name: toCamelCase(element.name),
       iataCode: element.iataCode,
       geoCode: element.geoCode,
-      address: element.address
+      address: {
+        cityName: toCamelCase(element.address.cityName),
+        cityCode: element.address.cityCode,
+        countryName: toCamelCase(element.address.countryName),
+        countryCode: element.address.countryCode,
+        stateCode: element.address.stateCode,
+        regionCode: element.address.regionCode
+      }
     })
   });
-
 
   return {
     data: newData
   };
+}
+
+
+function toCamelCase(item) {
+  return item.charAt(0).toUpperCase() +
+    item.substr(1).toLowerCase()
+      .replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => ' ' + chr.toUpperCase())
 }
 
