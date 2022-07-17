@@ -635,7 +635,7 @@ function transformDataAmadeus(data) {
     newData.push({
       subType: element.subType,
       name: element.name,
-      iataCode: element.name,
+      iataCode: element.iataCode,
       geoCode: element.geoCode,
       address: element.address
     })
