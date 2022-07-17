@@ -167,7 +167,7 @@ paths:
               type: object
               $ref: "#/definitions/WaypointCount"
 
-/waypoint/{waypointType}/flight-waypoint:
+  /waypoint/{waypointType}/flight-waypoint:
     # NOTE: Get waypoints for origin/destination by Amadeus API
     get:
       tags:
