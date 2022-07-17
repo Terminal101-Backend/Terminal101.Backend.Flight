@@ -3,6 +3,7 @@ const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 const pagination = require("../helpers/paginationHelper");
+const dateTime = require("../helpers/dateTimeHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -279,6 +280,96 @@ class FlightInfoRepository extends BaseRepository {
           segmentId: `${itineraryIndex + 1}-${segmentIndex + 1}`,
           class: travelClass,
         }))], [])
+      })),
+    }
+  }
+
+  /**
+   * 
+   * @param {String} searchCode 
+   * @param {Number} flightCode 
+   * @param {String<"flight-offers-pricing|flight-order">} type 
+   * @returns {}
+   */
+  regenerateAmadeusSoapBookFlightObject(flightInfo) {
+    /**
+     * 
+     * @param {Date} date 
+     * @returns {String}
+     */
+    const dateToIsoString = date => {
+      let result = date.toISOString();
+      return result.replace(/\.\d+Z$/, "");
+    }
+
+    // const flightInfo = await this.getFlight(searchCode, flightCode);
+    let travelClass;
+    switch (flightInfo.flights.travelClass) {
+      case "ECONOMY":
+        travelClass = "M";
+        break;
+
+      case "PERMIUM_ECONOMY":
+        travelClass = "W";
+        break;
+
+      case "BUSINESS":
+        travelClass = "C";
+        break;
+
+      case "FIRST":
+        travelClass = "F";
+        break;
+
+      default:
+        travelClass = "L";
+    }
+
+    return {
+      offerID: flightInfo.flights.providerData.offerId,
+      price: {
+        offerPrices: flightInfo.flights.price.travelerPrices.map(price => ({
+          baseAmount: 0,
+          taxesAmount: 0,
+          passengerType: (price.travelerType === "ADULT" ? "ADT" : (price.travelerType === "CHILD" ? "CHD" : "INF")),
+          numberOfUnits: 1,
+        }))
+      },
+      owner: "",
+      fareType: "RP",
+      flights: flightInfo.flights.itineraries.map(itinerary => ({
+        flightSegments: itinerary.segments.map(segment => ({
+          originDestination: {
+            departure: {
+              airportCode: segment.departure.airport.code,
+              date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.departure.at)),
+              time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.departure.at)),
+            },
+            arrival: {
+              airportCode: segment.arrival.airport.code,
+              date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.arrival.at)),
+              time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.arrival.at)),
+            },
+          },
+          marketingCarrier: {
+            airlineID: segment.airline.code,
+            flightNumber: segment.flightNumber,
+          },
+          operatingCarrier: {
+            airlineID: segment.airline.code,
+          },
+          flightDetail: {
+            classOfService: {
+              code: travelClass,
+            }
+          },
+        })),
+        departure: {
+          airportCode: "",
+        },
+        arrival: {
+          airportCode: "",
+        }
       })),
     }
   }
