@@ -596,3 +596,54 @@ module.exports.flightCreateOrder = async (req, res) => {
   }
 };
 
+// NOTE: Flight
+// NOTE: Search origin or destination by Amadeus
+module.exports.searchOriginDestinationAmadeus = async (req, res) => {
+  try {
+    let keyword = req.query.keyword ?? "";
+    const isKeywordEmpty = !keyword;
+    let ipInfo;
+    if (!keyword) {
+      if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
+        const ip = request.getRequestIpAddress(req);
+        ipInfo = await getIpInfo(ip);
+        // ipInfo = await getIpInfo("5.239.149.82");
+        console.log({ ip, ipInfo });
+        if (ipInfo.status === "success") {
+          keyword = ipInfo.city;
+        }
+      } else {
+        response.error(res, "keyword_required", 400);
+        return;
+      }
+    }
+    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+    const {data: resultTransformed} = transformDataAmadeus(result);
+    response.success(res, resultTransformed);
+  } catch (e) {
+    response.exception(res, e);
+  }
+
+
+};
+
+//Internal Function
+function transformDataAmadeus(data) {
+  const newData = [];
+
+  data.forEach(element => {
+    newData.push({
+      subType: element.subType,
+      name: element.name,
+      iataCode: element.name,
+      geoCode: element.geoCode,
+      address: element.address
+    })
+  });
+
+
+  return {
+    data: newData
+  };
+}
+

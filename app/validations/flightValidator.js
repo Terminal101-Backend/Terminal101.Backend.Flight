@@ -213,6 +213,25 @@ class RestrictionCovid19 extends BaseValidator {
   }
 };
 
+class SearchOriginDestinationAmadeus extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      waypointType: Joi.string().required(),
+    };
+
+    const query = {
+      keyword: Joi.string(),
+    };
+
+    super(body);
+    this.params(params);
+    this.query(query);
+  }
+};
+
 module.exports = {
   searchOriginDestination: new SearchOriginDestination(),
   getPopularWaypoints: new GetPopularWaypoints(),
@@ -227,4 +246,5 @@ module.exports = {
   getAirports: new GetAirports(),
   getAirlines: new GetAirlines(),
   restrictionCovid19: new RestrictionCovid19(),
+  searchOriginDestinationAmadeus: new SearchOriginDestinationAmadeus(),
 };

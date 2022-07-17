@@ -225,6 +225,19 @@ const deleteFlightOrder = async (orderId) => {
   return response;
 };
 
+const searchAirportAndCityWithAccessToken = async keyword => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = {'Authorization': 'Bearer '+ accessToken.access_token};
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations", {
+    params: {
+      subType: "AIRPORT,CITY",
+      keyword
+    },
+  });
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
@@ -235,5 +248,6 @@ module.exports = {
   covid19AreaReport,
   flightCreateOrder,
   getFlightOrder,
-  deleteFlightOrder
+  deleteFlightOrder,
+  searchAirportAndCityWithAccessToken
 };

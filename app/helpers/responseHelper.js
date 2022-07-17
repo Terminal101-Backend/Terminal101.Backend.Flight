@@ -3,6 +3,7 @@ const { common } = require("../services");
 
 //making response for successfully situation
 exports.success = (res, data) => {
+    //console.log(data);
     res.status(200).send({
         status: true,
         message: "",
