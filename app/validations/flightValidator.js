@@ -223,7 +223,10 @@ class SearchOriginDestinationAmadeus extends BaseValidator {
     };
 
     const query = {
-      keyword: Joi.string().allow(null, ''),
+      keyword: Joi.string()
+        .allow(null, '')
+        .replace(/\s|[0-9_]|\W|[#$%^*()]/g, "")
+        .trim(),
     };
 
     super(body);

@@ -600,8 +600,7 @@ module.exports.flightCreateOrder = async (req, res) => {
 // NOTE: Search origin or destination by Amadeus
 module.exports.searchOriginDestinationAmadeus = async (req, res) => {
   try {
-    let irregularKeyword = req.query.keyword ?? "";
-    let keyword = irregularKeyword.replace(/\s|[0-9_]|\W|[#$%^&*()]/g, "").trim();
+    let keyword = req.query.keyword ?? "";
     const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
