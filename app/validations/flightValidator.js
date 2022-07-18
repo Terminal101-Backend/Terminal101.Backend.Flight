@@ -12,7 +12,7 @@ class SearchOriginDestination extends BaseValidator {
     };
 
     const query = {
-      keyword: Joi.string(),
+      keyword: Joi.string().allow(""),
     };
 
     super(body);

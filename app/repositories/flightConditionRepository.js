@@ -486,6 +486,8 @@ class FlightConditionRepository extends BaseRepository {
     agrFlightCondition.append(this.#getConditionCityPipeline(false, true));
     agrFlightCondition.append(this.#getConditionAirportPipeline(false));
 
+    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+
     agrFlightCondition.append(this.#getConditionCheckFinalProjection());
 
     const conditions = {

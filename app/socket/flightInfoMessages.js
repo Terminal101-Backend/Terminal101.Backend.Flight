@@ -1,5 +1,5 @@
 const { EProvider } = require("../constants");
-const { providerRepository } = require("../repositories");
+const { providerRepository, flightConditionRepository } = require("../repositories");
 const { socketHelper, amadeusHelper, partoHelper } = require("../helpers");
 const { flightController } = require("../controllers");
 
@@ -8,7 +8,11 @@ module.exports = (io, socket) => {
     try {
       console.log(req);
       const activeProviders = await providerRepository.getActiveProviders();
-      const activeProviderCount = activeProviders.length;
+
+      const flightConditions = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
+      const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditions, activeProviders);
+
+      const activeProviderCount = notRestrictedProviders.length;
       const lastSearch = [];
       let providerNumber = 0;
       let searchCode;
@@ -40,11 +44,13 @@ module.exports = (io, socket) => {
         socket.emit("searchFlightResult", await socketHelper.success(response, language));
       })();
 
-      activeProviders.forEach(provider => {
+      notRestrictedProviders.forEach(provider => {
         providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
         providerHelper.searchFlights(req.body).then(async flight => {
-          lastSearch.push(...flight.flightDetails);
+          const flightDetails = flightController.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
+
+          lastSearch.push(...flightDetails);
           const result = await flightController.appendProviderResult(flight.origin, flight.destination, req.body.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
           searchCode = result.code;
 
