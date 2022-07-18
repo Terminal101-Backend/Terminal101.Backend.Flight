@@ -22,10 +22,12 @@ const pay = async (bookedFlight) => {
     await wallet.getUserTransaction(bookedFlight.bookedBy, bookedFlight.transactionId);
   }
 
+  // TODO: Send notification to user
   const userToken = token.newToken({ user: bookedFlight.bookedBy });
   await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
   await twilio.sendTicket(bookedFlight.contact.mobileNumber);
   await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+  // TODO: If user wallet's credit is less than flight price do... what???!!!
 
   await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
 };
@@ -34,12 +36,8 @@ const pay = async (bookedFlight) => {
 module.exports.payForFlight = async (req, res) => {
   try {
     const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
-    await pay(bookedFlight);
-
-    // TODO: Finilize book flight by Amadeus
-    // TODO: Send notification to user
     // TODO: Get last flight price from our DB
-    // TODO: If user wallet's credit is less than flight price do... what???!!!
+    await pay(bookedFlight);
 
     response.success(res, true);
   } catch (e) {
@@ -60,6 +58,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
     if (now - flightDetails.searchedTime > process.env.SEARCH_TIMEOUT) {
       throw "search_expired";
     }
+    const userWallet = await wallet.getUserWallet(decodedToken.user);
 
     if (bookedFlight.status === EBookedFlightStatus.get("PAYING")) {
       let amount = 0;
@@ -67,12 +66,14 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 
       switch (req.body.payWay) {
         case "WALLET":
-          const userWallet = await wallet.getUserWallet(decodedToken.user);
           amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
           break;
 
         case "PAY":
           amount = flightDetails.flights.price.total;
+          if (userWallet.credit < 0) {
+            amount += Math.abs(userWallet.credit);
+          }
           break;
 
         default:

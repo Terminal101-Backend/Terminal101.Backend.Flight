@@ -167,6 +167,33 @@ paths:
               type: object
               $ref: "#/definitions/WaypointCount"
 
+  /waypoint/{waypointType}/flight-waypoint:
+    # NOTE: Get waypoints for origin/destination by Amadeus API
+    get:
+      tags:
+        - Waypoint
+      description: Get waypoints for origin/destination by Amadeus API.
+      parameters:
+        - name: waypointType
+          in: path
+          type: string
+          enums: [ORIGIN, DESTINATION]
+          required: true
+          value: ORIGIN
+        - name: keyword
+          in: query
+          type: string
+          value: FRA
+          description: Keyword for search.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              $ref: "#/definitions/WaypointAmadeus"
+
   # NOTE: Flight
   /flight/search:
     # NOTE: Search a fligh
@@ -943,6 +970,30 @@ definitions:
       description:
         type: string
         example: Munchen airport
+  
+  WaypointAmadeus:
+    required:
+      - subType
+      - name
+      - iataCode
+      - geoCode
+      - address
+    properties:
+      subType:
+        type: string
+        enum: [CITY, AIRPORT]
+        example: AIRPORT
+      name:
+        type: string
+        example: FRANKFURT INTL
+      iataCode:
+        type: string
+        example: FRANKFURT INTL
+      geoCode:
+        $ref: "#/definitions/GeoCode"
+      address:
+        $ref: "#/definitions/Address"
+
 
   Airport:
     required:
@@ -1229,6 +1280,33 @@ definitions:
       isRestricted:
         type: boolean
         example: false
+
+  GeoCode:
+    properties:
+      latitude:
+        type: number
+        example: 50.0406
+      longitude:
+        type: number
+        example: 8.55603
+  
+  Address:
+    properties:
+      cityName:
+        type: string
+        example: FRANKFURT
+      cityCode:
+        type: string
+        example: FRA
+      countryName:
+        type: string
+        example: GERMANY
+      countryCode:
+        type: string
+        example: DE
+      regionCode:
+        type: string
+        example: EUROP
 
 schemes:
   # - http

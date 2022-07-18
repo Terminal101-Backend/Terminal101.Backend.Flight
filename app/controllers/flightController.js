@@ -12,6 +12,7 @@ const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } 
 module.exports.searchOriginDestination = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
+    keyword = keyword.trim();
     const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
@@ -98,6 +99,59 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
   };
 };
 
+module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
+  return activeProviders.filter(provider => {
+    const providerIsRestricted = flightConditions.some(flightCondition => {
+      const anyAirlines = !!flightCondition.airline.exclude && (!flightCondition.airline.items || (flightCondition.airline.items.length === 0));
+      if (!!anyAirlines) {
+        if (!!flightCondition.isRestricted && flightCondition.providerNames.includes(EProvider.find(provider.name))) {
+          return true;
+        }
+        if (!flightCondition.isRestricted && !flightCondition.providerNames.includes(EProvider.find(provider.name))) {
+          return true;
+        }
+        return false;
+      } else {
+        return false
+      };
+    });
+
+    return !providerIsRestricted;
+  });
+};
+
+module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
+  let result;
+
+  flightConditions.forEach(flightCondition => {
+    result = flightDetails.filter(flightDetails =>
+      flightDetails.itineraries.every(itinerary => itinerary.segments.every(segment => {
+        // NOTE: Check if airline exclude is false and segment airline is in airlines list
+        let foundAirline = !flightCondition.airline.exclude && flightCondition.airline.items.some(airline => airline.code === segment.airline.code);
+        // NOTE: Check if airline exclude is true and segment airline is not in airlines list
+        foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === segment.airline.code));
+
+        if (!!foundAirline) {
+          if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
+            return true;
+          }
+          if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
+            return true;
+          }
+          return false;
+        } else {
+          if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
+            return false;
+          }
+          return true;
+        }
+      }))
+    );
+  });
+
+  return result;
+};
+
 module.exports.searchFlights = async (req, res) => {
   try {
     // response.error(res, "use_socket", 503);
@@ -112,14 +166,15 @@ module.exports.searchFlights = async (req, res) => {
     let result;
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    console.log(flightConditions.map(condition => condition.toJSON()));
-    // TODO: Affect flight conditions on searchs
+    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditions, activeProviders);
 
-    activeProviders.forEach(provider => {
+    notRestrictedProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
-        lastSearch.push(...flight.flightDetails);
+        const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
+
+        lastSearch.push(...flightDetails);
         result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
         searchCode = result.code;
         hasResult = true;
@@ -596,4 +651,55 @@ module.exports.flightCreateOrder = async (req, res) => {
     response.exception(res, e);
   }
 };
+
+// NOTE: Flight
+// NOTE: Search origin or destination by Amadeus
+module.exports.searchOriginDestinationAmadeus = async (req, res) => {
+  try {
+    let keyword = req.query.keyword ?? "";
+    const isKeywordEmpty = !keyword;
+    let ipInfo;
+    if (!keyword) {
+      if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
+        const ip = request.getRequestIpAddress(req);
+        ipInfo = await getIpInfo(ip);
+        // ipInfo = await getIpInfo("5.239.149.82");
+        console.log({ ip, ipInfo });
+        if (ipInfo.status === "success") {
+          keyword = ipInfo.city;
+        }
+      } else {
+        response.error(res, "keyword_required", 400);
+        return;
+      }
+    }
+    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+    const {data: resultTransformed} = transformDataAmadeus(result);
+    response.success(res, resultTransformed);
+  } catch (e) {
+    response.exception(res, e);
+  }
+
+
+};
+
+//Internal Function
+function transformDataAmadeus(data) {
+  const newData = [];
+
+  data.forEach(element => {
+    newData.push({
+      subType: element.subType,
+      name: element.name,
+      code: element.iataCode,
+      geoCode: element.geoCode,
+      address: element.address
+    })
+  });
+
+
+  return {
+    data: newData
+  };
+}
 

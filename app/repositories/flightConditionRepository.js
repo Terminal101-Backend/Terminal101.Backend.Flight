@@ -9,6 +9,391 @@ const pagination = require("../helpers/paginationHelper");
  */
 
 class FlightConditionRepository extends BaseRepository {
+  /**
+   * @param {Boolean} origin 
+   * @param {Boolean} returnArrays = false
+   */
+  #getConditionCountryPipeline(origin, returnArrays = false) {
+    return {
+      $lookup: {
+        from: "countries",
+        as: `condition.${!!origin ? "origin" : "destination"}.countries`,
+        let: {
+          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+        },
+        pipeline: [
+          {
+            $project: {
+              _id: 0,
+              code: 1,
+              name: 1,
+              cities: !!returnArrays ? 1 : undefined,
+              type: "COUNTRY",
+            },
+          },
+          {
+            $match: {
+              $expr: {
+                $in: ["$code", "$$conditionItems"]
+              },
+            },
+          },
+        ]
+      }
+    };
+  }
+
+  /**
+   * @param {Boolean} origin 
+   * @param {Boolean} returnArrays = false
+   */
+  #getConditionCityPipeline(origin, returnArrays = false) {
+    return {
+      $lookup: {
+        from: "countries",
+        as: `condition.${!!origin ? "origin" : "destination"}.cities`,
+        let: {
+          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+        },
+        pipeline: [
+          {
+            $project: {
+              cities: {
+                code: 1,
+                name: 1,
+                airports: !!returnArrays ? 1 : undefined,
+                type: "CITY",
+              },
+            },
+          },
+          {
+            $project: {
+              items: {
+                $filter: {
+                  input: "$cities",
+                  as: "item",
+                  cond: {
+                    $in: [
+                      {
+                        $concat: ["C_", "$$item.code"]
+                      },
+                      `$$conditionItems`
+                    ]
+                  }
+                },
+              },
+            },
+          },
+        ]
+      }
+    };
+  }
+
+  /**
+   * @param {Boolean} origin 
+   */
+  #getConditionAirportPipeline(origin) {
+    return {
+      $lookup: {
+        from: "countries",
+        as: `condition.${!!origin ? "origin" : "destination"}.airports`,
+        let: {
+          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+        },
+        pipeline: [
+          {
+            $unwind: "$cities"
+          },
+          {
+            $project: {
+              cities: {
+                airports: {
+                  code: 1,
+                  name: 1,
+                  description: 1,
+                  type: "AIRPORT",
+                }
+              },
+            },
+          },
+          {
+            $project: {
+              items: {
+                $filter: {
+                  input: "$cities.airports",
+                  as: "item",
+                  cond: {
+                    $in: ["$$item.code", "$$conditionItems"]
+                  }
+                },
+              },
+            },
+          },
+        ]
+      }
+    };
+  }
+
+  #getConditionAirlinePipeline() {
+    return {
+      $lookup: {
+        from: "airlines",
+        as: "airlineInfo",
+        localField: "airline.items",
+        foreignField: "code",
+      }
+    };
+  }
+
+  #getConditionFinalProjection() {
+    const [origins, destinations] = ["origin", "destination"].map(waypoint => [
+      {
+        $addFields: {
+          [`condition.${waypoint}Cities`]: {
+            $reduce: {
+              input: `$condition.${waypoint}.cities`,
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.items",
+                ]
+              }
+            }
+          },
+        },
+      },
+      {
+        $addFields: {
+          [`condition.${waypoint}Airports`]: {
+            $reduce: {
+              input: `$condition.${waypoint}.airports`,
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.items",
+                ]
+              }
+            }
+          },
+        },
+      },
+    ]);
+
+    return [
+      ...origins,
+      ...destinations,
+      {
+        $project: {
+          code: 1,
+          providerNames: 1,
+          isRestricted: 1,
+          "airline.exclude": 1,
+          "airline.items": {
+            $map: {
+              input: "$airlineInfo",
+              as: "item",
+              in: {
+                code: "$$item.code",
+                name: "$$item.name",
+                description: "$$item.description",
+              }
+            }
+          },
+          "origin.exclude": 1,
+          "origin.items": {
+            $reduce: {
+              input: {
+                $concatArrays: [
+                  "$condition.originCities",
+                  "$condition.originAirports",
+                  "$condition.origin.countries",
+                ]
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  ["$$this"],
+                ]
+              }
+            }
+          },
+          "destination.exclude": 1,
+          "destination.items": {
+            $reduce: {
+              input: {
+                $concatArrays: [
+                  "$condition.destinationCities",
+                  "$condition.destinationAirports",
+                  "$condition.destination.countries",
+                ]
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  ["$$this"],
+                ]
+              }
+            }
+          },
+        },
+      }
+    ];
+  }
+
+  #getConditionCheckFinalProjection() {
+    const [origins, destinations] = ["origin", "destination"].map(waypoint => [
+      {
+        $addFields: {
+          [`condition.${waypoint}CountriesCities`]: {
+            $reduce: {
+              input: {
+                $concatArrays: `$condition.${waypoint}.countries`
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.cities",
+                ]
+              }
+            }
+          },
+        },
+      },
+      {
+        $addFields: {
+          [`condition.${waypoint}Cities`]: {
+            $reduce: {
+              input: `$condition.${waypoint}.cities`,
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.items",
+                ]
+              }
+            }
+          },
+        },
+      },
+      {
+        $addFields: {
+          [`condition.${waypoint}CitiesAirports`]: {
+            $reduce: {
+              input: {
+                $concatArrays: [
+                  `$condition.${waypoint}CountriesCities`,
+                  `$condition.${waypoint}Cities`,
+                ]
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.airports",
+                ]
+              }
+            }
+          },
+        },
+      },
+      {
+        $addFields: {
+          [`condition.${waypoint}Airports`]: {
+            $reduce: {
+              input: `$condition.${waypoint}.airports`,
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  "$$this.items",
+                ]
+              }
+            }
+          },
+        },
+      },
+    ]);
+
+    return [
+      ...origins,
+      ...destinations,
+      {
+        $project: {
+          code: 1,
+          providerNames: 1,
+          isRestricted: 1,
+          "airline.exclude": 1,
+          "airline.items": {
+            $map: {
+              input: "$airlineInfo",
+              as: "item",
+              in: {
+                code: "$$item.code",
+                name: "$$item.name",
+                description: "$$item.description",
+              }
+            }
+          },
+          "origin.exclude": 1,
+          "origin.items": {
+            $reduce: {
+              input: {
+                $concatArrays: [
+                  "$condition.originCountriesCities",
+                  "$condition.originCitiesAirports",
+                  "$condition.originCities",
+                  "$condition.originAirports",
+                  "$condition.origin.countries",
+                ]
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  ["$$this"],
+                ]
+              }
+            }
+          },
+          "destination.exclude": 1,
+          "destination.items": {
+            $reduce: {
+              input: {
+                $concatArrays: [
+                  "$condition.destinationCountriesCities",
+                  "$condition.destinationCitiesAirports",
+                  "$condition.destinationCities",
+                  "$condition.destinationAirports",
+                  "$condition.destination.countries",
+                ]
+              },
+              initialValue: [],
+              in: {
+                $concatArrays: [
+                  "$$value",
+                  ["$$this"],
+                ]
+              }
+            }
+          }
+        },
+      },
+      {
+        $project: {
+          "origin.items.cities": 0,
+          "origin.items.airports": 0,
+          "destination.items.cities": 0,
+          "destination.items.airports": 0,
+        }
+      },
+    ];
+  }
+
   constructor() {
     super(FlightCondition);
   }
@@ -41,135 +426,17 @@ class FlightConditionRepository extends BaseRepository {
    */
   async getFlightConditions(page, pageSize) {
     const agrFlightCondition = FlightCondition.aggregate();
-    agrFlightCondition.append({
-      $lookup: {
-        from: 'countries',
-        as: 'originInfo',
-        let: {
-          originItems: "$origin.items",
-        },
-        pipeline: [
-          {
-            $unwind: "$cities"
-          },
-          {
-            $project: {
-              cities: {
-                airports: {
-                  code: 1,
-                  name: 1,
-                  description: 1,
-                }
-              },
-            },
-          },
-          {
-            $project: {
-              originAirports: {
-                $filter: {
-                  input: "$cities.airports",
-                  as: "item",
-                  cond: {
-                    $in: ["$$item.code", "$$originItems"]
-                  }
-                },
-              },
-            },
-          },
-        ]
-      }
-    });
-    agrFlightCondition.append({
-      $lookup: {
-        from: 'countries',
-        as: 'destinationInfo',
-        let: {
-          destinationItems: "$destination.items",
-        },
-        pipeline: [
-          {
-            $unwind: "$cities"
-          },
-          {
-            $project: {
-              cities: {
-                airports: {
-                  code: 1,
-                  name: 1,
-                  description: 1,
-                }
-              },
-            },
-          },
-          {
-            $project: {
-              destinationAirports: {
-                $filter: {
-                  input: "$cities.airports",
-                  as: "item",
-                  cond: {
-                    $in: ["$$item.code", "$$destinationItems"]
-                  }
-                },
-              },
-            },
-          },
-        ]
-      }
-    });
-    agrFlightCondition.append({
-      $lookup: {
-        from: 'airlines',
-        as: 'airlineInfo',
-        localField: "airline.items",
-        foreignField: "code",
-      }
-    });
-    agrFlightCondition.append({
-      $project: {
-        code: 1,
-        providerNames: 1,
-        isRestricted: 1,
-        "airline.exclude": 1,
-        "airline.items": {
-          $map: {
-            input: "$airlineInfo",
-            as: "item",
-            in: {
-              code: "$$item.code",
-              name: "$$item.name",
-              description: "$$item.description",
-            }
-          }
-        },
-        "origin.exclude": 1,
-        "origin.items": {
-          $reduce: {
-            input: "$originInfo",
-            initialValue: [],
-            in: {
-              $concatArrays: [
-                "$$value",
-                "$$this.originAirports"
-              ]
-            }
-          }
-        },
-        "destination.exclude": 1,
-        "destination.items": {
-          $reduce: {
-            input: "$destinationInfo",
-            initialValue: [],
-            in: {
-              $concatArrays: [
-                "$$value",
-                "$$this.destinationAirports"
-              ]
-            }
-          }
-        },
-      },
-    });
+    agrFlightCondition.append(this.#getConditionCountryPipeline(true));
+    agrFlightCondition.append(this.#getConditionCityPipeline(true));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
+
+    agrFlightCondition.append(this.#getConditionCountryPipeline(false));
+    agrFlightCondition.append(this.#getConditionCityPipeline(false));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+
+    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+
+    agrFlightCondition.append(this.#getConditionFinalProjection());
 
     const flightConditions = await pagination.rootPagination(agrFlightCondition, page, pageSize);
     return flightConditions;
@@ -181,9 +448,26 @@ class FlightConditionRepository extends BaseRepository {
    * @returns {Promise<FlightCondition>}
    */
   async getFlightCondition(code) {
-    const flightCondition = await this.findOne({ code });
+    const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $match: {
+        code,
+      }
+    });
+    agrFlightCondition.append(this.#getConditionCountryPipeline(true));
+    agrFlightCondition.append(this.#getConditionCityPipeline(true));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
 
-    return flightCondition;
+    agrFlightCondition.append(this.#getConditionCountryPipeline(false));
+    agrFlightCondition.append(this.#getConditionCityPipeline(false));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+
+    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+
+    agrFlightCondition.append(this.#getConditionFinalProjection());
+
+    const flightCondition = await agrFlightCondition.exec();
+    return flightCondition[0];
   }
 
   /**
@@ -193,14 +477,32 @@ class FlightConditionRepository extends BaseRepository {
    * @returns {Promise<FlightCondition>}
    */
   async findFlightCondition(origin, destination) {
+    const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append(this.#getConditionCountryPipeline(true, true));
+    agrFlightCondition.append(this.#getConditionCityPipeline(true, true));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
+
+    agrFlightCondition.append(this.#getConditionCountryPipeline(false, true));
+    agrFlightCondition.append(this.#getConditionCityPipeline(false, true));
+    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+
+    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+
+    agrFlightCondition.append(this.#getConditionCheckFinalProjection());
+
     const conditions = {
-      origin: { "origin.items": origin, "origin.exclude": false, "destination.items": { $ne: destination }, "destination.exclude": true },
-      destination: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": destination, "destination.exclude": false },
-      origin_destination: { "origin.items": origin, "origin.exclude": false, "destination.items": destination, "destination.exclude": false },
-      not: { "origin.items": { $ne: origin }, "origin.exclude": true, "destination.items": { $ne: destination }, "destination.exclude": true },
+      origin_destination: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": destination, "destination.exclude": false },
+      origin: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": { $ne: destination }, "destination.exclude": true },
+      destination: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": destination, "destination.exclude": false },
+      none: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": { $ne: destination }, "destination.exclude": true },
     };
-    // const condition = Object.values(conditions).reduce((condition, current) => ({ $or: [condition, current] }), {});
-    const flightConditions = await this.findMany({ $or: Object.values(conditions) });
+
+    agrFlightCondition.append({
+      $match: {
+        $or: Object.values(conditions),
+      }
+    });
+    const flightConditions = await agrFlightCondition.exec();
 
     return flightConditions;
   }
