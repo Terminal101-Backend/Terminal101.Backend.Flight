@@ -186,6 +186,7 @@ module.exports.searchFlights = async params => {
     .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
     .reduce((res, cur) => ({
       ...res,
+      [cur.DepartureAirportLocationCode]: 1,
       [cur.ArrivalAirportLocationCode]: 1
     }), {}));
   // .filter(segment => !!segment.TechnicalStops && (segment.TechnicalStops.length > 0))
