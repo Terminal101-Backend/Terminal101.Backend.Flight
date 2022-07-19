@@ -9,8 +9,9 @@ module.exports = (io, socket) => {
       console.log(req);
       const activeProviders = await providerRepository.getActiveProviders();
 
-      const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
-      const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
+      // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
+      // const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
+      const notRestrictedProviders = activeProviders;
 
       const activeProviderCount = notRestrictedProviders.length;
       const lastSearch = [];
