@@ -129,7 +129,7 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         const first = 0, last = itinerary.segments.length - 1;
         const originCode = itinerary.segments[first].departure.airport.code;
         const destinationCode = itinerary.segments[last].arrival.airport.code;
-        const airlineCode = itinerary.segments[first].airline.code;
+        const airlineCode = flightDetails.owner.code;
 
         // NOTE: Check if origin exclude is false and flight origin is in origins list
         let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
