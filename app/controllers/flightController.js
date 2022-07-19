@@ -121,7 +121,7 @@ module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, act
 };
 
 module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
-  let result;
+  let result = [];
 
   flightConditions.forEach(flightCondition => {
     result = flightDetails.filter(flightDetails =>
@@ -674,7 +674,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
       }
     }
     const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const {data: resultTransformed} = transformDataAmadeus(result);
+    const { data: resultTransformed } = transformDataAmadeus(result);
     response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
