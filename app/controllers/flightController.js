@@ -159,8 +159,8 @@ module.exports.searchFlights = async (req, res) => {
 
     const activeProviders = await providerRepository.getActiveProviders();
 
-    const flightConditionsForAllAirlines = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForAllAirlines, activeProviders);
+    const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
 
     const activeProviderCount = notRestrictedProviders.length;
     const lastSearch = [];

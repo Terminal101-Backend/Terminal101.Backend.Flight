@@ -9,8 +9,8 @@ module.exports = (io, socket) => {
       console.log(req);
       const activeProviders = await providerRepository.getActiveProviders();
 
-      const flightConditions = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
-      const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditions, activeProviders);
+      const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
+      const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
 
       const activeProviderCount = notRestrictedProviders.length;
       const lastSearch = [];
@@ -43,6 +43,8 @@ module.exports = (io, socket) => {
 
         socket.emit("searchFlightResult", await socketHelper.success(response, language));
       })();
+
+      const flightConditions = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
 
       notRestrictedProviders.forEach(provider => {
         providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");

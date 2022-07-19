@@ -474,16 +474,16 @@ class FlightConditionRepository extends BaseRepository {
    * 
    * @param {String} origin 
    * @param {String} destination 
-   * @param {Boolean} withAirports = false
+   * @param {Boolean} includeAirports = false
    * @returns {Promise<FlightCondition>}
    */
-  async findFlightCondition(origin, destination, withAirports = false) {
+  async findFlightCondition(origin, destination, includeAirports = false) {
     const airports = {
       origin: [],
       destination: [],
     }
 
-    if (!!withAirports) {
+    if (!!includeAirports) {
       const agrCountry = {
         origin: Country.aggregate(),
         destination: Country.aggregate(),
