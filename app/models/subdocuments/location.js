@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const Point = require("./point");
 
 const location = new Schema({
-
 	name: {
 		type: String,
 		required: true,

@@ -1,5 +1,5 @@
 module.exports.City = require("./city");
-module.exports.Airport = require("./airport");
+// module.exports.Airport = require("./airport");
 module.exports.SearchedFlight = require("./searchedFlight");
 module.exports.FilterLimit = require("./filterLimit");
 module.exports.FlightDetails = require("./flightDetails");

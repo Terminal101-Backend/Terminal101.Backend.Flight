@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const Airport = require("./airport");
 const Location = require("./location");
 const NumberRange = require("./numberRange");
 
@@ -15,7 +14,7 @@ const filterLimit = new Schema({
     default: [],
   },
   airports: {
-    type: [Airport],
+    type: [Location],
     default: [],
   },
   airlines: {

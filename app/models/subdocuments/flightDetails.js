@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 
 const Itinerary = require("./itinerary");
 const { ETravelClass, EProvider } = require("../../constants");
+const Location = require("./location");
 const Price = require("./price");
 
 const flightDetails = new Schema({
@@ -13,6 +14,10 @@ const flightDetails = new Schema({
   providerData: {
     type: Object,
     default: {},
+  },
+  owner: {
+    type: Location,
+    required: true,
   },
   itineraries: {
     type: [Itinerary],

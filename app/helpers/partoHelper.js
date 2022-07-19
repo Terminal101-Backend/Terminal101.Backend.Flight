@@ -140,6 +140,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   return (flight, index) => {
     result = {
       code: `PRT-${index}`,
+      owner: airlines[flight.ValidatingAirlineCode],
       availableSeats: Math.min(...flight.OriginDestinationOptions
         .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
         .map(segment => segment.SeatsRemaining)),
@@ -200,7 +201,10 @@ module.exports.searchFlights = async params => {
       .reduce((res, cur) => ({
         ...res,
         [cur.MarketingAirlineCode]: 1
-      }), {})
+      }), partoSearchResult.reduce((res, cur) => ({
+        ...res,
+        [cur.ValidatingAirlineCode]: 1
+      }), {}))
   );
 
   const aircrafts = partoSearchResult

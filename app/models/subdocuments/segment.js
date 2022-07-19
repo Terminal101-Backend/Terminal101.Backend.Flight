@@ -6,7 +6,6 @@ const Stop = require("./stop");
 const Location = require("./location");
 
 const segment = new Schema({
-
   departure: {
     type: Waypoint,
     require: true,

@@ -145,6 +145,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   return (flight, index) => {
     result = {
       code: `AMD-${index}`,
+      owner: airlines[flight.owner],
       availableSeats: 0,
       currencyCode: flight.price.currency,
       travelClass,
@@ -257,6 +258,7 @@ module.exports.searchFlights = async params => {
   const carrierCodes = {};
 
   amadeusSearchResult.flights.forEach(flight => {
+    carrierCodes[flight.owner] = flight.owner;
     flight.flights.forEach(details => {
       details.flightSegments.forEach(segment => {
         airportCodes[segment.originDestination.departure.airportCode] = segment.originDestination.departure.airportCode;
