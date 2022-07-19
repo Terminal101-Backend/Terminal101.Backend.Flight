@@ -118,11 +118,11 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
     });
   });
 
-  filter.departureTime.min = dateTimeHelper.getMinutesFromIsoString(filter.departureTime.min);
-  filter.departureTime.max = dateTimeHelper.getMinutesFromIsoString(filter.departureTime.max);
+  filter.departureTime.min = dateTimeHelper.getMinutesFromIsoString(filter.departureTime.min ?? 0);
+  filter.departureTime.max = dateTimeHelper.getMinutesFromIsoString(filter.departureTime.max ?? 0);
 
-  filter.arrivalTime.min = dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.min);
-  filter.arrivalTime.max = dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.max);
+  filter.arrivalTime.min = dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.min ?? 0);
+  filter.arrivalTime.max = dateTimeHelper.getMinutesFromIsoString(filter.arrivalTime.max ?? 0);
 
   return filter;
 };

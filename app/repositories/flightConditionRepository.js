@@ -1,5 +1,5 @@
 const BaseRepository = require("../core/baseRepository");
-const { FlightCondition } = require("../models/documents");
+const { FlightCondition, Country } = require("../models/documents");
 const pagination = require("../helpers/paginationHelper");
 
 /**
@@ -474,9 +474,44 @@ class FlightConditionRepository extends BaseRepository {
    * 
    * @param {String} origin 
    * @param {String} destination 
+   * @param {Boolean} withAirports = false
    * @returns {Promise<FlightCondition>}
    */
-  async findFlightCondition(origin, destination) {
+  async findFlightCondition(origin, destination, withAirports = false) {
+    const airports = {
+      origin: [],
+      destination: [],
+    }
+
+    if (!!withAirports) {
+      const agrCountry = {
+        origin: Country.aggregate(),
+        destination: Country.aggregate(),
+      };
+      const waypoints = { origin, destination };
+
+      for (const [waypoint, aggregate] of Object.entries(agrCountry)) {
+        aggregate.append({
+          $unwind: "$cities"
+        });
+        aggregate.append({
+          $match: {
+            "cities.code": waypoints[waypoint]
+          }
+        });
+        aggregate.append({
+          $unwind: "$cities.airports"
+        });
+        aggregate.append({
+          $project: {
+            code: "$cities.airports.code"
+          }
+        });
+        const result = await aggregate.exec();
+        airports[waypoint] = result.map(item => item.code);
+      }
+    }
+
     const agrFlightCondition = FlightCondition.aggregate();
     agrFlightCondition.append(this.#getConditionCountryPipeline(true, true));
     agrFlightCondition.append(this.#getConditionCityPipeline(true, true));
@@ -491,11 +526,54 @@ class FlightConditionRepository extends BaseRepository {
     agrFlightCondition.append(this.#getConditionCheckFinalProjection());
 
     const conditions = {
-      origin_destination: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": destination, "destination.exclude": false },
-      origin: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": { $ne: destination }, "destination.exclude": true },
-      destination: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": destination, "destination.exclude": false },
-      none: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": { $ne: destination }, "destination.exclude": true },
+      origin_destination: {
+        "origin.items.code": {
+          $in: [origin, ...airports.origin],
+        },
+        "origin.exclude": false,
+        "destination.items.code": {
+          $in: [destination, ...airports.destination],
+        },
+        "destination.exclude": false
+      },
+      origin: {
+        "origin.items.code": {
+          $in: [origin, ...airports.origin],
+        },
+        "origin.exclude": false,
+        "destination.items.code": {
+          $nin: [destination, ...airports.destination],
+        },
+        "destination.exclude": true
+      },
+      destination: {
+        "origin.items.code": {
+          $nin: [origin, ...airports.origin],
+        },
+        "origin.exclude": true,
+        "destination.items.code": {
+          $in: [destination, ...airports.destination],
+        },
+        "destination.exclude": false
+      },
+      none: {
+        "origin.items.code": {
+          $nin: [origin, ...airports.origin],
+        },
+        "origin.exclude": true,
+        "destination.items.code": {
+          $nin: [destination, ...airports.destination],
+        },
+        "destination.exclude": true
+      },
     };
+
+    // const conditions = {
+    //   origin_destination: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": destination, "destination.exclude": false },
+    //   origin: { "origin.items.code": origin, "origin.exclude": false, "destination.items.code": { $ne: destination }, "destination.exclude": true },
+    //   destination: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": destination, "destination.exclude": false },
+    //   none: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": { $ne: destination }, "destination.exclude": true },
+    // };
 
     agrFlightCondition.append({
       $match: {

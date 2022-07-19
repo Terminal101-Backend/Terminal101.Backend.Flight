@@ -121,7 +121,7 @@ module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, act
 };
 
 module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
-  let result = [];
+  let result = flightDetails;
 
   flightConditions.forEach(flightCondition => {
     result = flightDetails.filter(flightDetails =>
@@ -159,8 +159,8 @@ module.exports.searchFlights = async (req, res) => {
 
     const activeProviders = await providerRepository.getActiveProviders();
 
-    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditions, activeProviders);
+    const flightConditionsForAllAirlines = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForAllAirlines, activeProviders);
 
     const activeProviderCount = notRestrictedProviders.length;
     const lastSearch = [];
@@ -168,6 +168,8 @@ module.exports.searchFlights = async (req, res) => {
     let providerNumber = 0;
     let searchCode;
     let result;
+
+    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination, true);
 
     notRestrictedProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
