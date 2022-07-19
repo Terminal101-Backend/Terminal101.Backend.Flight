@@ -56,6 +56,11 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
   };
 
   flights.forEach(flight => {
+    filter.airlines.push({
+      code: flight.owner.code,
+      name: flight.owner.name,
+      description: flight.owner.description,
+    })
     if (flight.price.total < filter.price.min) {
       filter.price.min = flight.price.total;
     }
@@ -65,12 +70,12 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
 
     flight.itineraries.forEach(itinerary => {
       itinerary.segments.forEach(segment => {
-        if (!!segment.airline.code && !filter.airlines.some(airline => airline.code === segment.airline.code)) {
-          filter.airlines.push({
-            code: segment.airline.code,
-            name: segment.airline.name,
-          });
-        }
+        // if (!!segment.airline.code && !filter.airlines.some(airline => airline.code === segment.airline.code)) {
+        //   filter.airlines.push({
+        //     code: segment.airline.code,
+        //     name: segment.airline.name,
+        //   });
+        // }
 
         if (!!segment.departure.airport.code && !filter.airports.some(airport => airport.code === segment.departure.airport.code)) {
           filter.airports.push({
