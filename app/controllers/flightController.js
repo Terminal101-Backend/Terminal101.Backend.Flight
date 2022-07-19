@@ -124,12 +124,31 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
   let result = flightDetails;
 
   flightConditions.forEach(flightCondition => {
-    result = flightDetails.filter(flightDetails =>
-      flightDetails.itineraries.every(itinerary => itinerary.segments.every(segment => {
-        // NOTE: Check if airline exclude is false and segment airline is in airlines list
-        let foundAirline = !flightCondition.airline.exclude && flightCondition.airline.items.some(airline => airline.code === segment.airline.code);
-        // NOTE: Check if airline exclude is true and segment airline is not in airlines list
-        foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === segment.airline.code));
+    result = result.filter(flightDetails =>
+      flightDetails.itineraries.every(itinerary => {
+        const first = 0, last = itinerary.segments.length - 1;
+        const originCode = itinerary.segments[first].departure.airport.code;
+        const destinationCode = itinerary.segments[last].arrival.airport.code;
+        const airlineCode = itinerary.segments[first].airline.code;
+
+        // NOTE: Check if origin exclude is false and flight origin is in origins list
+        let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
+        // NOTE: Check if origin exclude is true and flight origin is not in origins list
+        foundOrigin = foundOrigin || (!!flightCondition.origin.exclude && !flightCondition.origin.items.some(origin => origin.code === originCode));
+
+        // NOTE: Check if destination exclude is false and flight destination is in destinations list
+        let foundDestination = !flightCondition.destination.exclude && flightCondition.destination.items.some(destination => destination.code === destinationCode);
+        // NOTE: Check if destination exclude is true and flight destination is not in destinations list
+        foundDestination = foundDestination || (!!flightCondition.destination.exclude && !flightCondition.destination.items.some(destination => destination.code === destinationCode));
+
+        // NOTE: Check if airline exclude is false and flight airline is in airlines list
+        let foundAirline = !flightCondition.airline.exclude && flightCondition.airline.items.some(airline => airline.code === airlineCode);
+        // NOTE: Check if airline exclude is true and flight airline is not in airlines list
+        foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
+
+        if (!foundOrigin || !foundDestination) {
+          return true;
+        }
 
         if (!!foundAirline) {
           if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
@@ -145,7 +164,7 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
           }
           return true;
         }
-      }))
+      })
     );
   });
 
@@ -159,8 +178,9 @@ module.exports.searchFlights = async (req, res) => {
 
     const activeProviders = await providerRepository.getActiveProviders();
 
-    const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
+    // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    // const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
+    const notRestrictedProviders = activeProviders;
 
     const activeProviderCount = notRestrictedProviders.length;
     const lastSearch = [];
@@ -169,7 +189,7 @@ module.exports.searchFlights = async (req, res) => {
     let searchCode;
     let result;
 
-    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination, true);
+    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
 
     notRestrictedProviders.forEach(provider => {
       providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");

@@ -477,7 +477,7 @@ class FlightConditionRepository extends BaseRepository {
    * @param {Boolean} includeAirports = false
    * @returns {Promise<FlightCondition>}
    */
-  async findFlightCondition(origin, destination, includeAirports = false) {
+  async findFlightCondition(origin, destination, includeAirports = true) {
     const airports = {
       origin: [],
       destination: [],
@@ -542,13 +542,13 @@ class FlightConditionRepository extends BaseRepository {
         },
         "origin.exclude": false,
         "destination.items.code": {
-          $nin: [destination, ...airports.destination],
+          $ne: destination,
         },
         "destination.exclude": true
       },
       destination: {
         "origin.items.code": {
-          $nin: [origin, ...airports.origin],
+          $ne: origin,
         },
         "origin.exclude": true,
         "destination.items.code": {
@@ -558,11 +558,11 @@ class FlightConditionRepository extends BaseRepository {
       },
       none: {
         "origin.items.code": {
-          $nin: [origin, ...airports.origin],
+          $ne: origin,
         },
         "origin.exclude": true,
         "destination.items.code": {
-          $nin: [destination, ...airports.destination],
+          $ne: destination,
         },
         "destination.exclude": true
       },
