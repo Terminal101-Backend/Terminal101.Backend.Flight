@@ -454,7 +454,7 @@ module.exports.filterFlights = async (req, res) => {
 // NOTE: Get specific flight's price
 module.exports.getFlightPrice = async (req, res) => {
   try {
-    const amadeusFlightObject = await flightInfoRepository.regenerateAmadeusFlightOfferObject(req.params.searchId, req.params.flightCode);
+    const amadeusFlightObject = await amadeusHelper.regenerateAmadeusFlightOfferObject(req.params.searchId, req.params.flightCode);
 
     const result = await amadeus.updateFlightPrice(amadeusFlightObject);
 

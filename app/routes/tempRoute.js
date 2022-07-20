@@ -75,8 +75,8 @@ router.get("/socket", (req, res) => {
 });
 
 router.get("/test-rollbackAmadeusData", async (req, res) => {
-  const repository = require("../repositories/flightInfoRepository");
-  res.send(await repository.regenerateAmadeusFlightOfferObject("JiazIVN1RmxSW5u4OLGb", 0));
+  const amadeusHelper = require("../helpers/amadeusHelper");
+  res.send(await amadeusHelper.regenerateAmadeusFlightOfferObject("JiazIVN1RmxSW5u4OLGb", 0));
 });
 
 router.get("/test-soap", async (req, res) => {
