@@ -513,6 +513,11 @@ class FlightConditionRepository extends BaseRepository {
     }
 
     const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $match: {
+        isActive: { $ne: false },
+      }
+    });
     agrFlightCondition.append(this.#getConditionCountryPipeline(true, true));
     agrFlightCondition.append(this.#getConditionCityPipeline(true, true));
     agrFlightCondition.append(this.#getConditionAirportPipeline(true));

@@ -37,6 +37,7 @@ module.exports.getFlightConditions = async (req, res) => {
             isActive: provider.isActive,
           }
         }).filter(provider => !!provider),
+        isActive: flightCondition.isActive,
         isRestricted: flightCondition.isRestricted,
       }))
     });
@@ -80,6 +81,7 @@ module.exports.getFlightCondition = async (req, res) => {
           isActive: provider.isActive,
         }
       }).filter(provider => !!provider),
+      isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
   } catch (e) {
@@ -118,6 +120,11 @@ module.exports.editFlightCondition = async (req, res) => {
       modified = true;
     }
 
+    if ((req.body.isActive !== undefined) && (flightCondition.isActive !== req.body.isActive)) {
+      flightCondition.isActive = req.body.isActive;
+      modified = true;
+    }
+
     if (!!modified) {
       await flightCondition.save();
     }
@@ -137,6 +144,7 @@ module.exports.editFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
+      isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
   } catch (e) {
@@ -164,6 +172,7 @@ module.exports.deleteFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
+      isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
   } catch (e) {
@@ -191,6 +200,7 @@ module.exports.addFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
+      isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
   } catch (e) {

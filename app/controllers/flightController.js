@@ -160,9 +160,9 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
           }
           return false;
         } else {
-          if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-            return false;
-          }
+          // if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
+          //   return false;
+          // }
           return true;
         }
       })

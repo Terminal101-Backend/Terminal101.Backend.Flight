@@ -42,6 +42,7 @@ class EditFlightCondition extends BaseValidator {
       }).default({ items: [], exclude: false }),
       providerNames: Joi.array().items(Joi.string()),
       isRestricted: Joi.boolean(),
+      isActive: Joi.boolean(),
     };
 
     const params = {
