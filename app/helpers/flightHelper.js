@@ -72,6 +72,10 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
     }
 
     flight.itineraries.forEach(itinerary => {
+      if (!filter.stops.includes(segment.length - 1)) {
+        filter.stops.push(segment.length - 1);
+      }
+
       itinerary.segments.forEach(segment => {
         // if (!!segment.airline.code && !filter.airlines.some(airline => airline.code === segment.airline.code)) {
         //   filter.airlines.push({
@@ -98,9 +102,9 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
           filter.aircrafts.push(segment.aircraft);
         }
 
-        if (!filter.stops.includes(segment.stops.length)) {
-          filter.stops.push(segment.stops.length);
-        }
+        // if (!filter.stops.includes(segment.stops.length)) {
+        //   filter.stops.push(segment.stops.length);
+        // }
       });
 
       if (itinerary.duration < filter.duration.min) {
