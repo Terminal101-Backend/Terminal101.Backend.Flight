@@ -147,24 +147,17 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         // NOTE: Check if airline exclude is true and flight airline is not in airlines list
         foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
 
-        if (!foundOrigin || !foundDestination) {
+        if (!foundOrigin || !foundDestination || !foundAirline) {
+          return true;
+        }
+        if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
+          return true;
+        }
+        if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
           return true;
         }
 
-        if (!!foundAirline) {
-          if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-            return true;
-          }
-          if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
-            return true;
-          }
-          return false;
-        } else {
-          // if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-          //   return false;
-          // }
-          return true;
-        }
+        return false;
       })
     );
   });
