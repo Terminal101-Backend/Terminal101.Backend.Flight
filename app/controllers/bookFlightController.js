@@ -25,7 +25,8 @@ const pay = async (bookedFlight) => {
   // TODO: Send notification to user
   const userToken = token.newToken({ user: bookedFlight.bookedBy });
   await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
-  await twilio.sendTicket(bookedFlight.contact.mobileNumber);
+  // TODO: Send SMS
+  // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
   await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
   // TODO: If user wallet's credit is less than flight price do... what???!!!
 

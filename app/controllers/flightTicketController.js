@@ -107,6 +107,7 @@ module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
     const browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      ignoreDefaultArgs: ['--disable-extensions'],
     });
     const page = await browser.newPage();
     await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${token}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
