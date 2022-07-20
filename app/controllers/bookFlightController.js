@@ -120,6 +120,10 @@ module.exports.bookFlight = async (req, res) => {
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
     // TODO: Check if the user has not booked this flight before
+    const existsBookedFlight = await bookedFlightRepository.findOne({ bookedBy: decodedToken.user, searchedFlightCode: req.body.searchedFlightCode, flightDetailsCode: req.body.flightDetailsCode });
+    if (!!existsBookedFlight) {
+      throw "booked_flight_duplicated";
+    }
 
     if (!paymentMethod.isActive) {
       throw "payment_method_inactive";
