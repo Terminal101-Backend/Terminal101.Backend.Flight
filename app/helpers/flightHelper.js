@@ -72,8 +72,8 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
     }
 
     flight.itineraries.forEach(itinerary => {
-      if (!filter.stops.includes(segment.length - 1)) {
-        filter.stops.push(segment.length - 1);
+      if (!filter.stops.includes(itinerary.segments.length - 1)) {
+        filter.stops.push(itinerary.segments.length - 1);
       }
 
       itinerary.segments.forEach(segment => {
