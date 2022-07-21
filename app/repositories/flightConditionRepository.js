@@ -189,6 +189,7 @@ class FlightConditionRepository extends BaseRepository {
           code: 1,
           providerNames: 1,
           isRestricted: 1,
+          isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
             $map: {
@@ -327,6 +328,7 @@ class FlightConditionRepository extends BaseRepository {
           code: 1,
           providerNames: 1,
           isRestricted: 1,
+          isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
             $map: {
@@ -474,42 +476,39 @@ class FlightConditionRepository extends BaseRepository {
    * 
    * @param {String} origin 
    * @param {String} destination 
-   * @param {Boolean} includeAirports = false
    * @returns {Promise<FlightCondition>}
    */
-  async findFlightCondition(origin, destination, includeAirports = true) {
+  async findFlightCondition(origin, destination) {
     const airports = {
       origin: [],
       destination: [],
     }
 
-    if (!!includeAirports) {
-      const agrCountry = {
-        origin: Country.aggregate(),
-        destination: Country.aggregate(),
-      };
-      const waypoints = { origin, destination };
+    const agrCountry = {
+      origin: Country.aggregate(),
+      destination: Country.aggregate(),
+    };
+    const waypoints = { origin, destination };
 
-      for (const [waypoint, aggregate] of Object.entries(agrCountry)) {
-        aggregate.append({
-          $unwind: "$cities"
-        });
-        aggregate.append({
-          $match: {
-            "cities.code": waypoints[waypoint]
-          }
-        });
-        aggregate.append({
-          $unwind: "$cities.airports"
-        });
-        aggregate.append({
-          $project: {
-            code: "$cities.airports.code"
-          }
-        });
-        const result = await aggregate.exec();
-        airports[waypoint] = result.map(item => item.code);
-      }
+    for (const [waypoint, aggregate] of Object.entries(agrCountry)) {
+      aggregate.append({
+        $unwind: "$cities"
+      });
+      aggregate.append({
+        $match: {
+          "cities.code": waypoints[waypoint]
+        }
+      });
+      aggregate.append({
+        $unwind: "$cities.airports"
+      });
+      aggregate.append({
+        $project: {
+          code: "$cities.airports.code"
+        }
+      });
+      const result = await aggregate.exec();
+      airports[waypoint] = result.map(item => item.code);
     }
 
     const agrFlightCondition = FlightCondition.aggregate();
