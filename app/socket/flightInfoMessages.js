@@ -119,7 +119,7 @@ module.exports = (io, socket) => {
               }
 
               providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
-              providerResultCompleted[provider.title] = pageIndex === pageCount - 1;
+              providerResultCompleted[provider.title] = pageIndex >= pageCount - 1;
 
               const response = {
                 headers: {
@@ -145,7 +145,7 @@ module.exports = (io, socket) => {
                 },
               };
 
-              if (pageIndex === pageCount) {
+              if (pageIndex >= pageCount) {
                 clearInterval(timerId);
               }
               console.log(provider.title, response.headers, "count: " + flightDetails.length);
