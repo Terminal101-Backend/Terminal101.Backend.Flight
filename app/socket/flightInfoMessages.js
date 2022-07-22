@@ -4,18 +4,37 @@ const { flightHelper, socketHelper, amadeusHelper, partoHelper } = require("../h
 const { flightController } = require("../controllers");
 
 module.exports = (io, socket) => {
+  let canceledSearchFlightCodes = [];
+  const header = (req, name) => {
+    const result = Object.entries(req?.headers ?? {}).find(([hname, hvalue]) => hname.toLowerCase() === name.toLowerCase());
+
+    return result ? result[1] : undefined;
+  };
+
+  socket.on("cancelSearchFlight", async req => {
+    req.header = name => header(req, name);
+    const language = req.header("Language") ?? "EN";
+
+    try {
+      if (!req?.body?.searchCode) {
+        throw "searchCode_required";
+      }
+      canceledSearchFlightCodes.push(req.body.searchCode);
+    } catch (e) {
+      socket.emit("searchFlightCanceled", await socketHelper.exception(e, language));
+    }
+  });
+
   socket.on("searchFlight", async req => {
+    let providerNumber = 0;
+    let searchCode;
     if (!req.headers) {
       req.headers = {};
     }
     if (!req.body) {
       req.body = {};
     }
-    req.header = name => {
-      const result = Object.entries(req?.headers ?? {}).find(([hname, hvalue]) => hname.toLowerCase() === name.toLowerCase());
-
-      return result ? result[1] : undefined;
-    };
+    req.header = name => header(req, name);
     const language = req.header("Language") ?? "EN";
 
     console.log(req);
@@ -29,8 +48,6 @@ module.exports = (io, socket) => {
 
       const activeProviderCount = notRestrictedProviders.length;
       const lastSearch = [];
-      let providerNumber = 0;
-      let searchCode;
       const departureDate = new Date(req.body?.departureDate);
 
       await (async () => {
@@ -46,7 +63,6 @@ module.exports = (io, socket) => {
           },
           body: result,
         };
-        console.log(response.headers);
 
         socket.emit("searchFlightResult", await socketHelper.success(response, language, "START"));
       })();
@@ -57,25 +73,37 @@ module.exports = (io, socket) => {
         providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
         providerHelper.searchFlights(req.body).then(async flight => {
+          if (canceledSearchFlightCodes.includes(searchCode)) {
+            return;
+          }
+
           const flightDetails = flightController.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
 
           lastSearch.push(...flightDetails);
           const result = await flightController.appendProviderResult(flight.origin, flight.destination, departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
           searchCode = result.code;
 
-          const response = {
-            headers: {
-              language,
-              providerNumber: ++providerNumber,
-              activeProviderCount,
-              completed: providerNumber === activeProviderCount,
-            },
-            body: result,
-          };
-          console.log(provider.title, response.headers, "count: " + flightDetails.length);
+          if (req.header("Page") === -1) {
+            console.log("Return all pages coninuosly");
+          } else {
+            const response = {
+              headers: {
+                language,
+                providerNumber: ++providerNumber,
+                activeProviderCount,
+                completed: providerNumber === activeProviderCount,
+              },
+              body: result,
+            };
+            console.log(provider.title, response.headers, "count: " + flightDetails.length);
 
-          socket.emit("searchFlightResult", await socketHelper.success(response, language));
+            socket.emit("searchFlightResult", await socketHelper.success(response, language));
+          }
         }).catch(async e => {
+          if (canceledSearchFlightCodes.includes(searchCode)) {
+            return;
+          }
+
           socket.emit("searchFlightResult", await socketHelper.exception(e, language, {
             headers: {
               language,
