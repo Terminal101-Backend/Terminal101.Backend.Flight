@@ -97,6 +97,11 @@ module.exports = (io, socket) => {
             ++providerNumber;
 
             const timerId = setInterval(async () => {
+              if (canceledSearchFlightCodes.includes(searchCode)) {
+                clearInterval(timerId);
+                return;
+              }
+
               const response = {
                 headers: {
                   language,
