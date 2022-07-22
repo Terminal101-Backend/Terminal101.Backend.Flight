@@ -1,12 +1,26 @@
 const { EProvider } = require("../constants");
 const { providerRepository, flightConditionRepository } = require("../repositories");
-const { socketHelper, amadeusHelper, partoHelper } = require("../helpers");
+const { flightHelper, socketHelper, amadeusHelper, partoHelper } = require("../helpers");
 const { flightController } = require("../controllers");
 
 module.exports = (io, socket) => {
   socket.on("searchFlight", async req => {
+    if (!req.headers) {
+      req.headers = {};
+    }
+    if (!req.body) {
+      req.body = {};
+    }
+    req.header = name => {
+      const result = Object.entries(req?.headers ?? {}).find(([hname, hvalue]) => hname.toLowerCase() === name.toLowerCase());
+
+      return result ? result[1] : undefined;
+    };
+    const language = req.header("Language") ?? "EN";
+
+    console.log(req);
+
     try {
-      console.log(req);
       const activeProviders = await providerRepository.getActiveProviders();
 
       // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
@@ -17,32 +31,24 @@ module.exports = (io, socket) => {
       const lastSearch = [];
       let providerNumber = 0;
       let searchCode;
-      if (!req.headers) {
-        req.headers = {};
-      }
-      if (!req.body) {
-        req.body = {};
-      }
-      req.header = name => {
-        const result = Object.entries(req.headers).find(([hname, hvalue]) => hname.toLowerCase() === name.toLowerCase());
-
-        return result ? result[1] : undefined;
-      };
-
-      const language = req.header.language ?? "EN";
+      const departureDate = new Date(req.body?.departureDate);
 
       await (async () => {
+        const { origin, destination } = await flightHelper.getOriginDestinationCity(req.body.origin, req.body.destination);
+        result = await flightController.appendProviderResult(origin, destination, departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+        searchCode = result.code;
+
         const response = {
           headers: {
             language,
             providerNumber,
             activeProviderCount,
           },
-          body: {},
+          body: result,
         };
         console.log(response.headers);
 
-        socket.emit("searchFlightResult", await socketHelper.success(response, language));
+        socket.emit("searchFlightResult", await socketHelper.success(response, language, "START"));
       })();
 
       const flightConditions = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
@@ -54,7 +60,7 @@ module.exports = (io, socket) => {
           const flightDetails = flightController.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
 
           lastSearch.push(...flightDetails);
-          const result = await flightController.appendProviderResult(flight.origin, flight.destination, req.body.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+          const result = await flightController.appendProviderResult(flight.origin, flight.destination, departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
           searchCode = result.code;
 
           const response = {
@@ -65,7 +71,7 @@ module.exports = (io, socket) => {
             },
             body: result,
           };
-          console.log(provider.title, response.headers);
+          console.log(provider.title, response.headers, "count: " + flightDetails.length);
 
           socket.emit("searchFlightResult", await socketHelper.success(response, language));
         }).catch(async e => {

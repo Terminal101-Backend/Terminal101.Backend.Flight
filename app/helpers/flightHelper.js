@@ -1,4 +1,5 @@
 const dateTimeHelper = require("./dateTimeHelper");
+const { countryRepository } = require("../repositories");
 
 /**
  * @typedef AirlineType
@@ -138,3 +139,30 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
 
   return filter;
 };
+
+module.exports.getOriginDestinationCity = async (origin, destination, airports = []) => {
+  const result = {
+    origin: await countryRepository.getCityByCode(origin),
+    destination: await countryRepository.getCityByCode(destination),
+  }
+
+  if ((!result.origin || !result.destination) && (!airports || (airports.length === 0))) {
+    airports = await countryRepository.getAirportsByCode([origin, destination]);
+  }
+
+  if (!result.origin) {
+    result.origin = airports[origin]?.city ?? {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+  }
+
+  if (!result.destination) {
+    result.destination = !!airports[destination] ? airports[destination].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    };
+  }
+
+  return result;
+}

@@ -1,4 +1,5 @@
-const dateTime = require("./dateTimeHelper");
+const dateTimeHelper = require("./dateTimeHelper");
+const flightHelper = require("./flightHelper");
 const { accountManagement, amadeus, amadeusSoap } = require("../services");
 const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
 const { EProvider } = require("../constants");
@@ -27,7 +28,7 @@ const makeSegmentsArray = segments => {
 const makeSegmentStopsArray = airports => {
   return stop => ({
     description: stop.description,
-    duration: dateTime.convertAmadeusTime(stop.duration),
+    duration: dateTimeHelper.convertAmadeusTime(stop.duration),
     arrivalAt: stop.arrivalAt,
     departureAt: stop.departureAt,
     airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : {
@@ -48,7 +49,7 @@ const makeSegmentStopsArray = airports => {
 const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
   return segment => {
     let result = {
-      duration: dateTime.convertAmadeusTime(segment.flightDetail.flightDuration),
+      duration: dateTimeHelper.convertAmadeusTime(segment.flightDetail.flightDuration),
       flightNumber: segment.marketingCarrier.flightNumber,
       aircraft: aircrafts[segment.equipment.aircraftCode],
       airline: airlines[segment.marketingCarrier.airlineID],
@@ -176,8 +177,8 @@ module.exports.searchFlights_____OLD = async params => {
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
 
-  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
   let amadeusSearchResult;
   if (!segments || (segments.length === 0)) {
@@ -235,8 +236,8 @@ module.exports.searchFlights = async params => {
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
 
-  const departureDate = dateTime.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTime.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
+  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
+  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
   let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
@@ -274,24 +275,25 @@ module.exports.searchFlights = async params => {
   const carriers = await airlineRepository.getAirlinesByCode(Object.keys(carrierCodes));
 
   const flightDetails = amadeusSearchResult.flights.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
+  const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
-  let origin = await countryRepository.getCityByCode(params.origin);
-  let destination = await countryRepository.getCityByCode(params.destination);
+  // let origin = await countryRepository.getCityByCode(params.origin);
+  // let destination = await countryRepository.getCityByCode(params.destination);
 
-  if (!origin) {
-    origin = !!airports[params.origin] ? airports[params.origin].city : {
-      code: "UNKNOWN",
-      name: "UNKNOWN"
-    };
-  }
+  // if (!origin) {
+  //   origin = !!airports[params.origin] ? airports[params.origin].city : {
+  //     code: "UNKNOWN",
+  //     name: "UNKNOWN"
+  //   };
+  // }
 
-  if (!destination) {
-    destination = !!airports[params.destination] ? airports[params.destination].city : {
-      code: "UNKNOWN",
-      name: "UNKNOWN"
-    };
+  // if (!destination) {
+  //   destination = !!airports[params.destination] ? airports[params.destination].city : {
+  //     code: "UNKNOWN",
+  //     name: "UNKNOWN"
+  //   };
 
-  }
+  // }
 
   return {
     origin,
@@ -313,7 +315,7 @@ module.exports.bookFlight = async params => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
       return {
         passenger: {
-          birthdate: dateTime.excludeDateFromIsoString(user.info.birthDate),
+          birthdate: dateTimeHelper.excludeDateFromIsoString(user.info.birthDate),
           emailContact: user.email,
           gender: user.info.gender,
           nameGiven: user.info.firstName,
@@ -327,7 +329,7 @@ module.exports.bookFlight = async params => {
           },
         },
         document: {
-          expirationDate: dateTime.excludeDateFromIsoString(user.info.document.expirationDate),
+          expirationDate: dateTimeHelper.excludeDateFromIsoString(user.info.document.expirationDate),
         },
       };
     } else {
@@ -339,7 +341,7 @@ module.exports.bookFlight = async params => {
 
       return {
         passenger: {
-          birthdate: dateTime.excludeDateFromIsoString(person.birthDate),
+          birthdate: dateTimeHelper.excludeDateFromIsoString(person.birthDate),
           gender: person.gender,
           nameGiven: person.firstName,
           surname: person.lastName,
@@ -353,7 +355,7 @@ module.exports.bookFlight = async params => {
           },
         },
         document: {
-          expirationDate: dateTime.excludeDateFromIsoString(person.document.expirationDate),
+          expirationDate: dateTimeHelper.excludeDateFromIsoString(person.document.expirationDate),
         },
       };
     }
@@ -504,13 +506,13 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
         originDestination: {
           departure: {
             airportCode: segment.departure.airport.code,
-            date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.departure.at)),
-            time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.departure.at)),
+            date: dateTimeHelper.excludeDateFromIsoString(dateToIsoString(segment.departure.at)),
+            time: dateTimeHelper.excludeTimeFromIsoString(dateToIsoString(segment.departure.at)),
           },
           arrival: {
             airportCode: segment.arrival.airport.code,
-            date: dateTime.excludeDateFromIsoString(dateToIsoString(segment.arrival.at)),
-            time: dateTime.excludeTimeFromIsoString(dateToIsoString(segment.arrival.at)),
+            date: dateTimeHelper.excludeDateFromIsoString(dateToIsoString(segment.arrival.at)),
+            time: dateTimeHelper.excludeTimeFromIsoString(dateToIsoString(segment.arrival.at)),
           },
         },
         marketingCarrier: {

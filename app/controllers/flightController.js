@@ -81,6 +81,11 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
   await flightInfo.save();
 
+  if (page === -1) {
+    page = 0;
+    pageSize = flights.length;
+  }
+
   return {
     code: flightInfo.code,
     origin: {
@@ -193,6 +198,7 @@ module.exports.searchFlights = async (req, res) => {
 
         lastSearch.push(...flightDetails);
         result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+
         searchCode = result.code;
         hasResult = true;
 

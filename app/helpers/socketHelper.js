@@ -2,17 +2,17 @@ const { ValidationException } = require("./validationExceptionHelper");
 const { common } = require("../services");
 
 //making response for successfully situation
-exports.success = async (data, language) => {
+exports.success = async (data, language, message = "") => {
   try {
     return await common.translate({
       status: true,
-      message: "",
+      message,
       data,
     }, language);
   } catch (e) {
     return {
       status: true,
-      message: "",
+      message,
       data,
     };
   }

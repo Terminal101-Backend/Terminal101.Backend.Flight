@@ -1,4 +1,5 @@
 const dateTimeHelper = require("./dateTimeHelper");
+const flightHelper = require("./flightHelper");
 const { parto } = require("../services");
 const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
 const { accountManagement } = require("../services");
@@ -220,23 +221,24 @@ module.exports.searchFlights = async params => {
   const airlines = await airlineRepository.getAirlinesByCode(carriers);
   const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, airlines, airports, params.travelClass));
 
-  let origin = await countryRepository.getCityByCode(params.origin);
-  let destination = await countryRepository.getCityByCode(params.destination);
+  const { origin, destination } = flightHelper.getOriginDestinationCity(origin, destination, airports);
 
-  if (!origin) {
-    origin = !!airports[params.origin] ? airports[params.origin].city : {
-      code: "UNKNOWN",
-      name: "UNKNOWN"
-    };
-  }
+  // let origin = await countryRepository.getCityByCode(params.origin);
+  // let destination = await countryRepository.getCityByCode(params.destination);
 
-  if (!destination) {
-    destination = !!airports[params.destination] ? airports[params.destination].city : {
-      code: "UNKNOWN",
-      name: "UNKNOWN"
-    };
+  // if (!origin) {
+  //   origin = !!airports[params.origin] ? airports[params.origin].city : {
+  //     code: "UNKNOWN",
+  //     name: "UNKNOWN"
+  //   };
+  // }
 
-  }
+  // if (!destination) {
+  //   destination = !!airports[params.destination] ? airports[params.destination].city : {
+  //     code: "UNKNOWN",
+  //     name: "UNKNOWN"
+  //   };
+  // }
 
   return {
     origin,
