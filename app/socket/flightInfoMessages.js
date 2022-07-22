@@ -26,6 +26,7 @@ module.exports = (io, socket) => {
       },
         10 * 60 * 1000
       )
+      socket.emit("searchFlightCanceled", await socketHelper.success({ searchFlightCode: req.body.searchCode }));
     } catch (e) {
       socket.emit("searchFlightCanceled", await socketHelper.exception(e, language));
     }
