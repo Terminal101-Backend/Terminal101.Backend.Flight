@@ -4,12 +4,30 @@ const { flightHelper, socketHelper, arrayHelper, amadeusHelper, partoHelper } = 
 const { flightController } = require("../controllers");
 
 module.exports = (io, socket) => {
-  let canceledSearchFlightCodes = [];
+  const canceledSearchFlightCodes = [];
+  const searchedList = {};
+  let providerResultCompleted = {};
+
+  const cancelSearch = async searchCode => {
+    canceledSearchFlightCodes.push(searchCode);
+
+    setTimeout(() => {
+      canceledSearchFlightCodes.splice(0, 1);
+    },
+      10 * 60 * 1000
+    )
+    socket.emit("searchFlightCanceled", await socketHelper.success({ searchFlightCode: searchCode }));
+  };
+
   const header = (req, name) => {
     const result = Object.entries(req?.headers ?? {}).find(([hname, hvalue]) => hname.toLowerCase() === name.toLowerCase());
 
     return result ? result[1] : undefined;
   };
+
+  socket.on("disconnect", (reason) => {
+    delete searchedList[socket.id];
+  });
 
   socket.on("cancelSearchFlight", async req => {
     req.header = name => header(req, name);
@@ -19,14 +37,7 @@ module.exports = (io, socket) => {
       if (!req?.body?.searchCode) {
         throw "searchCode_required";
       }
-      canceledSearchFlightCodes.push(req.body.searchCode);
-
-      setTimeout(() => {
-        canceledSearchFlightCodes.splice(0, 1);
-      },
-        10 * 60 * 1000
-      )
-      socket.emit("searchFlightCanceled", await socketHelper.success({ searchFlightCode: req.body.searchCode }));
+      await cancelSearch(req.body.searchCode);
     } catch (e) {
       socket.emit("searchFlightCanceled", await socketHelper.exception(e, language));
     }
@@ -48,6 +59,7 @@ module.exports = (io, socket) => {
 
     try {
       const activeProviders = await providerRepository.getActiveProviders();
+      providerResultCompleted = activeProviders.reduce((res, cur) => ({ ...res, [cur.title]: false }), {});
 
       // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
       // const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
@@ -61,6 +73,11 @@ module.exports = (io, socket) => {
         const { origin, destination } = await flightHelper.getOriginDestinationCity(req.body.origin, req.body.destination);
         result = await flightController.appendProviderResult(origin, destination, departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
         searchCode = result.code;
+
+        if (!!searchedList[socket.id]) {
+          await cancelSearch(searchedList[socket.id]);
+        }
+        searchedList[socket.id] = searchCode;
 
         const response = {
           headers: {
@@ -94,7 +111,6 @@ module.exports = (io, socket) => {
             let pageIndex = 0;
             const pageSize = !!req.header("PageSize") ? parseInt(req.header("PageSize")) : config.application.pagination.pageSize;
             const pageCount = Math.ceil(flightDetails.length / pageSize);
-            ++providerNumber;
 
             const timerId = setInterval(async () => {
               if (canceledSearchFlightCodes.includes(searchCode)) {
@@ -102,12 +118,15 @@ module.exports = (io, socket) => {
                 return;
               }
 
+              providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
+              providerResultCompleted[provider.title] = pageIndex === pageCount - 1;
+
               const response = {
                 headers: {
                   language,
                   providerNumber,
                   activeProviderCount,
-                  completed: (providerNumber === activeProviderCount) && (pageIndex === pageCount - 1),
+                  completed: Object.values(providerResultCompleted).every(pc => !!pc),
                 },
                 body: {
                   code: searchCode,
@@ -134,12 +153,15 @@ module.exports = (io, socket) => {
               socket.emit("searchFlightResult", await socketHelper.success(response, language));
             }, 50);
           } else {
+            providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
+            providerResultCompleted[provider.number] = true;
+
             const response = {
               headers: {
                 language,
-                providerNumber: ++providerNumber,
+                providerNumber,
                 activeProviderCount,
-                completed: providerNumber === activeProviderCount,
+                completed: Object.values(providerResultCompleted).every(pc => !!pc),
               },
               body: result,
             };
@@ -152,12 +174,14 @@ module.exports = (io, socket) => {
             return;
           }
 
+          providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
+          providerResultCompleted[provider.number] = true;
           socket.emit("searchFlightResult", await socketHelper.exception(e, language, {
             headers: {
               language,
-              providerNumber: ++providerNumber,
+              providerNumber,
               activeProviderCount,
-              completed: providerNumber === activeProviderCount,
+              completed: Object.values(providerResultCompleted).every(pc => !!pc),
             }
           }));
           console.log(provider.title, {
