@@ -20,6 +20,12 @@ module.exports = (io, socket) => {
         throw "searchCode_required";
       }
       canceledSearchFlightCodes.push(req.body.searchCode);
+
+      setTimeout(() => {
+        canceledSearchFlightCodes.splice(0, 1);
+      },
+        10 * 60 * 1000
+      )
     } catch (e) {
       socket.emit("searchFlightCanceled", await socketHelper.exception(e, language));
     }
