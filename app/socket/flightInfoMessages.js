@@ -1,6 +1,6 @@
 const { EProvider } = require("../constants");
 const { providerRepository, flightConditionRepository } = require("../repositories");
-const { flightHelper, socketHelper, amadeusHelper, partoHelper } = require("../helpers");
+const { flightHelper, socketHelper, arrayHelper, amadeusHelper, partoHelper } = require("../helpers");
 const { flightController } = require("../controllers");
 
 module.exports = (io, socket) => {
@@ -90,7 +90,43 @@ module.exports = (io, socket) => {
           searchCode = result.code;
 
           if (req.header("Page") === -1) {
-            console.log("Return all pages coninuosly");
+            let pageIndex = 0;
+            const pageSize = !!req.header("PageSize") ? parseInt(req.header("PageSize")) : config.application.pagination.pageSize;
+            const pageCount = Math.ceil(flightDetails.length / pageSize);
+            ++providerNumber;
+
+            const timerId = setInterval(async () => {
+              const response = {
+                headers: {
+                  language,
+                  providerNumber,
+                  activeProviderCount,
+                  completed: (providerNumber === activeProviderCount) && (pageIndex === pageCount - 1),
+                },
+                body: {
+                  code: searchCode,
+                  origin: {
+                    code: result.origin.code,
+                    name: result.origin.name,
+                    description: result.origin.description,
+                  },
+                  destination: {
+                    code: result.destination.code,
+                    name: result.destination.name,
+                    description: result.destination.description,
+                  },
+                  time: result.time,
+                  flights: arrayHelper.pagination(flightDetails.sort((flight1, flight2) => flight1.price.total - flight2.price.total), pageIndex++, pageSize),
+                },
+              };
+
+              if (pageIndex === pageCount) {
+                clearInterval(timerId);
+              }
+              console.log(provider.title, response.headers, "count: " + flightDetails.length);
+
+              socket.emit("searchFlightResult", await socketHelper.success(response, language));
+            }, 50);
           } else {
             const response = {
               headers: {
