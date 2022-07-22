@@ -221,7 +221,7 @@ module.exports.searchFlights = async params => {
   const airlines = await airlineRepository.getAirlinesByCode(carriers);
   const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, airlines, airports, params.travelClass));
 
-  const { origin, destination } = flightHelper.getOriginDestinationCity(origin, destination, airports);
+  const { origin, destination } = flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
   // let origin = await countryRepository.getCityByCode(params.origin);
   // let destination = await countryRepository.getCityByCode(params.destination);

@@ -68,6 +68,7 @@ module.exports = (io, socket) => {
               language,
               providerNumber: ++providerNumber,
               activeProviderCount,
+              completed: providerNumber === activeProviderCount,
             },
             body: result,
           };
@@ -80,6 +81,7 @@ module.exports = (io, socket) => {
               language,
               providerNumber: ++providerNumber,
               activeProviderCount,
+              completed: providerNumber === activeProviderCount,
             }
           }));
           console.log(provider.title, {
