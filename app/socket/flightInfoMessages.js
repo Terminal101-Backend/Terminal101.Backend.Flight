@@ -145,7 +145,7 @@ module.exports = (io, socket) => {
                 },
               };
 
-              if (pageIndex >= pageCount) {
+              if (!!providerResultCompleted[provider.title]) {
                 clearInterval(timerId);
               }
               console.log(provider.title, response.headers, "count: " + flightDetails.length);
@@ -154,7 +154,7 @@ module.exports = (io, socket) => {
             }, 50);
           } else {
             providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
-            providerResultCompleted[provider.number] = true;
+            providerResultCompleted[provider.title] = true;
 
             const response = {
               headers: {
@@ -175,7 +175,7 @@ module.exports = (io, socket) => {
           }
 
           providerNumber = Object.keys(providerResultCompleted).findIndex(p => p === provider.title) + 1;
-          providerResultCompleted[provider.number] = true;
+          providerResultCompleted[provider.title] = true;
           socket.emit("searchFlightResult", await socketHelper.exception(e, language, {
             headers: {
               language,
