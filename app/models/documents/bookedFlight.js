@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { EBookedFlightStatus } = require("../../constants");
+const { EBookedFlightStatus, ETravelClass } = require("../../constants");
 const Person = require("../subdocuments/person");
 const Contact = require("../subdocuments/contact");
 const Segment = require("../subdocuments/segment");
@@ -27,6 +27,7 @@ const bookedFlight = new Schema({
         type: [Segment],
         default: [],
     },
+    travelClass: ETravelClass.mongoField({ default: "ECONOMY" }),
     time: {
         type: Date,
         default: Date.now,

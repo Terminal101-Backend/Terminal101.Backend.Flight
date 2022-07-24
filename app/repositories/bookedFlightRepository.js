@@ -17,7 +17,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
    */
-  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, flightSegments, status) {
+  async createBookedFlight(bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, flightSegments, travelClass, status) {
     let bookedFlight = !!transactionId ? await this.findOne({ transactionId }) : undefined;
 
     if (!bookedFlight) {
@@ -32,7 +32,7 @@ class BookedFlightRepository extends BaseRepository {
         }
       }
 
-      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status, flightSegments });
+      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status, flightSegments, travelClass });
       await bookedFlight.save();
     }
 
