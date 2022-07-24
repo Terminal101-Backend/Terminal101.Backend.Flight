@@ -3,6 +3,7 @@ const Schema = mongoose.Schema;
 const { EBookedFlightStatus } = require("../../constants");
 const Person = require("../subdocuments/person");
 const Contact = require("../subdocuments/contact");
+const Segment = require("../subdocuments/segment");
 
 const bookedFlight = new Schema({
 
@@ -22,6 +23,10 @@ const bookedFlight = new Schema({
     //     type: String,
     //     required: true,
     // },
+    flightSegments: {
+        type: [Segment],
+        default: [],
+    },
     time: {
         type: Date,
         default: Date.now,

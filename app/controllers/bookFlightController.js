@@ -205,7 +205,7 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, result.value === 0 ? "INPROGRESS" : "PAYING");
+    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, flightDetails.flights?.itineraries?.[0].segments, result.value === 0 ? "INPROGRESS" : "PAYING");
     if (amount === 0) {
       await pay(bookedFlight);
     }
