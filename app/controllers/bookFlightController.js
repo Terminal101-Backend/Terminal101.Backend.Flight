@@ -65,20 +65,13 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
       let amount = 0;
       let result = {};
 
-      switch (req.body.payWay) {
-        case "WALLET":
-          amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-          break;
-
-        case "PAY":
-          amount = flightDetails.flights.price.total;
-          if (userWallet.credit < 0) {
-            amount += Math.abs(userWallet.credit);
-          }
-          break;
-
-        default:
-          throw "pay_way_invalid";
+      if (!!req.body.useWallet) {
+        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
+      } else {
+        amount = flightDetails.flights.price.total;
+        if (userWallet.credit < 0) {
+          amount += Math.abs(userWallet.credit);
+        }
       }
 
       switch (paymentMethod.type) {
@@ -177,11 +170,14 @@ module.exports.bookFlight = async (req, res) => {
     let amount = 0;
     let result = {};
 
+    const userWallet = await wallet.getUserWallet(decodedToken.user);
     if (!!req.body.useWallet) {
-      const userWallet = await wallet.getUserWallet(decodedToken.user);
       amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
     } else {
       amount = flightDetails.flights.price.total;
+      if (userWallet.credit < 0) {
+        amount += Math.abs(userWallet.credit);
+      }
     }
 
     if (amount >= 1) {
