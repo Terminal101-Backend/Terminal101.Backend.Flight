@@ -366,8 +366,8 @@ module.exports.bookFlight = async params => {
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
   const { result: bookedFlight } = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
-  flightInfo.flights[flightIndex].providerData.pnr = bookedFlight.pnr;
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.flight.shoppingResponseID;
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.pnr;
+  flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.flight.shoppingResponseID;
   await flightInfo.save();
 
   return bookedFlight;
