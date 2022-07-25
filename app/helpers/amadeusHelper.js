@@ -101,11 +101,11 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
 const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.totalPrice),
   grandTotal: parseFloat(flightPrice.totalPrice),
-  base: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.baseAmount), 0),
+  base: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.baseAmount * travelerPrice.numberOfUnits), 0),
   fees: [],
   taxes: [
     {
-      amount: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.taxesAmount), 0),
+      amount: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.taxesAmount * travelerPrice.numberOfUnits), 0),
       code: "Tax",
     }
   ],
@@ -130,12 +130,12 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
     }
 
     return {
-      total: parseFloat(travelerPrice.baseAmount + travelerPrice.taxesAmount),
-      base: parseFloat(travelerPrice.baseAmount),
+      total: parseFloat((travelerPrice.baseAmount + travelerPrice.taxesAmount) * travelerPrice.numberOfUnits),
+      base: parseFloat(travelerPrice.baseAmount * travelerPrice.numberOfUnits),
       travelerType,
       fees: [],
       taxes: {
-        amount: parseFloat(travelerPrice.taxesAmount),
+        amount: parseFloat(travelerPrice.taxesAmount * travelerPrice.numberOfUnits),
         code: "Tax",
       },
     }
