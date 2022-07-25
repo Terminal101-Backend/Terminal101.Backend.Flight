@@ -40,5 +40,5 @@ module.exports.translate = async (input, language) => {
   };
   const { data: response } = await axiosApiInstance.put(`/i18n/translate`, { input }, config);
 
-  return response.data;
+  return response;
 };

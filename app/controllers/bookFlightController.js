@@ -109,6 +109,10 @@ module.exports.bookFlight = async (req, res) => {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
     const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+    if (!flightDetails) {
+      response.error(res, "flight_not_found", 404);
+      return;
+    }
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
