@@ -505,6 +505,7 @@ module.exports.getFlight = async (req, res) => {
             type: travelerPrice.travelerType,
             total: travelerPrice.total,
             base: travelerPrice.base,
+            count: travelerPrice.count,
             fees: travelerPrice.fees.map(fee => ({
               amount: fee.amount,
               type: EFeeType.find(fee.type),
