@@ -20,6 +20,10 @@ const priceDetails = new Schema({
 	travelerType: ETravelerType.mongoField({
 		required: true,
 	}),
+	count: {
+		type: Number,
+		default: 1,
+	},
 	fees: {
 		type: [Fee],
 		default: [],

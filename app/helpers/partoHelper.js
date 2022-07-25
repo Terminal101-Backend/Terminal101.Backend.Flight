@@ -122,15 +122,16 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
     }
 
     return {
-      total: parseFloat(travelerPrice.PassengerFare.TotalFare * travelerPrice.PassengerTypeQuantity.Quantity),
-      base: parseFloat(travelerPrice.PassengerFare.BaseFare * travelerPrice.PassengerTypeQuantity.Quantity),
+      total: parseFloat(travelerPrice.PassengerFare.TotalFare),
+      base: parseFloat(travelerPrice.PassengerFare.BaseFare),
+      count: travelerPrice.PassengerTypeQuantity.Quantity,
       travelerType,
       fees: [{
-        amount: parseFloat(travelerPrice.PassengerFare.Commission * travelerPrice.PassengerTypeQuantity.Quantity),
+        amount: parseFloat(travelerPrice.PassengerFare.Commission),
         type: "COMMISSION",
       }],
       taxes: (travelerPrice.PassengerFare.Taxes ?? []).map(tax => ({
-        amount: parseFloat(tax.Amount * travelerPrice.PassengerTypeQuantity.Quantity),
+        amount: parseFloat(tax.Amount),
         code: "Tax",
       })),
     }

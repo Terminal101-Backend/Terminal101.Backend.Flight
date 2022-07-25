@@ -130,12 +130,13 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
     }
 
     return {
-      total: parseFloat((travelerPrice.baseAmount + travelerPrice.taxesAmount) * travelerPrice.numberOfUnits),
-      base: parseFloat(travelerPrice.baseAmount * travelerPrice.numberOfUnits),
+      total: parseFloat(travelerPrice.baseAmount + travelerPrice.taxesAmount),
+      base: parseFloat(travelerPrice.baseAmount),
+      count: travelerPrice.numberOfUnits,
       travelerType,
       fees: [],
       taxes: {
-        amount: parseFloat(travelerPrice.taxesAmount * travelerPrice.numberOfUnits),
+        amount: parseFloat(travelerPrice.taxesAmount),
         code: "Tax",
       },
     }
