@@ -4,6 +4,12 @@ const { EBookedFlightStatus } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 const { paginationHelper } = require("../helpers");
 
+/**
+ * @typedef {Object} PassengerInfo
+ * @property {String} documentCode
+ * @property {String} documentIssuedAt
+ */
+
 class BookedFlightRepository extends BaseRepository {
   constructor() {
     super(BookedFlight);
@@ -115,6 +121,26 @@ class BookedFlightRepository extends BaseRepository {
 
     const result = await agrBookedFlight.exec();
     return !!result && !!result[0] ? result[0] : {};
+  }
+
+  /**
+   * 
+   * @param {*} itineraries 
+   * @returns 
+   */
+  generateBookedFlightSegments(itineraries) {
+    return;
+  }
+
+  /**
+   * 
+   * @param {PassengerInfo[]} passengers 
+   * @param {FlightSegmentInfo[]} flightSegments 
+   * @param {String} travelClass 
+   * @returns {Promise}
+   */
+  async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {
+    return;
   }
 };
 
