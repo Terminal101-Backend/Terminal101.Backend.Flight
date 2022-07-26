@@ -36,6 +36,10 @@ const bookedFlight = new Schema({
         type: String,
         required: false,
     },
+    providerError: {
+        type: String,
+        required: false,
+    },
     searchedFlightCode: {
         type: String,
         required: true,
