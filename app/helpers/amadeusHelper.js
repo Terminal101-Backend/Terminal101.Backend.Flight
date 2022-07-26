@@ -365,12 +365,15 @@ module.exports.bookFlight = async params => {
   const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const { result: bookedFlight } = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.pnr;
-  flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.flight.shoppingResponseID;
+  const bookedFlight = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  if (!bookedFlight.succeed) {
+    throw bookedFlight.errorMessage;
+  };
+  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.result.pnr;
+  flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
   await flightInfo.save();
 
-  return bookedFlight;
+  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
 };
 
 /**
