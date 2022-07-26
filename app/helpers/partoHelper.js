@@ -303,5 +303,5 @@ module.exports.bookFlight = async params => {
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
 
-  return bookedFlight;
+  return { ...bookedFlight, bookedId: bookedFlight.UniqueId };
 };

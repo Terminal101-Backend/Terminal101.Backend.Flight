@@ -32,6 +32,10 @@ const bookedFlight = new Schema({
         type: Date,
         default: Date.now,
     },
+    providerPnr: {
+        type: String,
+        required: false,
+    },
     searchedFlightCode: {
         type: String,
         required: true,

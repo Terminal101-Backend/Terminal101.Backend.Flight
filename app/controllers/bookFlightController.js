@@ -106,6 +106,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 // NOTE: Book a flight
 module.exports.bookFlight = async (req, res) => {
   try {
+    let bookedFlight;
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
     const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
@@ -166,6 +167,10 @@ module.exports.bookFlight = async (req, res) => {
     providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
       .then(res => {
         console.log("Flight booked by ", providerName, res);
+        if (!!bookedFlight) {
+          bookedFlight.providerPnr = res.bookedId;
+          bookedFlight.save();
+        }
       })
       .catch(e => {
         console.error("Provider error: ", e);
@@ -209,7 +214,12 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, flightDetails.flights?.itineraries?.[0].segments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
+    const bookedFlightSegments = [flightDetails.flights?.itineraries?.[0].segments?.[0]];
+    const lastIndex = (flightDetails.flights?.itineraries?.[0].segments?.length ?? 0) - 1;
+    if (lastIndex > 0) {
+      bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
+    }
+    bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
     if (amount === 0) {
       await pay(bookedFlight);
     }
