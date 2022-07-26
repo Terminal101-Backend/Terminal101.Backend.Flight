@@ -111,7 +111,11 @@ module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
     });
     const page = await browser.newPage();
     await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${token}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
-    const pdf = await page.pdf({ format: 'A4' });
+    const pdf = await page.pdf({ format: 'A4', margin: {
+      top: "3px",
+      right: "8px",
+      bottom: "3px"
+    }});
 
     const fd = fs.openSync(filePath, "w");
     fs.writeSync(fd, pdf);
@@ -186,6 +190,8 @@ module.exports.getFlightTicketsView = async (req, res) => {
           lastName: user.info.lastName,
           birthDate: user.info.birthDate,
           gender: user.info.gender,
+          type: user.info.type,
+          documentCode: user.info.document.code,
         }
       } else {
         const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
@@ -199,6 +205,8 @@ module.exports.getFlightTicketsView = async (req, res) => {
           lastName: userPerson.lastName,
           birthDate: userPerson.birthDate,
           gender: userPerson.gender,
+          type: userPerson.type,
+          documentCode: userPerson.document.code,
         }
       }
     });
@@ -209,7 +217,15 @@ module.exports.getFlightTicketsView = async (req, res) => {
     const template = await ejs.renderFile(
       templatePath,
       {
-        contact: bookedFlight.contact,
+        time: bookedFlight.time,
+        itineraries: bookedFlight.flightInfo.flights.itineraries,
+        status: bookedFlight.status,
+        classOfService: bookedFlight.travelClass,
+        reservationCode: "TODO",
+        pnr: bookedFlight.flightInfo.flights.providerData.bookedId,
+        agencyPhoneNumber: process.env.AGENCY_TICKET_PHONE_NUMBER,
+        cloudineryStaticFileUrl: process.env.CLOUDINERY_STATIC_FILE_TICKET_URL,
+        airlineLogoBaseUrl: process.env.AIRLINE_LOGO_BASE_URL,
         passengers,
       },
       {
