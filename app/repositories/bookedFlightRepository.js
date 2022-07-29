@@ -97,7 +97,12 @@ class BookedFlightRepository extends BaseRepository {
     });
     agrBookedFlight.append({
       $addFields: {
-        lastStatus: { $last: "$status" }
+        lastStatus: { $last: "$statuses" }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        status: "$lastStatus.status"
       }
     });
 

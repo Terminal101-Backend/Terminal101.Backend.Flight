@@ -385,7 +385,7 @@ module.exports.getBookedFlights = async (req, res) => {
         searchedFlightCode: bookedFlight.searchedFlightCode,
         flightDetailsCode: bookedFlight.flightDetailsCode,
         // status: bookedFlight.status.map(status => EBookedFlightStatus.find(status) ?? status),
-        status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
+        status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
         contact: {
@@ -421,7 +421,7 @@ module.exports.getUserBookedFlights = async (req, res) => {
     response.success(res, bookedFlights.map(bookedFlight => ({
       // bookedBy: bookedFlight.bookedBy,
       code: bookedFlight.code,
-      status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
+      status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
       time: bookedFlight.time,
       passengers: bookedFlight.passengers.map(passenger => ({
         documentCode: passenger.documentCode,
@@ -457,7 +457,7 @@ module.exports.getBookedFlight = async (req, res) => {
       code: bookedFlight.code,
       searchedFlightCode: bookedFlight.searchedFlightCode,
       flightDetailsCode: bookedFlight.flightDetailsCode,
-      status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
+      status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
       time: bookedFlight.time,
       contact: {
         email: bookedFlight.contact.email,
