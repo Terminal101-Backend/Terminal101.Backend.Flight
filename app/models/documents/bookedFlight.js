@@ -1,12 +1,12 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { EBookedFlightStatus, ETravelClass } = require("../../constants");
+const { EBookedFlightStatus, ETravelClass, ERefund } = require("../../constants");
 const Person = require("../subdocuments/person");
 const Contact = require("../subdocuments/contact");
 const Segment = require("../subdocuments/segment");
+const Status = require("../subdocuments/status");
 
 const bookedFlight = new Schema({
-
     code: {
         type: String,
         required: true,
@@ -15,14 +15,6 @@ const bookedFlight = new Schema({
         type: String,
         required: true,
     },
-    // origin: {
-    //     type: String,
-    //     required: true,
-    // },
-    // destination: {
-    //     type: String,
-    //     required: true,
-    // },
     flightSegments: {
         type: [Segment],
         default: [],
@@ -60,9 +52,14 @@ const bookedFlight = new Schema({
         type: [Person],
         default: [],
     },
-    status: EBookedFlightStatus.mongoField({
-        default: "PAYING",
-    }),
+    // status: EBookedFlightStatus.mongoField({
+    //     default: "PAYING",
+    // }),
+    statuses: {
+        type: [Status(EBookedFlightStatus, "PAYING")],
+        default: [],
+    },
+    refundTo: ERefund.mongoField({ default: "WALLET" }),
 }, {
     timestamps: true
 });

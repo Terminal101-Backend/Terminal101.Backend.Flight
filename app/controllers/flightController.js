@@ -65,6 +65,7 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
   );
 
   // TODO: Make last search distinct
+  // TODO: Update search and append only last search
   flightInfo.flights = flights;
   flightInfo.filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flights);
 

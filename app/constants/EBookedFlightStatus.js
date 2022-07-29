@@ -7,7 +7,10 @@ class EFlightBook extends Enum {
 
         this.add("PAYING");
         this.add("INPROGRESS");
-        this.add("REFUND");
+        this.add("REFUND_REQUEST");
+        this.add("REFUND_ACCEPTED");
+        this.add("REFUND_CANCEL");
+        this.add("|REFUND_REJECTED");
         this.add("CANCEL");
         this.add("REMOVE");
         this.add("BOOKED");

@@ -262,8 +262,14 @@ module.exports.cancelBookedFlight = async (req, res) => {
       throw "flight_not_found";
     }
 
-    if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], bookedFlight.status)) {
-      bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
+    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
+    if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
+      // bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
+      bookedFlight.statuses.push({
+        status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
+        description: req.body.description,
+        changedBy: decodedToken.user,
+      });;
 
       await bookedFlight.save();
     }
@@ -298,8 +304,10 @@ module.exports.cancelBookedFlight = async (req, res) => {
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
     const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
+    let status = req.body.status;
 
     if (!user) {
       throw "user_not_found";
@@ -317,9 +325,14 @@ module.exports.editUserBookedFlight = async (req, res) => {
       bookedFlight.contact.mobileNumber = req.body.contact.mobileNumber;
     }
 
-    if (!!req.body.status && (!EBookedFlightStatus.check(req.body.status, bookedFlight.status))) {
-      bookedFlight.status = req.body.status;
+    if (!req.body.status) {
+      status = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
     }
+    bookedFlight.statuses.push({
+      status,
+      description: req.body.description,
+      changedBy: decodedToken.user,
+    });
 
     bookedFlight.passengers = req.body.passengers.filter(passenger => ((user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) || user.persons.some(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt)));
 
@@ -371,7 +384,8 @@ module.exports.getBookedFlights = async (req, res) => {
         code: bookedFlight.code,
         searchedFlightCode: bookedFlight.searchedFlightCode,
         flightDetailsCode: bookedFlight.flightDetailsCode,
-        status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+        // status: bookedFlight.status.map(status => EBookedFlightStatus.find(status) ?? status),
+        status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
         contact: {
@@ -399,15 +413,15 @@ module.exports.getBookedFlights = async (req, res) => {
 // NOTE: Get specific user's booked flights list
 module.exports.getUserBookedFlights = async (req, res) => {
   try {
-    const result = await bookedFlightRepository.getBookedFlights(req.params.userCode);
-    if (!result) {
+    const bookedFlights = await bookedFlightRepository.getBookedFlights(req.params.userCode);
+    if (!bookedFlights) {
       throw "not_found";
     }
 
-    response.success(res, result.map(bookedFlight => ({
+    response.success(res, bookedFlights.map(bookedFlight => ({
       // bookedBy: bookedFlight.bookedBy,
       code: bookedFlight.code,
-      status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+      status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
       time: bookedFlight.time,
       passengers: bookedFlight.passengers.map(passenger => ({
         documentCode: passenger.documentCode,
@@ -443,7 +457,7 @@ module.exports.getBookedFlight = async (req, res) => {
       code: bookedFlight.code,
       searchedFlightCode: bookedFlight.searchedFlightCode,
       flightDetailsCode: bookedFlight.flightDetailsCode,
-      status: EBookedFlightStatus.find(bookedFlight.status) ?? bookedFlight.status,
+      status: EBookedFlightStatus.find(bookedFlight.lastStatus.status) ?? bookedFlight.lastStatus.status,
       time: bookedFlight.time,
       contact: {
         email: bookedFlight.contact.email,
@@ -481,6 +495,48 @@ module.exports.getBookedFlight = async (req, res) => {
       price: bookedFlight.flightInfo.flights.price.total,
       currencyCode: bookedFlight.flightInfo.flights.currencyCode,
       transaction,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get booked flight's statuses
+module.exports.getBookedFlightStatus = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
+
+    response.success(res, {
+      code: bookedFlight.code,
+      status: bookedFlight.statuses.map(status => ({
+        status: EBookedFlightStatus.find(status.status) ?? status.status,
+        time: status.time,
+        changedBy: status.changedBy,
+        description: status.description,
+      })),
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get user's booked flight's statuses
+module.exports.getUserBookedFlightStatus = async (req, res) => {
+  try {
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.userCode, req.params.bookedFlightCode);
+    if (!bookedFlight) {
+      throw "not_found";
+    }
+
+    response.success(res, {
+      code: bookedFlight.code,
+      status: bookedFlight.statuses.map(status => ({
+        status: EBookedFlightStatus.find(status.status) ?? status.status,
+        time: status.time,
+        changedBy: status.changedBy,
+        description: status.description,
+      })),
     });
   } catch (e) {
     response.exception(res, e);
