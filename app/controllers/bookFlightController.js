@@ -269,7 +269,10 @@ module.exports.cancelBookedFlight = async (req, res) => {
         status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
         description: req.body.description,
         changedBy: decodedToken.user,
-      });;
+      });
+
+      bookedFlight.refundTo = req.body.refundTo;
+      bookedFlight.refundInfo = req.body.refundInfo;
 
       await bookedFlight.save();
     }

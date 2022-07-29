@@ -96,6 +96,8 @@ class CancelBookedFlight extends BaseValidator {
   constructor() {
     const body = {
       description: Joi.string().required(),
+      refundTo: Joi.string().required().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/),
+      refundInfo: Joi.string().required(),
     };
 
     const params = {
