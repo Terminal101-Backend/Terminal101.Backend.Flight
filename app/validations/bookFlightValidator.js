@@ -55,7 +55,8 @@ class EditUserBookedFlight extends BaseValidator {
       //   documentCode: Joi.string().required(),
       //   documentIssuedAt: Joi.string().required(),
       // })),
-      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|CANCEL|REMOVE|BOOKED|REJECTED/),
+      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND_REQUEST|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOKED|REJECTED/),
+      description: Joi.string().default(""),
     };
 
     const params = {
@@ -94,6 +95,9 @@ class GetUserBookedFlights extends BaseValidator {
 class CancelBookedFlight extends BaseValidator {
   constructor() {
     const body = {
+      description: Joi.string().required(),
+      refundTo: Joi.string().required().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/),
+      refundInfo: Joi.string().required(),
     };
 
     const params = {
@@ -116,6 +120,35 @@ class GenerateNewPaymentInfo extends BaseValidator {
     };
 
     const params = {
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
+class GetBookedFlightStatus extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      bookedFlightCode: Joi.string().required(),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
+class GetUserBookedFlightStatus extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      userCode: Joi.string().required(),
       bookedFlightCode: Joi.string().required(),
     };
 
@@ -173,6 +206,8 @@ module.exports = {
   getBookedFlights: new GetBookedFlights(),
   getUserBookedFlights: new GetUserBookedFlights(),
   getBookedFlight: new GetBookedFlight(),
+  getUserBookedFlightStatus: new GetUserBookedFlightStatus(),
+  getBookedFlightStatus: new GetBookedFlightStatus(),
   generateNewPaymentInfo: new GenerateNewPaymentInfo(),
   getUserBookedFlight: new GetUserBookedFlight(),
   payForFlight: new PayForFlight(),

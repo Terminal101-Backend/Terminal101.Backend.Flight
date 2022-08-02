@@ -38,11 +38,32 @@ class BookedFlightRepository extends BaseRepository {
         }
       }
 
-      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, status, flightSegments, travelClass });
+      bookedFlight = new BookedFlight({ code, bookedBy, searchedFlightCode, flightDetailsCode, transactionId, contact, passengers, statuses: { status, changedBy: bookedBy }, flightSegments, travelClass });
       await bookedFlight.save();
     }
 
     return bookedFlight;
+  }
+
+  /**
+   * 
+   * @param {String} code 
+   * @param {EBookedFlightStatus} status 
+   * @param {String} changedBy 
+   * @param {String} description 
+   * @returns {Promise<Status[]>}
+   */
+  async changeStatus(code, status, changedBy, description) {
+    const bookedFlight = await this.findOne({ code });
+
+    if (!bookedFlihgt) {
+      throw "flight_not_found";
+    }
+
+    bookedFlight.status.push({ status, changedBy, description });
+    await bookedFlight.save();
+
+    return bookedFlight.status;
   }
 
   /**
@@ -72,6 +93,16 @@ class BookedFlightRepository extends BaseRepository {
         $expr: {
           $eq: ["$flightDetailsCode", "$flightInfo.flights.code"],
         }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        lastStatus: { $last: "$statuses" }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        status: "$lastStatus.status"
       }
     });
 
@@ -116,6 +147,16 @@ class BookedFlightRepository extends BaseRepository {
         $expr: {
           $eq: ["$flightDetailsCode", "$flightInfo.flights.code"]
         }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        lastStatus: { $last: "$statuses" }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        status: "$lastStatus.status"
       }
     });
 

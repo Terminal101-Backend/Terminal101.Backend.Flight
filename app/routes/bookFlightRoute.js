@@ -26,6 +26,28 @@ router
     bookFlightValidator.getBookedFlights.check(true),
     bookFlightController.getBookedFlights);
 
+// NOTE: Get booked flight's statuses
+router
+  .get("/status/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Get booked flight's statuses", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["CLIENT"]),
+    bookFlightValidator.getBookedFlightStatus.check(true),
+    bookFlightController.getBookedFlightStatus);
+
+// NOTE: Get user's booked flight's statuses
+router
+  .get("/status/:userCode/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Get user's booked flight's statuses", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    bookFlightValidator.getUserBookedFlightStatus.check(true),
+    bookFlightController.getUserBookedFlightStatus);
+
 // NOTE: Change booked flight's status
 router
   .delete("/:bookedFlightCode",

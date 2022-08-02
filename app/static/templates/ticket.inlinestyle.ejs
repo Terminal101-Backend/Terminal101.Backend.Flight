@@ -1,9 +1,9 @@
 <style>
 	html {
-	  -webkit-print-color-adjust: exact;
+		-webkit-print-color-adjust: exact;
 	}
-  </style>
-  <div class="wrapper" style="width: 100%;  display: flex; font-family: sans-serif; margin: auto">
+</style>
+<div class="wrapper" style="width: 100%;  display: flex; font-family: sans-serif; margin: auto">
 	<div class="ticket" style="
 		 width: 1100px;
 			min-width: 1100px;
@@ -13,7 +13,7 @@
 			margin: auto;
 			font-family: sans-serif;
 		">
-	  <div class="header" style="
+		<div class="header" style="
 			background: #fbfcfd;
 			padding: 10px;
 			box-sizing: border-box;
@@ -22,59 +22,60 @@
 			border: 1px solid #e1e4e8;
 			border-radius: 10px;
 		  ">
-		<div class="row" style="display: flex; height: 100%; justify-content: space-between">
-		  <div class="col logo" style="display: flex; align-items: center">
-			<img src="<%=cloudineryStaticFileUrl%>/v1658766633/ticketRecieptTemplate/logo.svg" alt="logo"
-			  style="width: 70px" />
-		  </div>
-		  <div class="col" style="display: flex; align-items: center">
-			<div class="icon" style="width: 26px">
-			  <img src="<%=cloudineryStaticFileUrl%>/v1658766636/ticketRecieptTemplate/emailWebsiteIcon.svg" alt="icon"
-				style="display: block; width: 100%" />
-			</div>
-			<div class="content" style="padding-left: 10px">
-			  <span
-				style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Website</span>
-			  <b style="font-family: sans-serif">Terminal101.co</b>
-			</div>
-		  </div>
-		  <div class="col" style="display: flex; align-items: center">
-			<div class="icon" style="width: 26px">
-			  <img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/phoneIcon.svg" alt="icon"
-				style="display: block; width: 100%" />
-			</div>
-			<div class="content" style="padding-left: 10px">
-			  <span
-				style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Agency
-				Number</span>
-			  <b style="font-family: sans-serif">
-				<%=agencyPhoneNumber%>
-			  </b>
-			</div>
-		  </div>
-		  <div class="col" style="display: flex; align-items: center">
-			<div class="icon" style="width: 26px">
-			  <img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/calendarIcon.svg" alt="icon"
-				style="display: block; width: 100%" />
-			</div>
-			<div class="content" style="padding-left: 10px">
-			  <span
-				style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Date
-				of ticket issuance</span>
-			  <b style="font-family: sans-serif">
-				<%=new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' , day: '2-digit' }).format(time) %>
-			  </b>
-			</div>
-		  </div>
-		  <div class="col pnr" style="display: flex; align-items: center">
-			<div style="
+			<div class="row" style="display: flex; height: 100%; justify-content: space-between">
+				<div class="col logo" style="display: flex; align-items: center">
+					<img src="<%=cloudineryStaticFileUrl%>/v1658766633/ticketRecieptTemplate/logo.svg" alt="logo"
+						style="width: 70px" />
+				</div>
+				<div class="col" style="display: flex; align-items: center">
+					<div class="icon" style="width: 26px">
+						<img src="<%=cloudineryStaticFileUrl%>/v1658766636/ticketRecieptTemplate/emailWebsiteIcon.svg"
+							alt="icon" style="display: block; width: 100%" />
+					</div>
+					<div class="content" style="padding-left: 10px">
+						<span
+							style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Website</span>
+						<b style="font-family: sans-serif">Terminal101.co</b>
+					</div>
+				</div>
+				<div class="col" style="display: flex; align-items: center">
+					<div class="icon" style="width: 26px">
+						<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/phoneIcon.svg"
+							alt="icon" style="display: block; width: 100%" />
+					</div>
+					<div class="content" style="padding-left: 10px">
+						<span
+							style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Agency
+							Number</span>
+						<b style="font-family: sans-serif">
+							<%=agencyPhoneNumber%>
+						</b>
+					</div>
+				</div>
+				<div class="col" style="display: flex; align-items: center">
+					<div class="icon" style="width: 26px">
+						<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/calendarIcon.svg"
+							alt="icon" style="display: block; width: 100%" />
+					</div>
+					<div class="content" style="padding-left: 10px">
+						<span
+							style="font-family: sans-serif; display: block; color: #a3abb5; margin-bottom: 8px; font-size: 12px">Date
+							of ticket issuance</span>
+						<b style="font-family: sans-serif">
+							<%=new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' , day: '2-digit'
+								}).format(time) %>
+						</b>
+					</div>
+				</div>
+				<div class="col pnr" style="display: flex; align-items: center">
+					<div style="
 				  display: inline-block;
 				  border: 2px solid #094899;
 				  border-radius: 10px;
 				  padding: 5px 15px;
 				  text-align: center;
 				">
-			  <span style="
+						<span style="
 					font-family: sans-serif;
 					text-transform: uppercase;
 					color: #094899;
@@ -83,22 +84,22 @@
 					font-weight: bold;
 					margin-bottom: 5px;
 				  "> PNR </span>
-			  <b style="font-family: sans-serif">
-				<%= pnr%>
-			  </b>
+						<b style="font-family: sans-serif">
+							<%= pnr%>
+						</b>
+					</div>
+				</div>
 			</div>
-		  </div>
 		</div>
-	  </div>
-  
-	  <div class="itineraries" style="border: 1px solid #e1e4e8; border-radius: 10px; overflow: hidden">
-		<!-- @LOOP: loop throw itinerarires here -->
-  
-		<div class="itinerary">
-		  <div class="title" style="background-color: #094899; padding: 15px; display: flex; align-items: center">
-			<img src="<%=cloudineryStaticFileUrl%>/v1658766629/ticketRecieptTemplate/itineraryIcon.svg" alt="icon"
-			  style="display: block" />
-			<span style="
+
+		<div class="itineraries" style="border: 1px solid #e1e4e8; border-radius: 10px; overflow: hidden">
+			<!-- @LOOP: loop throw itinerarires here -->
+
+			<div class="itinerary">
+				<div class="title" style="background-color: #094899; padding: 15px; display: flex; align-items: center">
+					<img src="<%=cloudineryStaticFileUrl%>/v1658766629/ticketRecieptTemplate/itineraryIcon.svg"
+						alt="icon" style="display: block" />
+					<span style="
 				  font-family: sans-serif;
 				  display: block;
 				  color: #fff;
@@ -106,11 +107,11 @@
 				  font-weight: bold;
 				  margin-left: 10px;
 				">Flight informations
-			</span>
-		  </div>
-		  <% for( let itinerary of itineraries ) { %>
-			<% for( let segment of itinerary.segments ) { %>
-			  <div class="main" style="
+					</span>
+				</div>
+				<% for( let itinerary of itineraries ) { %>
+					<% for( let segment of itinerary.segments ) { %>
+						<div class="main" style="
 				background-image: url(<%=cloudineryStaticFileUrl%>/v1658843963/ticketRecieptTemplate/bgVector.svg);
 				background-size: contain;
 				background-repeat: no-repeat;
@@ -120,7 +121,7 @@
 				flex-wrap: wrap;
 				border-top: 8px solid #e1e4e8;
 			  ">
-				<section class="s1" style="
+							<section class="s1" style="
 				  padding: 20px 0;
 				  box-sizing: border-box;
 				  display: flex;
@@ -128,141 +129,149 @@
 				  border-right: 1px solid #e1e4e8;
 				  flex-basis: 50%;
 				">
-				  <div class="col c1" style="padding: 0 10px; box-sizing: border-box; width: 80px; min-width: 80px">
-					<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/airplanTakeoff.svg"
-					  alt="icon" style="display: block; width: 50px; margin: 0 auto" />
-				  </div>
-				  <div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<div style="margin-bottom: 20px">
-					  <b style="
+								<div class="col c1"
+									style="padding: 0 10px; box-sizing: border-box; width: 80px; min-width: 80px">
+									<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/airplanTakeoff.svg"
+										alt="icon" style="display: block; width: 50px; margin: 0 auto" />
+								</div>
+								<div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<div style="margin-bottom: 20px">
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Depart from</b>
-					  <strong style="font-family: sans-serif; font-size: 12px">
-						<%= segment.departure.city.name %>
-					  </strong>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.departure.airport.name %>
-					  </span>
-					  <strong style="font-family: sans-serif; font-size: 12px">(<%= segment.departure.airport.code %>
-						  )</strong>
-					</div>
-					<div>
-					  <b style="
+										<strong style="font-family: sans-serif; font-size: 12px">
+											<%= segment.departure.city.name %>
+										</strong>
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.departure.airport.name %>
+										</span>
+										<strong style="font-family: sans-serif; font-size: 12px">(<%=
+												segment.departure.airport.code %>
+												)</strong>
+									</div>
+									<div>
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Terminal</b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.departure.airport.description %>
-					  </span>
-					</div>
-				  </div>
-				  <div class="col c3" style="padding: 0 10px; box-sizing: border-box; width: 110px; min-width: 110px">
-					<div style="margin-bottom: 20px">
-					  <b style="
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.departure.airport.description %>
+										</span>
+									</div>
+								</div>
+								<div class="col c3"
+									style="padding: 0 10px; box-sizing: border-box; width: 110px; min-width: 110px">
+									<div style="margin-bottom: 20px">
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">
-						<%= new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(segment.departure.at)%>
-					  </b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' , day: '2-digit'
-						  }).format(segment.departure.at) %>
-					  </span>
-					</div>
-					<div>
-					  <b style="
+											<%= new Intl.DateTimeFormat('en-US', { weekday: 'long'
+												}).format(segment.departure.at)%>
+										</b>
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' ,
+												day: '2-digit' }).format(segment.departure.at) %>
+										</span>
+									</div>
+									<div>
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Time</b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.departure.at.toLocaleString('en-US', { hour: 'numeric' , minute: 'numeric' , hour12:
-						  true })%>
-					  </span>
-					</div>
-				  </div>
-				</section>
-				<section class="s2"
-				  style="padding: 20px 0; box-sizing: border-box; display: flex; align-items: center; flex-basis: 50%">
-				  <div class="col c1" style="padding: 0 10px; box-sizing: border-box; width: 80px; min-width: 80px">
-					<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/airplanLanding.svg"
-					  alt="icon" style="display: block; width: 50px; margin: 0 auto" />
-				  </div>
-				  <div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<div style="margin-bottom: 20px">
-					  <b style="
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.departure.at.toLocaleString('en-US', { hour: 'numeric' ,
+												minute: 'numeric' , hour12: true })%>
+										</span>
+									</div>
+								</div>
+							</section>
+							<section class="s2"
+								style="padding: 20px 0; box-sizing: border-box; display: flex; align-items: center; flex-basis: 50%">
+								<div class="col c1"
+									style="padding: 0 10px; box-sizing: border-box; width: 80px; min-width: 80px">
+									<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/airplanLanding.svg"
+										alt="icon" style="display: block; width: 50px; margin: 0 auto" />
+								</div>
+								<div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<div style="margin-bottom: 20px">
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Going to</b>
-					  <strong style="font-family: sans-serif; font-size: 12px">
-						<%= segment.arrival.city.name %>
-					  </strong>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.arrival.airport.name%>
-					  </span>
-					  <strong style="font-family: sans-serif; font-size: 12px">(<%= segment.arrival.airport.code%>
-						  )</strong>
-					</div>
-					<div>
-					  <b style="
+										<strong style="font-family: sans-serif; font-size: 12px">
+											<%= segment.arrival.city.name %>
+										</strong>
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.arrival.airport.name%>
+										</span>
+										<strong style="font-family: sans-serif; font-size: 12px">(<%=
+												segment.arrival.airport.code%>
+												)</strong>
+									</div>
+									<div>
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Terminal</b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.arrival.airport.description%>
-					  </span>
-					</div>
-				  </div>
-				  <div class="col c3" style="padding: 0 10px; box-sizing: border-box; width: 110px; min-width: 110px">
-					<div style="margin-bottom: 20px">
-					  <b style="
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.arrival.airport.description%>
+										</span>
+									</div>
+								</div>
+								<div class="col c3"
+									style="padding: 0 10px; box-sizing: border-box; width: 110px; min-width: 110px">
+									<div style="margin-bottom: 20px">
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">
-						<%= new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(segment.arrival.at)%>
-					  </b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' , day: '2-digit'
-						  }).format(segment.arrival.at) %>
-					  </span>
-					</div>
-					<div>
-					  <b style="
+											<%= new Intl.DateTimeFormat('en-US', { weekday: 'long'
+												}).format(segment.arrival.at)%>
+										</b>
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= new Intl.DateTimeFormat('en-GB', { year: 'numeric' , month: 'long' ,
+												day: '2-digit' }).format(segment.arrival.at) %>
+										</span>
+									</div>
+									<div>
+										<b style="
 						font-family: sans-serif;
 						display: block;
 						margin-bottom: 5px;
 						font-size: 14px;
 						font-weight: bold;
 					  ">Time</b>
-					  <span style="font-family: sans-serif; font-size: 12px">
-						<%= segment.arrival.at.toLocaleString('en-US', { hour: 'numeric' , minute: 'numeric' , hour12:
-						  true })%>
-					  </span>
-					</div>
-				  </div>
-				</section>
-				<section class="s3" style="
+										<span style="font-family: sans-serif; font-size: 12px">
+											<%= segment.arrival.at.toLocaleString('en-US', { hour: 'numeric' ,
+												minute: 'numeric' , hour12: true })%>
+										</span>
+									</div>
+								</div>
+							</section>
+							<section class="s3" style="
 				  padding: 20px 0;
 				  box-sizing: border-box;
 				  display: flex;
@@ -271,7 +280,7 @@
 				  margin-bottom: 10px;
 				  border-top: 1px solid #e1e4e8;
 				">
-				  <div class="col c1" style="
+								<div class="col c1" style="
 					padding: 0 10px;
 					box-sizing: border-box;
 					flex-grow: 1;
@@ -280,79 +289,93 @@
 					text-align: center;
 					margin-right: 20px;
 				  ">
-					<img src="<%=airlineLogoBaseUrl%>*<%=segment.airline.code%>?w=50&h=50" alt="icon"
-					  style="display: block; width: 50px; margin: 0 auto; margin-bottom: 15px" />
-					<span style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <%= segment.airline.name%>
-					</span>
-				  </div>
-				  <div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<span style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Class Of
-					  Service:</span>
-					<span
-					  style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Plane:</span>
-					<span
-					  style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meals:</span>
-					<span
-					  style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Seat:</span>
-				  </div>
-				  <div class="col c3" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <%= classOfService%>
-					</b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <% if (segment.aircraft === "" ) { %>
-						<%= " - " %>
-						  <% } else { %>
-							<%= segment.aircraft %>
-							  <% } %>
-					</b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meal</b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Check-in
-					  required</b>
-				  </div>
-				  <div class="col c4" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<span
-					  style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Status:</span>
-					<span
-					  style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Duratoin:</span>
-					<span style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Fllight
-					  number:</span>
-					<span style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Airline
-					  Code:</span>
-				  </div>
-				  <div class="col c5" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <%= status%>
-					</b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px"
-					  class="durarion" data-duration="<%=segment.duration%>"></b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <%= segment.flightNumber%>
-					</b>
-					<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-					  <%= segment.airline.code%>
-					</b>
-				  </div>
-				  <div class="col stampImg" style="padding: 0 10px; box-sizing: border-box; flex-grow: 0">
-					<img src="<%=cloudineryStaticFileUrl%>/v1658766645/ticketRecieptTemplate/stamp.svg" alt="stamp"
-					  style="display: block; width: auto; margin: 0 auto; margin-bottom: 0;" width=84px height=110px />
-				  </div>
-				</section>
-			  </div>
-			  <% } %>
-				<% } %>
+									<img src="<%=airlineLogoBaseUrl%>*<%=segment.airline.code%>?w=50&h=50" alt="icon"
+										style="display: block; width: 50px; margin: 0 auto; margin-bottom: 15px" />
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<%= segment.airline.name%>
+									</span>
+								</div>
+								<div class="col c2" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Class
+										Of
+										Service:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Plane:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meals:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Seat:</span>
+								</div>
+								<div class="col c3" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<%= classOfService%>
+									</b>
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<% if (segment.aircraft==="" ) { %>
+											<%= " - " %>
+												<% } else { %>
+													<%= segment.aircraft %>
+														<% } %>
+									</b>
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meal</b>
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Check-in
+										required</b>
+								</div>
+								<div class="col c4" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Status:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Duratoin:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Fllight
+										number:</span>
+									<span
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Airline
+										Code:</span>
+								</div>
+								<div class="col c5" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<%= status%>
+									</b>
+									<b style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px"
+										class="durarion" data-duration="<%=segment.duration%>"></b>
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<%= segment.flightNumber%>
+									</b>
+									<b
+										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
+										<%= segment.airline.code%>
+									</b>
+								</div>
+								<div class="col stampImg" style="padding: 0 10px; box-sizing: border-box; flex-grow: 0">
+									<img src="<%=cloudineryStaticFileUrl%>/v1658766645/ticketRecieptTemplate/stamp.svg"
+										alt="stamp"
+										style="display: block; width: auto; margin: 0 auto; margin-bottom: 0;"
+										width=84px height=110px />
+								</div>
+							</section>
+						</div>
+						<% } %>
+							<% } %>
+			</div>
+			<!-- @LOOP: loop throw itinerarires here -->
+
 		</div>
-		<!-- @LOOP: loop throw itinerarires here -->
-  
-	  </div>
-  
-	  <div class="passengers-info"
-		style="border: 1px solid #e1e4e8; border-radius: 10px; overflow: hidden; margin-top: 5px">
-		<div class="title" style="background: #202e40; padding: 15px; display: flex; align-items: center">
-		  <img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/passangerIcon.svg" alt="icon"
-			style="display: block; width: 20px" />
-		  <span style="
+
+		<div class="passengers-info"
+			style="border: 1px solid #e1e4e8; border-radius: 10px; overflow: hidden; margin-top: 5px">
+			<div class="title" style="background: #202e40; padding: 15px; display: flex; align-items: center">
+				<img src="<%=cloudineryStaticFileUrl%>/v1658766634/ticketRecieptTemplate/passangerIcon.svg" alt="icon"
+					style="display: block; width: 20px" />
+				<span style="
 				font-family: sans-serif;
 				display: block;
 				color: #fff;
@@ -360,64 +383,95 @@
 				font-weight: bold;
 				margin-left: 10px;
 			  ">Flight Passengers information</span>
+			</div>
+
+			<div class="main">
+				<table style="width: 100%; text-align: center; border-bottom: 1px solid #e1e4e8; border-spacing: 0">
+					<thead>
+						<tr style="background: #f3f6f9">
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">#</th>
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">Type</th>
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">Full Name</th>
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">Passport Number</th>
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">Birthday</th>
+						</tr>
+					</thead>
+					<tbody>
+						<!-- @NOTE: add [style="background: #f3f6f9"] to each even elemnt customely. like "test data" below  -->
+						<!-- @LOOP: loop throw passengers here -->
+						<!-- @LOOP: loop throw passengers here -->
+						<% for( let passenger of passengers ) { %>
+							<!-- test data -->
+							<% if (passengers.indexOf(passenger) & 1) { %>
+								<tr style="background: #f3f6f9">
+									<td
+										style="padding: 20px 0; position: relative; padding-left: 20px; padding-right: 20px">
+										<%= passengers.indexOf(passenger) + 1%>
+									</td>
+									<td style="padding: 20px 0; position: relative">
+										<%= passenger.type%>
+									</td>
+									<td style="padding: 20px 0; position: relative">
+										<% if (passenger.gender==="MALE" ) { %>
+											<%= "Mr. " %>
+												<% } else if (passenger.gender==="FEMALE" ) { %>
+													<%= "Mrs. " %>
+														<% } else { %>
+															<%= "Mx. " %>
+																<% } %>
+																	<%= passenger.firstName + " " + passenger.lastName
+																		%>
+									</td>
+									<td style="padding: 20px 0; position: relative">
+										<%= passenger.documentCode%>
+									</td>
+									<td style="padding: 20px 0; position: relative">
+										<%= passenger.birthDate.split('T')[0] %>
+									</td>
+								</tr>
+								<% } else { %>
+									<tr>
+										<td
+											style="padding: 20px 0; position: relative; padding-left: 20px; padding-right: 20px">
+											<%= passengers.indexOf(passenger) + 1%>
+										</td>
+										<td style="padding: 20px 0; position: relative">
+											<%= passenger.type%>
+										</td>
+										<td style="padding: 20px 0; position: relative">
+											<% if (passenger.gender==="MALE" ) { %>
+												<%= "Mr. " %>
+													<% } else if (passenger.gender==="FEMALE" ) { %>
+														<%= "Mrs. " %>
+															<% } else { %>
+																<%= "Mx. " %>
+																	<% } %>
+																		<%= passenger.firstName + " " +
+																			passenger.lastName %>
+										</td>
+										<td style="padding: 20px 0; position: relative">
+											<%= passenger.documentCode%>
+										</td>
+										<td style="padding: 20px 0; position: relative">
+											<%= passenger.birthDate.split('T')[0] %>
+										</td>
+									</tr>
+									<% } %>
+										<% } %>
+											<!-- test data -->
+					</tbody>
+				</table>
+			</div>
 		</div>
-  
-		<div class="main">
-		  <table style="width: 100%; text-align: center; border-bottom: 1px solid #e1e4e8; border-spacing: 0">
-			<thead>
-			  <tr style="background: #f3f6f9">
-				<th style="color: #094899; padding: 25px 0; font-weight: bold">#</th>
-				<th style="color: #094899; padding: 25px 0; font-weight: bold">Type</th>
-				<th style="color: #094899; padding: 25px 0; font-weight: bold">Full Name</th>
-				<th style="color: #094899; padding: 25px 0; font-weight: bold">Passport Number</th>
-				<th style="color: #094899; padding: 25px 0; font-weight: bold">Birthday</th>
-			  </tr>
-			</thead>
-			<tbody>
-			  <!-- @NOTE: add [style="background: #f3f6f9"] to each even elemnt customely. like "test data" below  -->
-			  <!-- @LOOP: loop throw passengers here -->
-			  <!-- @LOOP: loop throw passengers here -->
-			  <% for( let passenger of passengers ) { %>
-				<!-- test data -->
-				<tr style="background: #f3f6f9">
-				  <td style="padding: 20px 0; position: relative; padding-left: 20px; padding-right: 20px">
-					  <%= passengers.indexOf(passenger) + 1%>
-				  </td>
-				  <td style="padding: 20px 0; position: relative">
-					<%= passenger.type%>
-				  </td>
-				  <td style="padding: 20px 0; position: relative">
-					<% if (passenger.gender==="MALE" ) { %>
-					  <%= "Mr. " %>
-						<% } else if (passenger.gender==="FEMALE" ) { %>
-						  <%= "Mrs. " %>
-							<% } else { %>
-							  <%= "Mx. " %>
-								<% } %>
-								  <%= passenger.firstName + " " + passenger.lastName %>
-				  </td>
-				  <td style="padding: 20px 0; position: relative">
-					<%= passenger.documentCode%>
-				  </td>
-				  <td style="padding: 20px 0; position: relative">
-					<%= passenger.birthDate %>
-				  </td>
-				</tr>
-				<% } %>
-				  <!-- test data -->
-			</tbody>
-		  </table>
-		</div>
-	  </div>
 	</div>
-  </div>
-  <script>
+</div>
+<script>
 	var durationELements = document.getElementsByClassName("durarion");
 	for (let i = 0; i < durationELements.length; i++) {
-	  const durationEL = durationELements[i];
-	  var totalMin = durationEL.getAttribute("data-duration");
-	  var min = totalMin % 60;
-	  var hour = Math.floor(totalMin / 60);
-	  durationEL.innerHTML = hour + 'H ' + min + 'M';
+		const durationEL = durationELements[i];
+		var totalMin = durationEL.getAttribute("data-duration");
+		var min = totalMin % 60;
+		var hour = Math.floor(totalMin / 60);
+		durationEL.innerHTML = hour + 'H ' + min + 'M';
 	}
-  </script>
+</script>

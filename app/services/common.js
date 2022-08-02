@@ -1,5 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
+const accountManagement = require("./accountManagement");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -39,6 +40,19 @@ module.exports.translate = async (input, language) => {
     },
   };
   const { data: response } = await axiosApiInstance.put(`/i18n/translate`, { input }, config);
+
+  return response;
+};
+
+module.exports.getSetting = async key => {
+  const user = accountManagement.loginAsService();
+
+  const config = {
+    headers: {
+      Authorization: "Bearer " + user.data.token,
+    },
+  };
+  const { data: response } = await axiosApiInstance.put(`/setting/${key}`, {}, config);
 
   return response;
 };
