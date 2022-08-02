@@ -433,6 +433,22 @@
 									<tr>
 										<td
 											style="padding: 20px 0; position: relative; padding-left: 20px; padding-right: 20px">
+											<% if (passengers.indexOf(passenger) === 0) { %>
+												<div class="leader-badge" style="
+							background: #dd1d74;
+							transform: rotate(-90deg) translateX(25%);
+							position: absolute;
+							top: 50%;
+							left: 0;
+							color: #fff;
+							display: inline-block;
+							padding: 5px;
+							border-radius: 10px;
+							font-size: 10px;
+						  ">
+													Leader
+												</div>
+												<%} %>
 											<%= passengers.indexOf(passenger) + 1%>
 										</td>
 										<td style="padding: 20px 0; position: relative">
