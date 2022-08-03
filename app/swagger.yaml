@@ -519,6 +519,12 @@ paths:
           required: true
           type: string
           example: dg27te82ed2
+        - name: refundInfo
+          in: body
+          required: true
+          schema:
+            type: object
+            $ref: "#/definitions/RefundInfo"
       responses:
         "200":
           description: OK
@@ -1313,6 +1319,18 @@ definitions:
       regionCode:
         type: string
         example: EUROP
+
+  RefundInfo:
+    properties:
+      description:
+        type: string
+      refundTo:
+        type: string
+        enum: [WALLET, CREDIT_CARD, CRYPTO_CURRENCY]
+        example: WALLET
+      refundInfo:
+        type: string
+        example: Credit card number
 
 schemes:
   # - http
