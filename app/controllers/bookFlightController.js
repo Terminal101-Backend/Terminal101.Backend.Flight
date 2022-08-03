@@ -12,7 +12,11 @@ const flightTicketController = require("./flightTicketController");
 const pay = async (bookedFlight) => {
   const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
   if (!!bookedFlight) {
-    bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
+    // bookedFlight.status = EBookedFlightStatus.get("INPROGRESS");
+    bookedFlight.statuses.push({
+      status: EBookedFlightStatus.get("INPROGRESS"),
+      changedBy: bookedFlight.bookedBy,
+    });
     await bookedFlight.save();
   } else {
     throw "flight_not_found";
@@ -62,8 +66,8 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
       throw "search_expired";
     }
     const userWallet = await wallet.getUserWallet(decodedToken.user);
-
-    if (bookedFlight.status === EBookedFlightStatus.get("PAYING")) {
+    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
+    if (lastStatus === EBookedFlightStatus.get("PAYING")) {
       let amount = 0;
       let result = {};
 
@@ -93,6 +97,12 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
       bookedFlight.transactionId = result.externalTransactionId;
       await bookedFlight.save();
 
+      if (!result) {
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("INPROGRESS"),
+          changedBy: decodedToken.user,
+        });
+      }
       response.success(res, {
         code: bookedFlight.code,
         ...result
@@ -388,7 +398,8 @@ module.exports.getBookedFlights = async (req, res) => {
         searchedFlightCode: bookedFlight.searchedFlightCode,
         flightDetailsCode: bookedFlight.flightDetailsCode,
         // status: bookedFlight.status.map(status => EBookedFlightStatus.find(status) ?? status),
-        status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+        // status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+        status: bookedFlight.statuses[bookedFlight.statuses.length - 1].status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
         contact: {
