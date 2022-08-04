@@ -279,23 +279,35 @@ module.exports.cancelBookedFlight = async (req, res) => {
       if (bookedFlight.flightDetailsCode.includes('PRT')) {
         try {
           if (!bookedFlight.providerError) {
+            bookedFlight.statuses.push({
+              status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
+              description: req.body.description,
+              changedBy: decodedToken.user,
+            });
+
             let pnr = bookedFlight.providerPnr;
             EBookedFlightStatus.check(lastStatus, "PAYING") ? await parto.airBookCancel(pnr) : await parto.airBookRefund(pnr)
 
             bookedFlight.statuses.push({
               status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
               description: req.body.description,
-              changedBy: decodedToken.user,
+              changedBy: 'SERVICE',
             });
-          } else {
-            bookedFlight.statuses.push({
-              status: "CANCEL",
-              description: req.body.description,
-              changedBy: decodedToken.user,
-            });
-          }
+          } 
+          // else {
+          //   bookedFlight.statuses.push({
+          //     status: 'CANCEL' || 'INPROGRESS',
+          //     description: bookedFlight.providerError,
+          //     changedBy: decodedToken.user,
+          //   });
+          // }
         } catch (e) {
           console.log(e)
+          bookedFlight.statuses.push({
+            status: 'REJECTED',
+            description: e,
+            changedBy: 'SERVICE',
+          });
         }
       } else {
         bookedFlight.statuses.push({
@@ -365,19 +377,30 @@ module.exports.editUserBookedFlight = async (req, res) => {
     if (!req.body.status) {
       status = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
     }
-    
+
     if (bookedFlight.flightDetailsCode.includes('PRT')) {
       if (status === 'BOOKED' && !bookedFlight.providerError) {
         try {
-          await parto.airBookIssuing(bookedFlight.providerPnr);
           bookedFlight.statuses.push({
             status,
             description: req.body.description,
             changedBy: decodedToken.user,
           });
+
+          await parto.airBookIssuing(bookedFlight.providerPnr);
+          bookedFlight.statuses.push({
+            status,
+            description: req.body.description,
+            changedBy: 'SERVICE',
+          });
         } //'PO0038048'
         catch (e) {
           console.log(e);
+          bookedFlight.statuses.push({
+            status: 'REJECTED',
+            description: e,
+            changedBy: 'SERVICE',
+          });
         }
       } else if (status !== 'BOOKED') {
         bookedFlight.statuses.push({
