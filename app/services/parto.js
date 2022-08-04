@@ -288,10 +288,51 @@ const airBookCancel = async bookId => {
   return response;
 };
 
+/**
+ * 
+ * @param {String} bookId 
+ * @returns 
+ */
+ const airBookRefund = async bookId => {
+  const params = {
+    UniqueId: bookId,
+    SessionId: sessionId,
+    RefundType: 'Eticket'
+  };
+
+  const {
+    data: response
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRefund", params, {
+  });
+
+  return response;
+};
+
+/**
+ * 
+ * @param {String} bookId 
+ * @returns 
+ */
+ const airBookIssuing = async bookId => {
+  const params = {
+    UniqueId: bookId,
+    SessionId: sessionId,
+  };
+
+  const {
+    data: response
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirOrderTicket", params, {
+  });
+
+  return response;
+};
+
 module.exports = {
   createSession,
   airLowFareSearch,
   airBook,
   airBookData,
   airBookCancel,
+  airBookRefund,
+  airBookIssuing,
 };

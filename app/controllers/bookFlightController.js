@@ -7,6 +7,7 @@ const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 const { twilio } = require("../services");
 const flightTicketController = require("./flightTicketController");
+const parto = require("../services/parto");
 
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {
@@ -275,11 +276,34 @@ module.exports.cancelBookedFlight = async (req, res) => {
     const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
     if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
       // bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
-      bookedFlight.statuses.push({
-        status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
-        description: req.body.description,
-        changedBy: decodedToken.user,
-      });
+      if (bookedFlight.flightDetailsCode.includes('PRT')) {
+        try {
+          if (!bookedFlight.providerError) {
+            let pnr = bookedFlight.providerPnr;
+            EBookedFlightStatus.check(lastStatus, "PAYING") ? await parto.airBookCancel(pnr) : await parto.airBookRefund(pnr)
+
+            bookedFlight.statuses.push({
+              status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
+              description: req.body.description,
+              changedBy: decodedToken.user,
+            });
+          } else {
+            bookedFlight.statuses.push({
+              status: "CANCEL",
+              description: req.body.description,
+              changedBy: decodedToken.user,
+            });
+          }
+        } catch (e) {
+          console.log(e)
+        }
+      } else {
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND",
+          description: req.body.description,
+          changedBy: decodedToken.user,
+        });
+      }
 
       bookedFlight.refundTo = req.body.refundTo;
       bookedFlight.refundInfo = req.body.refundInfo;
@@ -341,13 +365,35 @@ module.exports.editUserBookedFlight = async (req, res) => {
     if (!req.body.status) {
       status = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
     }
-    bookedFlight.statuses.push({
-      status,
-      description: req.body.description,
-      changedBy: decodedToken.user,
-    });
-
-    bookedFlight.passengers = req.body.passengers.filter(passenger => ((user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) || user.persons.some(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt)));
+    
+    if (bookedFlight.flightDetailsCode.includes('PRT')) {
+      if (status === 'BOOKED' && !bookedFlight.providerError) {
+        try {
+          await parto.airBookIssuing(bookedFlight.providerPnr);
+          bookedFlight.statuses.push({
+            status,
+            description: req.body.description,
+            changedBy: decodedToken.user,
+          });
+        } //'PO0038048'
+        catch (e) {
+          console.log(e);
+        }
+      } else if (status !== 'BOOKED') {
+        bookedFlight.statuses.push({
+          status,
+          description: req.body.description,
+          changedBy: decodedToken.user,
+        });
+      }
+    } else {
+      bookedFlight.statuses.push({
+        status,
+        description: req.body.description,
+        changedBy: decodedToken.user,
+      });
+    }
+    bookedFlight.passengers = req.body.passengers.filter(passenger => user.persons.some(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt)) || ((user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)));
 
     if (bookedFlight.passengers.length === 0) {
       throw "passengers_not_valid";
