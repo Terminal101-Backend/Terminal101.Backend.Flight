@@ -258,7 +258,7 @@ module.exports.bookFlightForUser = async (req, res) => {
   }
 };
 
-// NOTE: Edit booked flight's status
+// NOTE: Cancel/refund booked flight's status
 module.exports.cancelBookedFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
@@ -293,7 +293,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
               description: req.body.description,
               changedBy: 'SERVICE',
             });
-          } 
+          }
           // else {
           //   bookedFlight.statuses.push({
           //     status: 'CANCEL' || 'INPROGRESS',
