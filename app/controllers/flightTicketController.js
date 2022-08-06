@@ -2,7 +2,7 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { wallet, accountManagement, amadeus } = require("../services");
+const { wallet, accountManagement, amadeus, common } = require("../services");
 const { EBookedFlightStatus } = require("../constants");
 // let htmlPdfNode = require("html-pdf-node");
 let puppeteer = require("puppeteer");
@@ -212,6 +212,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
         }
       }
     });
+    const agencyPhoneNumber = await common.getSetting('AGENCY_PHONE_NUMBER');
 
     const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
     // const template = fs.readFileSync(templatePath, "utf8");
@@ -225,7 +226,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
         classOfService: bookedFlight.travelClass,
         reservationCode: "TODO",
         pnr: bookedFlight.providerPnr ?? "-----",
-        agencyPhoneNumber: process.env.AGENCY_TICKET_PHONE_NUMBER,
+        agencyPhoneNumber: agencyPhoneNumber,
         cloudineryStaticFileUrl: process.env.CLOUDINERY_STATIC_FILE_TICKET_URL,
         airlineLogoBaseUrl: process.env.AIRLINE_LOGO_BASE_URL,
         passengers,

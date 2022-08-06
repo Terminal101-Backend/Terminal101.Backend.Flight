@@ -45,7 +45,7 @@ module.exports.translate = async (input, language) => {
 };
 
 module.exports.getSetting = async key => {
-  const user = accountManagement.loginAsService();
+  const user = await accountManagement.loginAsService();
 
   const config = {
     headers: {
