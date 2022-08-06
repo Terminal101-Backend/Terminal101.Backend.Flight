@@ -305,3 +305,49 @@ module.exports.bookFlight = async params => {
 
   return { ...bookedFlight, bookedId: bookedFlight.UniqueId };
 };
+
+module.exports.cancelBookFlight = async (description, bookedFlight) => { 
+  try {
+    await parto.airBookCancel(bookedFlight.providerPnr);
+    return {
+      status: 'CANCEL',
+      description,
+      changedBy: 'SERVICE',
+    }
+  } catch (e) {
+    console.log(e)
+    return {
+      status: 'REJECTED',
+      description: e,
+      changedBy: 'SERVICE',
+    }
+  }
+}
+
+module.exports.issuedBookFlight = async (description, bookedFlight) => {
+  if (!bookedFlight.providerError) {
+    try {
+      await parto.airBookIssuing(bookedFlight.providerPnr);
+      return {
+        status: 'BOOKED',
+        description,
+        changedBy: 'SERVICE'
+      }
+    } //'PO0038048'
+    catch (e) {
+      console.log(e);
+      return {
+        status: 'REJECTED',
+        description: e,
+        changedBy: 'SERVICE',
+      }
+    }
+  }
+  else {
+    return {
+      status: 'REJECTED',
+      description: 'this status change not allowed.',
+      changedBy: 'SERVICE',
+    }
+  }
+}
