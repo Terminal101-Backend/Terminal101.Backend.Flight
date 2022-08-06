@@ -52,7 +52,7 @@ module.exports.getSetting = async key => {
       Authorization: "Bearer " + user.data.token,
     },
   };
-  const { data: response } = await axiosApiInstance.put(`/setting/${key}`, {}, config);
+  const { data: response } = await axiosApiInstance.get(`/setting/${key}`, {}, config);
 
-  return response;
+  return response.data;
 };

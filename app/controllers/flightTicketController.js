@@ -212,7 +212,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
         }
       }
     });
-    const agencyPhoneNumber = await common.getSetting('AGENCY_PHONE_NUMBER');
+    const {value: agencyPhoneNumber} = await common.getSetting('AGENCY_PHONE_NUMBER');
 
     const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
     // const template = fs.readFileSync(templatePath, "utf8");
