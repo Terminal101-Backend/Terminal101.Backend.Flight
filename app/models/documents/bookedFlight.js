@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
-const { EBookedFlightStatus, ETravelClass, ERefund } = require("../../constants");
+const { EBookedFlightStatus, ETravelClass, ERefund, EProvider } = require("../../constants");
 const Person = require("../subdocuments/person");
 const Contact = require("../subdocuments/contact");
 const Segment = require("../subdocuments/segment");
@@ -63,7 +63,8 @@ const bookedFlight = new Schema({
   refundInfo: {
     type: String,
     required: false,
-  }
+  },
+  providerName: EProvider.mongoField({ required: true }),
 }, {
   timestamps: true
 });

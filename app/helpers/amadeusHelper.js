@@ -541,3 +541,9 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
     })),
   }
 }
+
+module.exports.cancelBookFlight = async (description, bookedFlight) => {
+}
+
+module.exports.issuedBookFlight = async (description, bookedFlight) => {
+}
