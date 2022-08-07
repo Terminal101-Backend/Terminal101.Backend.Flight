@@ -592,8 +592,55 @@ paths:
         "200":
           description: OK
           schema:
-            type: file
-            description: "A pdf file contains flight's tickets"
+            $ref: "#/definitions/BookFlightResult"
+
+  /flight/book/status/{bookedFlightCode}:
+    # NOTE: Get booked flight's status history
+    get:
+      tags:
+        - Book
+      description: Get booked flight's status history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookFlightStatus"
+
+  /flight/book/status/{userCode}/{bookedFlightCode}:
+    # NOTE: Get other user's booked flight's status history
+    get:
+      tags:
+        - Book
+      description: Get other user's booked flight's status history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookFlightStatus"
 
   /flight/ticket/{bookedFlightCode}:
     # NOTE: Get booked flight's tickets
@@ -780,6 +827,7 @@ paths:
             items:
               $ref: "#/definitions/FlightConditionInfo"
               description: Flight condition info
+
     # NOTE: Add new flight conditions
     post:
       tags:
@@ -1123,7 +1171,7 @@ definitions:
           $ref: "#/definitions/BookFlightPassenger"
       status:
         type: string
-        enum: PAYING|INPROGRESS|BOOKED|CANCEL|REJECT|REFUND
+        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND_REQUEST,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
 
   ContactInfo:
     required:
@@ -1331,6 +1379,22 @@ definitions:
       refundInfo:
         type: string
         example: Credit card number
+
+  BookFlightStatus:
+    properties: 
+      status:
+        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND_REQUEST,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
+        type: string
+        example: INPROGRESS
+      description:
+        type: string
+      time:
+        type: string
+        example: 2022-02-05
+      changedBy:
+        type: string
+        description: User's code
+        example: 3rfyd83y42eey823
 
 schemes:
   # - http
