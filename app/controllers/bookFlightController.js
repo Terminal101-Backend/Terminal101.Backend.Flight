@@ -431,7 +431,7 @@ module.exports.getBookedFlights = async (req, res) => {
         code: bookedFlight.code,
         searchedFlightCode: bookedFlight.searchedFlightCode,
         flightDetailsCode: bookedFlight.flightDetailsCode,
-        status: bookedFlight.status,
+        status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
         contact: {
