@@ -1171,7 +1171,7 @@ definitions:
           $ref: "#/definitions/BookFlightPassenger"
       status:
         type: string
-        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND_REQUEST,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
+        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
 
   ContactInfo:
     required:
@@ -1383,7 +1383,7 @@ definitions:
   BookFlightStatus:
     properties: 
       status:
-        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND_REQUEST,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
+        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
         type: string
         example: INPROGRESS
       description:
