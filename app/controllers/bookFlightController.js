@@ -191,6 +191,7 @@ module.exports.bookFlight = async (req, res) => {
         bookedFlight.providerError = e;
         bookedFlight.save();
         // TODO: Cancel book
+        // TODO: Add reject status to status's history
       });
 
     let amount = 0;
@@ -430,9 +431,7 @@ module.exports.getBookedFlights = async (req, res) => {
         code: bookedFlight.code,
         searchedFlightCode: bookedFlight.searchedFlightCode,
         flightDetailsCode: bookedFlight.flightDetailsCode,
-        // status: bookedFlight.status.map(status => EBookedFlightStatus.find(status) ?? status),
-        // status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
-        status: bookedFlight.statuses[bookedFlight.statuses.length - 1].status,
+        status: bookedFlight.status,
         time: bookedFlight.time,
         passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
         contact: {
