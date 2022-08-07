@@ -298,7 +298,11 @@ module.exports.cancelBookedFlight = async (req, res) => {
           break;
       }
       if (!newStatus) {
-        bookedFlight.statuses.push(newStatus);
+        bookedFlight.statuses.push({
+          status: newStatus,
+          description: req.body.description,
+          changedBy: decodedToken.user,
+        });
       }
 
       bookedFlight.refundTo = req.body.refundTo;
@@ -385,7 +389,11 @@ module.exports.editUserBookedFlight = async (req, res) => {
         break;
     }
     if (!newStatus)
-      bookedFlight.statuses.push(newStatus);
+      bookedFlight.statuses.push({
+        status: newStatus,
+        description: req.body.description,
+        changedBy: decodedToken.user,
+      });
 
     await bookedFlight.save();
 
