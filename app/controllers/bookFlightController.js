@@ -235,7 +235,7 @@ module.exports.bookFlight = async (req, res) => {
     if (lastIndex > 0) {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
-    bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, providerName, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
+    bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, result.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
     if (amount === 0) {
       await pay(bookedFlight);
     }
@@ -278,7 +278,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
     if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
       // bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
       const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND"
-      
+
       bookedFlight.statuses.push({
         status,
         description: req.body.description,
