@@ -286,27 +286,19 @@ module.exports.cancelBookedFlight = async (req, res) => {
         changedBy: decodedToken.user,
       });
 
-      providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
-
-      let newStatus;
-      switch (status) {
-        case 'CANCEL':
-          newStatus = providerHelper.cancelBookFlight(req.body.description, bookedFlight);
-        case 'REFUND':
-          break;
-        default:
-          break;
-      }
-      if (!newStatus) {
-        bookedFlight.statuses.push({
-          status: newStatus,
-          description: req.body.description,
-          changedBy: decodedToken.user,
-        });
-      }
-
       bookedFlight.refundTo = req.body.refundTo;
       bookedFlight.refundInfo = req.body.refundInfo;
+
+      providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
+      try {
+        await providerHelper.cancelBookFlight(req.body.description, bookedFlight);
+      } catch (e) {
+        bookedFlight.statuses.push({
+          status: "REFUND_REJECTED",
+          description: e?.message ?? e,
+          changedBy: "SERVICE",
+        });
+      }
 
       await bookedFlight.save();
     }
@@ -381,19 +373,27 @@ module.exports.editUserBookedFlight = async (req, res) => {
     });
 
     providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
-    let newStatus;
     switch (status) {
-      case 'BOOKED':
-        newStatus = providerHelper.issuedBookFlight(status, req.body.description, bookedFlight);
+      case "BOOKED":
+        try {
+          await providerHelper.issueBookedFlight(bookedFlight);
+        } catch (e) {
+          bookedFlight.statuses.push({
+            status: "REJECTED",
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
+        break;
+
+      case "CANCEL":
+      case "REJECTED":
+        await providerHelper.cancelBookFlight(bookedFlight);
+        break;
+
       default:
         break;
     }
-    if (!newStatus)
-      bookedFlight.statuses.push({
-        status: newStatus,
-        description: req.body.description,
-        changedBy: decodedToken.user,
-      });
 
     await bookedFlight.save();
 
