@@ -57,6 +57,7 @@ const pay = async (bookedFlight) => {
     }
   } catch (e) {
     console.error("Pay error: ", e);
+    throw e;
   }
 };
 
