@@ -329,7 +329,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
 
       providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
       try {
-        await providerHelper.cancelBookFlight(req.body.description, bookedFlight);
+        await providerHelper.cancelBookFlight(bookedFlight);
       } catch (e) {
         bookedFlight.statuses.push({
           status: "REFUND_REJECTED",
