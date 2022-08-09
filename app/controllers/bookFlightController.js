@@ -27,8 +27,6 @@ const pay = async (bookedFlight) => {
       await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
       // TODO: If user wallet's credit is less than flight price do... what???!!!
 
-      await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
-
       bookedFlight.statuses.push({
         status: "INPROGRESS",
         description: "Paid",
@@ -36,6 +34,7 @@ const pay = async (bookedFlight) => {
       });
 
       providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
+      let issued = true;
       try {
         const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
         if (!!issuedBookedFlight) {
@@ -46,11 +45,16 @@ const pay = async (bookedFlight) => {
           });
         }
       } catch (e) {
+        issued = false;
         bookedFlight.statuses.push({
           status: "REJECTED",
           description: e,
           changedBy: "SERVICE",
         });
+      }
+
+      if (!!issued) {
+        await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
       }
 
       await bookedFlight.save();
