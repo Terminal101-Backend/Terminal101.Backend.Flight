@@ -293,7 +293,7 @@ const airBookCancel = async bookId => {
  * @param {String} bookId 
  * @returns 
  */
- const airBookRefund = async bookId => {
+const airBookRefund = async bookId => {
   const params = {
     UniqueId: bookId,
     SessionId: sessionId,
@@ -313,7 +313,7 @@ const airBookCancel = async bookId => {
  * @param {String} bookId 
  * @returns 
  */
- const airBookIssuing = async bookId => {
+const airBookIssuing = async bookId => {
   const params = {
     UniqueId: bookId,
     SessionId: sessionId,
