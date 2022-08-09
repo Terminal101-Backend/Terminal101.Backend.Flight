@@ -35,9 +35,9 @@ const pay = async (bookedFlight) => {
         changedBy: bookedFlight.bookedBy,
       });
 
-      providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
       let issued = true;
       try {
+        providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
         console.time("Issue by provider");
         const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
         console.timeEnd("Issue by provider");
