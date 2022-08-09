@@ -30,6 +30,7 @@ const pay = async (bookedFlight) => {
 
     bookedFlight.statuses.push({
       status: "INPROGRESS",
+      description: "Paid",
       changedBy: bookedFlight.bookedBy,
     });
 
@@ -147,7 +148,7 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Check if the user has not booked similar flight
     // const existsBookedFlight = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itinerarry);
     const existsBookedFlight = await bookedFlightRepository.findOne({ bookedBy: decodedToken.user, searchedFlightCode: req.body.searchedFlightCode, flightDetailsCode: req.body.flightDetailsCode });
-    if (!!existsBookedFlight) {
+    if (!!existsBookedFlight && !EBookedFlightStatus.check(["CANCEL", "REJECTED"], existsBookedFlight.statuses[existsBookedFlight.statuses.length - 1].status)) {
       response.error(res, "booked_flight_duplicated", 406);
       return;
     }
