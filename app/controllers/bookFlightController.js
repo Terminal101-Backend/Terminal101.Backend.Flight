@@ -27,30 +27,32 @@ const pay = async (bookedFlight) => {
       await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
       // TODO: If user wallet's credit is less than flight price do... what???!!!
 
-      await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
+      if (wallet.credit >= flightInfo.flights.price.total) {
+        await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
 
-      bookedFlight.statuses.push({
-        status: "INPROGRESS",
-        description: "Paid",
-        changedBy: bookedFlight.bookedBy,
-      });
+        bookedFlight.statuses.push({
+          status: "INPROGRESS",
+          description: "Paid",
+          changedBy: bookedFlight.bookedBy,
+        });
 
-      providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
-      try {
-        const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
-        if (!!issuedBookedFlight) {
+        providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
+        try {
+          const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
+          if (!!issuedBookedFlight) {
+            bookedFlight.statuses.push({
+              status: "BOOKED",
+              description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
+              changedBy: "SERVICE",
+            });
+          }
+        } catch (e) {
           bookedFlight.statuses.push({
-            status: "BOOKED",
-            description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
+            status: "REJECTED",
+            description: e,
             changedBy: "SERVICE",
           });
         }
-      } catch (e) {
-        bookedFlight.statuses.push({
-          status: "REJECTED",
-          description: e,
-          changedBy: "SERVICE",
-        });
       }
 
       await bookedFlight.save();
