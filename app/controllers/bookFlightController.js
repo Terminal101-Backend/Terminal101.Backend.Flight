@@ -47,7 +47,7 @@ const pay = async (bookedFlight) => {
         }
       } catch (e) {
         bookedFlight.statuses.push({
-          status: "REJECT",
+          status: "REJECTED",
           description: e,
           changedBy: "SERVICE",
         });
