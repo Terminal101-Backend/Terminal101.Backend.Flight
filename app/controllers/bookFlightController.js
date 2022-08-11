@@ -36,26 +36,27 @@ const pay = async (bookedFlight) => {
       });
 
       let issued = true;
-      try {
-        providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
-        console.time("Issue by provider");
-        const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
-        console.timeEnd("Issue by provider");
-        if (!!issuedBookedFlight) {
-          bookedFlight.statuses.push({
-            status: "BOOKED",
-            description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
-            changedBy: "SERVICE",
-          });
-        }
-      } catch (e) {
-        issued = false;
-        bookedFlight.statuses.push({
-          status: "REJECTED",
-          description: e,
-          changedBy: "SERVICE",
-        });
-      }
+      // TODO: Issue by provider in socket mode
+      // try {
+      //   providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
+      //   console.time("Issue by provider");
+      //   const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
+      //   console.timeEnd("Issue by provider");
+      //   if (!!issuedBookedFlight) {
+      //     bookedFlight.statuses.push({
+      //       status: "BOOKED",
+      //       description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
+      //       changedBy: "SERVICE",
+      //     });
+      //   }
+      // } catch (e) {
+      //   issued = false;
+      //   bookedFlight.statuses.push({
+      //     status: "REJECTED",
+      //     description: e,
+      //     changedBy: "SERVICE",
+      //   });
+      // }
 
       if (!!issued) {
         await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
