@@ -346,17 +346,18 @@ module.exports.bookFlight = async params => {
           gender: person.gender,
           nameGiven: person.firstName,
           surname: person.lastName,
-          emailContact: user.email,
+          emailContact: params.contact.email,
           passengerType: (person.type === "ADULT" ? "ADT" : (person.type === "CHILD" ? "CHD" : "INF")),
           // passengerType: person.type,
           phone: {
             areaCode: "",
             countryCode: "",
-            number: user.mobileNumber,
+            number: params.contact.mobileNumber,
           },
         },
         document: {
           expirationDate: dateTimeHelper.excludeDateFromIsoString(person.document.expirationDate),
+          documentID: person.document.code,
         },
       };
     }
@@ -503,7 +504,7 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
         numberOfUnits: 1,
       }))
     },
-    owner: "",
+    owner: flightInfo.flights.owner.code,
     fareType: "RP",
     flights: flightInfo.flights.itineraries.map(itinerary => ({
       flightSegments: itinerary.segments.map(segment => ({
