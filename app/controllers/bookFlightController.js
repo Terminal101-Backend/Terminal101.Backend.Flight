@@ -542,7 +542,7 @@ module.exports.getBookedFlight = async (req, res) => {
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
-    const transaction = await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId);
+    const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
 
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
