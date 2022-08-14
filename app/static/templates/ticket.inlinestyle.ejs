@@ -194,7 +194,7 @@
 					  ">Time</b>
 										<span style="font-family: sans-serif; font-size: 12px">
 											<%= segment.departure.at.toLocaleString('en-US', { hour: 'numeric' ,
-												minute: 'numeric' , hour12: true })%>
+												minute: 'numeric' , hour12: false })%>
 										</span>
 									</div>
 								</div>
@@ -266,7 +266,7 @@
 					  ">Time</b>
 										<span style="font-family: sans-serif; font-size: 12px">
 											<%= segment.arrival.at.toLocaleString('en-US', { hour: 'numeric' ,
-												minute: 'numeric' , hour12: true })%>
+												minute: 'numeric' , hour12: false })%>
 										</span>
 									</div>
 								</div>
@@ -302,8 +302,6 @@
 										Of
 										Service:</span>
 									<span
-										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Plane:</span>
-									<span
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meals:</span>
 									<span
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Seat:</span>
@@ -312,14 +310,6 @@
 									<b
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
 										<%= classOfService%>
-									</b>
-									<b
-										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-										<% if (segment.aircraft==="" ) { %>
-											<%= " - " %>
-												<% } else { %>
-													<%= segment.aircraft %>
-														<% } %>
 									</b>
 									<b
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Meal</b>
@@ -335,9 +325,6 @@
 									<span
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Fllight
 										number:</span>
-									<span
-										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">Airline
-										Code:</span>
 								</div>
 								<div class="col c5" style="padding: 0 10px; box-sizing: border-box; flex-grow: 1">
 									<b
@@ -348,11 +335,7 @@
 										class="durarion" data-duration="<%=segment.duration%>"></b>
 									<b
 										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-										<%= segment.flightNumber%>
-									</b>
-									<b
-										style="font-family: sans-serif; display: block; margin-bottom: 15px; font-size: 14px">
-										<%= segment.airline.code%>
+										<%= segment.airline.code%><%= segment.flightNumber%>
 									</b>
 								</div>
 								<div class="col stampImg" style="padding: 0 10px; box-sizing: border-box; flex-grow: 0">
