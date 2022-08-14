@@ -326,7 +326,7 @@ module.exports.bookFlight = async params => {
           phone: {
             areaCode: "",
             countryCode: "",
-            number: user.mobileNumber,
+            number: (!!user.mobileNumber) ? user.mobileNumber: params.contact.mobileNumber,
           },
         },
         document: {
