@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
@@ -36,26 +36,27 @@ const pay = async (bookedFlight) => {
       });
 
       let issued = true;
-      try {
-        providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
-        console.time("Issue by provider");
-        const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
-        console.timeEnd("Issue by provider");
-        if (!!issuedBookedFlight) {
-          bookedFlight.statuses.push({
-            status: "BOOKED",
-            description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
-            changedBy: "SERVICE",
-          });
-        }
-      } catch (e) {
-        issued = false;
-        bookedFlight.statuses.push({
-          status: "REJECTED",
-          description: e,
-          changedBy: "SERVICE",
-        });
-      }
+      // TODO: Issue by provider in socket mode
+      // try {
+      //   providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
+      //   console.time("Issue by provider");
+      //   const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
+      //   console.timeEnd("Issue by provider");
+      //   if (!!issuedBookedFlight) {
+      //     bookedFlight.statuses.push({
+      //       status: "BOOKED",
+      //       description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
+      //       changedBy: "SERVICE",
+      //     });
+      //   }
+      // } catch (e) {
+      //   issued = false;
+      //   bookedFlight.statuses.push({
+      //     status: "REJECTED",
+      //     description: e,
+      //     changedBy: "SERVICE",
+      //   });
+      // }
 
       if (!!issued) {
         await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
@@ -244,7 +245,9 @@ module.exports.bookFlight = async (req, res) => {
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
     console.time("Booking by provider");
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+    const providerBookResult = {
+      bookedId: (providerName === "AMADEUS") ? stringHelper.generateRandomString(6, 6, true, false, true) : "PO" + stringHelper.generateRandomString(7, 7, true, false, false),
+    } ?? await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
     console.timeEnd("Booking by provider");
     console.log("Flight booked by ", providerName, providerBookResult);
 
@@ -542,7 +545,7 @@ module.exports.getBookedFlight = async (req, res) => {
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
-    const transaction = await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId);
+    const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
 
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
