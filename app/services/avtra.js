@@ -1,5 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
+const xmljsonParser = require("xml2json");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -47,7 +48,14 @@ module.exports.ping = async message => {
 </OTA_PingRQ>
   `);
 
-  return response;
+  const option = {
+    object: true
+  };
+  const responseJson = xmljsonParser.toJson(response, option);
+
+  const result = { success: !!responseJson?.OTA_PingRS?.Success, data: responseJson?.OTA_PingRS?.EchoData };
+
+  return result;
 };
 
 module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
@@ -107,11 +115,16 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 </OTA_AirLowFareSearchRQ>
   `;
 
-  console.log(query);
-
   const {
     data: response
   } = await axiosApiInstance.post("/availability/lowfaresearch", query);
 
-  return response;
+  const option = {
+    object: true
+  };
+  const responseJson = xmljsonParser.toJson(response, option);
+
+  const result = { success: !!responseJson?.OTA_AirLowFareSearchRS?.Success, data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary };
+
+  return result;
 };

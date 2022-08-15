@@ -3,9 +3,11 @@ const { avtra } = require("../../services");
 
 module.exports.ping = async done => {
   try {
-    const response = await avtra.ping();
+    const response = await avtra.ping("Echo me back");
 
     console.log(response);
+    expect(response.success).toBeTruthy();
+    expect(response.data).toMatch(/.*Echo me back.*/);
 
     done();
   } catch (err) {
