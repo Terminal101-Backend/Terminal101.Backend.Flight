@@ -7,7 +7,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
+host: terminal101backendflight.azurewebsites.net
 # host: localhost:8005
 basePath: /
 
