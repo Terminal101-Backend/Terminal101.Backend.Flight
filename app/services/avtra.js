@@ -1,17 +1,22 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 const xmljsonParser = require("xml2json");
+const { dateTimeHelper, flightHelper } = require("../helpers");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.AVTRA_BASE_URL;
+    const testMode = config?.testMode ?? false;
+    const pathPostFix = testMode ? "_TEST" : "";
+
+    config.baseURL = process.env["AVTRA_BASE_URL" + pathPostFix];
     config.headers = {
-      'Authorization': `${process.env.AVTRA_ACCESS_TOKEN}`,
+      'Authorization': `${process.env["AVTRA_ACCESS_TOKEN" + pathPostFix]}`,
       'Accept': 'application/xml',
       // 'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Type': 'application/xml',
     }
+
     return config;
   },
   error => {
@@ -33,7 +38,7 @@ axiosApiInstance.interceptors.request.use(
 //   return Promise.reject(error);
 // });
 
-module.exports.ping = async message => {
+module.exports.ping = async (message, testMode = false) => {
   const {
     data: response
   } = await axiosApiInstance.post("/services/ping", `
@@ -46,22 +51,27 @@ module.exports.ping = async message => {
 </POS>
 <EchoData>${message ?? "Echo me back"}</EchoData>
 </OTA_PingRQ>
-  `);
+  `, { testMode });
 
   const option = {
     object: true
   };
   const responseJson = xmljsonParser.toJson(response, option);
 
-  const result = { success: !!responseJson?.OTA_PingRS?.Success, data: responseJson?.OTA_PingRS?.EchoData };
+  const result = {
+    success: !!responseJson?.OTA_PingRS?.Success,
+    data: responseJson?.OTA_PingRS?.EchoData
+  };
 
   return result;
 };
 
-module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
+  segments = flightHelper.makeSegmentsArray(segments);
   const originDestinations = [];
+
   originDestinations.push(`
-  <DepartureDateTime>${departureDate}</DepartureDateTime>
+  <DepartureDateTime>${dateTimeHelper.excludeDateFromIsoString(new Date(departureDate).toISOString())}</DepartureDateTime>
   <OriginLocation LocationCode="${originLocationCode}" />
   <DestinationLocation LocationCode="${destinationLocationCode}" />
   `);
@@ -77,13 +87,13 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   if (!!returnDate) {
     if (!!segments && (segments?.length ?? 0 > 0)) {
       originDestinations.push(`
-      <DepartureDateTime>${returnDate}</DepartureDateTime>
+      <DepartureDateTime>${dateTimeHelper.excludeDateFromIsoString(new Date(returnDate).toISOString())}</DepartureDateTime>
       <OriginLocation LocationCode="${segments[segments.length - 1].destinationCode}" />
       <DestinationLocation LocationCode="${originLocationCode}" />
       `);
     } else {
       originDestinations.push(`
-      <DepartureDateTime>${returnDate}</DepartureDateTime>
+      <DepartureDateTime>${dateTimeHelper.excludeDateFromIsoString(new Date(returnDate).toISOString())}</DepartureDateTime>
       <OriginLocation LocationCode="${destinationLocationCode}" />
       <DestinationLocation LocationCode="${originLocationCode}" />
       `);
@@ -117,14 +127,17 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const {
     data: response
-  } = await axiosApiInstance.post("/availability/lowfaresearch", query);
+  } = await axiosApiInstance.post("/availability/lowfaresearch", query, { testMode });
 
   const option = {
     object: true
   };
   const responseJson = xmljsonParser.toJson(response, option);
 
-  const result = { success: !!responseJson?.OTA_AirLowFareSearchRS?.Success, data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary };
+  const result = {
+    success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
+    data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary
+  };
 
   return result;
 };

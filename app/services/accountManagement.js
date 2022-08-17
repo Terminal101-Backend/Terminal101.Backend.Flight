@@ -63,16 +63,25 @@ const getUserInfo = async userCode => {
   return response;
 };
 
-const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
-  const params = new URLSearchParams();
-  params.append("userType", userType);
-  params.append("method", method);
-  params.append("path", path);
-  params.append("serviceName", serviceName);
+const checkUserAccess = async (userCode, userType, serviceName, method, path, thirdPartyUsername, thirdPartyTestMode) => {
+  // const params = new URLSearchParams();
+  // params.append("userType", userType);
+  // params.append("method", method);
+  // params.append("path", path);
+  // params.append("serviceName", serviceName);
+  // params.append("thirdPartyUsername", thirdPartyUsername);
+  const params = {
+    userType,
+    method,
+    path,
+    serviceName,
+    thirdPartyUsername,
+    thirdPartyTestMode,
+  };
 
-  const { data: response } = await axiosApiInstance.get(`/user/${userCode}`, params);
+  const { data: response } = await axiosApiInstance.get(`/user/${userCode}/access`, { params });
 
-  return response;
+  return response.data;
 };
 
 module.exports = {

@@ -4,27 +4,6 @@ const { accountManagement, amadeus, amadeusSoap } = require("../services");
 const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
 const { EProvider } = require("../constants");
 
-const makeSegmentsArray = segments => {
-  segments = segments ?? [];
-  if (!Array.isArray(segments)) {
-    try {
-      segments = segments.split(",");
-    } catch (e) {
-      segments = [segments];
-    }
-  };
-  segments = segments.map(segment => {
-    const segment_date = segment.trim().split(":");
-    return {
-      originCode: segment_date[0],
-      destinationCode: segment_date[1],
-      date: segment_date[2],
-    };
-  });
-
-  return segments;
-};
-
 const makeSegmentStopsArray = airports => {
   return stop => ({
     description: stop.description,
@@ -173,7 +152,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
 };
 
 module.exports.searchFlights_____OLD = async params => {
-  let segments = makeSegmentsArray(params.segments);
+  let segments = flightHelper.makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
@@ -232,7 +211,7 @@ module.exports.searchFlights_____OLD = async params => {
 };
 
 module.exports.searchFlights = async params => {
-  let segments = makeSegmentsArray(params.segments);
+  let segments = flightHelper.makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";

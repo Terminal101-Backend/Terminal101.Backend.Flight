@@ -6,13 +6,13 @@ class EFlightBook extends Enum {
         super(EEnumType.SYMBOLIC);
 
         this.add("PAYING");
+        this.add("PAID");
         this.add("INPROGRESS");
         this.add("REFUND");
         this.add("REFUND_ACCEPTED");
         this.add("REFUND_CANCEL");
         this.add("REFUND_REJECTED");
         this.add("CANCEL");
-        this.add("REMOVE");
         this.add("BOOKED");
         this.add("REJECTED");
 
