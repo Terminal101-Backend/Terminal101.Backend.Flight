@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
@@ -245,7 +245,9 @@ module.exports.bookFlight = async (req, res) => {
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
     console.time("Booking by provider");
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+    const providerBookResult = {
+      bookedId: (providerName === "AMADEUS") ? stringHelper.generateRandomString(6, 6, true, false, true) : "PO" + stringHelper.generateRandomString(7, 7, true, false, false),
+    } ?? await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
     console.timeEnd("Booking by provider");
     console.log("Flight booked by ", providerName, providerBookResult);
 
