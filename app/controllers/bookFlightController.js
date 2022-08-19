@@ -257,26 +257,24 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, result.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
-    // const providerName = flightDetails.flights.provider.toLowerCase();
-    // const providerHelper = eval(providerName + "Helper");
-    // providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
-    //   .then(res => {
-    //     console.log("Flight booked by ", providerName, res);
-    //     if (!!bookedFlight) {
-    //       bookedFlight.providerPnr = res.bookedId;
-    //       bookedFlight.save();
-    //     }
-    //   })
-    //   .catch(e => {
-    //     console.error("Provider error: ", e);
-    //     bookedFlight.providerError = e;
-    //     bookedFlight.statuses.push({
-    //       status: "REJECTED",
-    //       description: e,
-    //       changedBy: "SERVICE",
-    //     })
-    //     bookedFlight.save();
-    //   });
+    providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+      .then(res => {
+        console.log("Flight booked by ", providerName, res);
+        if (!!bookedFlight) {
+          bookedFlight.providerPnr = res.bookedId;
+          bookedFlight.save();
+        }
+      })
+      .catch(e => {
+        console.error("Provider error: ", e);
+        bookedFlight.providerError = e;
+        bookedFlight.statuses.push({
+          status: "REJECTED",
+          description: e,
+          changedBy: "SERVICE",
+        })
+        bookedFlight.save();
+      });
 
     if (amount === 0) {
       await pay(bookedFlight);
