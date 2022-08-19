@@ -1,11 +1,11 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, stringHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
-const { twilio } = require("../services");
+const { common } = require("../services");
 const flightTicketController = require("./flightTicketController");
 const parto = require("../services/parto");
 
@@ -91,7 +91,9 @@ const pay = async (bookedFlight) => {
           await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
           // TODO: Send SMS
           // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
-          await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+          // await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+          // should send path URL of Ticket
+          await common.sendTicketFlightPDF(bookedFlight.contact.email, bookedFlight.code);
         })();
       }
     }

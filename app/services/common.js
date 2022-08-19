@@ -56,3 +56,19 @@ module.exports.getSetting = async key => {
 
   return response.data;
 };
+
+module.exports.sendTicketFlightPDF = async (to, link) => {
+  const user = userController.loginAsService();
+  const config = {
+    headers: {
+      Authorization: "Bearer " + user.token,
+    },
+  };
+  const params =new URLSearchParams();
+  params.append("to", to);
+  params.append("path", path);
+
+  const { data: response } = await axiosApiInstance.post(`/email/ticket-flight`, params, config);
+
+  return response.data;
+};
