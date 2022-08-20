@@ -57,18 +57,16 @@ module.exports.getSetting = async key => {
   return response.data;
 };
 
-module.exports.sendTicketFlightPDF = async (to, link) => {
-  const user = userController.loginAsService();
+module.exports.sendTicketFlightPDF = async (to, path) => {
+  const user = await accountManagement.loginAsService();
+
   const config = {
     headers: {
-      Authorization: "Bearer " + user.token,
+      Authorization: "Bearer " + user.data.token,
     },
   };
-  const params =new URLSearchParams();
-  params.append("to", to);
-  params.append("path", path);
 
-  const { data: response } = await axiosApiInstance.post(`/email/ticket-flight`, params, config);
+  const { data: response } = await axiosApiInstance.post(`/email/ticket-flight`, { to, path }, config);
 
   return response.data;
 };
