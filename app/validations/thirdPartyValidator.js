@@ -8,7 +8,7 @@ class LowFareSearch extends BaseValidator {
     };
 
     const params = {
-      providerName: Joi.string().required().regex(/AVTRA|AMADEUS|PARTO/),
+      providerTitle: Joi.string().required(),
       0: Joi.string().allow(null, ""),
     };
 

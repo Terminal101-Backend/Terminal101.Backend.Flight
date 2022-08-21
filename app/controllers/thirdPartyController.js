@@ -9,7 +9,12 @@ module.exports.lowFareSearch = async (req, res) => {
   try {
     const testMode = req.params[0] === "/test";
 
-    // const providers = await providerRepository.findMany();
+    const provider = await providerRepository.findOne({ title: req.params.providerTitle });
+    if (!provider?.isActive) {
+      response.error(res, "provider_not_found", 404);
+      return;
+    }
+
     const result = await avtra.lowFareSearch(
       req.query.originLocationCode,
       req.query.destinationLocationCode,
