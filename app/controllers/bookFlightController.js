@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
@@ -24,37 +24,59 @@ const pay = async (bookedFlight) => {
         description: "Paid",
         changedBy: bookedFlight.bookedBy,
       });
-
-      let issued = true;
-      try {
-        providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
-        console.time("Issue by provider");
-        const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
-        console.timeEnd("Issue by provider");
-        if (!!issuedBookedFlight) {
-          bookedFlight.statuses.push({
-            status: "BOOKED",
-            description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
-            changedBy: "SERVICE",
-          });
-        }
-      } catch (e) {
-        console.log('Reject issued by error -> ', e);
-        issued = false;
-        bookedFlight.statuses.push({
-          status: "REJECTED",
-          description: e,
-          changedBy: "SERVICE",
-        });
-      }
-      // TODO: check wallet's credit 
       const userWallet = await wallet.getUserWallet(bookedFlight.bookedBy);
+      let issued = true;
+
+      // TODO: Issue by provider in socket mode
+      // try {
+      //   providerHelper = eval(EProvider.find(bookedFlight.providerName).toLowerCase() + "Helper");
+      //   console.time("Issue by provider");
+      //   const issuedBookedFlight = await providerHelper.issueBookedFlight(bookedFlight);
+      //   console.timeEnd("Issue by provider");
+      //   if (!!issuedBookedFlight) {
+      //     bookedFlight.statuses.push({
+      //       status: "BOOKED",
+      //       description: "Issued automatically by " + EProvider.find(bookedFlight.providerName),
+      //       changedBy: "SERVICE",
+      //     });
+      //   }
+      // } catch (e) {
+      //   issued = false;
+      //   bookedFlight.statuses.push({
+      //     status: "REJECTED",
+      //     description: e,
+      //     changedBy: "SERVICE",
+      //   });
+      // }
 
       if (!!issued) {
         if (!(userWallet.credit < flightInfo.flights.price.total)) {
           await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
+          // add PAID
+          bookedFlight.statuses.push({
+            status: "PAID",
+            description: 'Payment is done.',
+            changedBy: "SERVICE",
+          });
+
+          (async () => {
+            // TODO: Send notification to user
+            const userToken = token.newToken({ user: bookedFlight.bookedBy });
+            await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+            // TODO: Send SMS
+            // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
+            await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+            // TODO: If user wallet's credit is less than flight price do... what???!!!
+          })();
+
         } else {
+          issued = false;
           console.log('Your credit is not enough');
+          bookedFlight.statuses.push({
+            status: "PAYING",
+            description: "Client credit is not enough",
+            changedBy: "SERVICE",
+          });
           //TODO: send email or SMS to user message -> (Your credit is not enough, please resharge your wallet and book again)
         }
       }
@@ -215,82 +237,94 @@ module.exports.bookFlight = async (req, res) => {
     let amount = 0;
     let result = {};
 
-    const userWallet = await wallet.getUserWallet(decodedToken.user);
-    if (!!req.body.useWallet) {
-      amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-    } else {
-      amount = flightDetails.flights.price.total;
-      if (userWallet.credit < 0) {
-        amount += Math.abs(userWallet.credit);
-      }
-    }
-
-    if (amount >= 1) {
-      switch (paymentMethod.type) {
-        case "STRIPE":
-          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-          if (!result) {
-            throw "wallet_error";
-          }
-          break;
-
-        case "CRYPTOCURRENCY":
-          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-          if (!result) {
-            throw "wallet_error";
-          }
-          break;
-
-        default:
-      }
-    } else {
-      result = {
-        value: 0,
-      }
-    }
-
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    console.time("Booking by provider");
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
-    console.timeEnd("Booking by provider");
-    console.log("Flight booked by ", providerName, providerBookResult);
 
     const bookedFlightSegments = [flightDetails.flights?.itineraries?.[0].segments?.[0]];
     const lastIndex = (flightDetails.flights?.itineraries?.[0].segments?.length ?? 0) - 1;
     if (lastIndex > 0) {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
-    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, result.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, result.value === 0 ? "INPROGRESS" : "PAYING");
-    // const providerName = flightDetails.flights.provider.toLowerCase();
-    // const providerHelper = eval(providerName + "Helper");
-    // providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
-    //   .then(res => {
-    //     console.log("Flight booked by ", providerName, res);
-    //     if (!!bookedFlight) {
-    //       bookedFlight.providerPnr = res.bookedId;
-    //       bookedFlight.save();
-    //     }
-    //   })
-    //   .catch(e => {
-    //     console.error("Provider error: ", e);
-    //     bookedFlight.providerError = e;
-    //     bookedFlight.statuses.push({
-    //       status: "REJECTED",
-    //       description: e,
-    //       changedBy: "SERVICE",
-    //     })
-    //     bookedFlight.save();
-    //   });
 
-    if (amount === 0) {
-      await pay(bookedFlight);
+    let reserved = false;
+    let pnr;
+    let providerError;
+    
+    await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+      .then(res => {
+        reserved = true;
+        pnr = res.bookedId;
+        console.log("Flight booked by ", providerName, res);
+      })
+      .catch(e => {
+        console.error("Provider error: ", e);
+        providerError = e;
+        // bookedFlight.providerError = e;
+        // bookedFlight.statuses.push({
+        //   status: "REJECTED",
+        //   description: e,
+        //   changedBy: "SERVICE",
+        // })
+        // bookedFlight.save();
+      });
+
+    if (!!reserved) {
+      const userWallet = await wallet.getUserWallet(decodedToken.user);
+
+      if (!!req.body.useWallet) {
+        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
+      } else {
+        amount = flightDetails.flights.price.total;
+        if (userWallet.credit < 0) {
+          amount += Math.abs(userWallet.credit);
+        }
+      }
+      const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, pnr, "", req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+
+      if (amount >= 1) {
+        switch (paymentMethod.type) {
+          case "STRIPE":
+            result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+            if (!result) {
+              throw "wallet_error";
+            }
+            break;
+
+          case "CRYPTOCURRENCY":
+            result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+            if (!result) {
+              throw "wallet_error";
+            }
+            break;
+
+          default:
+        }
+        bookedFlight.statuses.push({
+          status: "PAYING",
+          description: 'Payment is in progress',
+          changedBy: "SERVICE",
+        });
+        bookedFlight.transactionId = result.externalTransactionId;
+
+      } else {
+        result = {
+          value: 0,
+        }
+      }
+      await bookedFlight.save();
+
+      if (amount === 0) {
+        await pay(bookedFlight);
+      }
+
+      response.success(res, {
+        code: bookedFlight.code,
+        ...result
+      });
+    } else {
+      response.exception(res, providerError);
     }
 
-    response.success(res, {
-      code: bookedFlight.code,
-      ...result
-    });
   } catch (e) {
     response.exception(res, e);
   }
@@ -550,7 +584,7 @@ module.exports.getBookedFlight = async (req, res) => {
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
-    const transaction = await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId);
+    const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
 
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
