@@ -12,8 +12,20 @@ router
       next();
     },
     checkAccess.checkUserType(["THIRD_PARTY"]),
-    checkAccess.checkUserAccess,
+    // checkAccess.checkUserAccess,
     thirdPartyValidator.lowFareSearch.check(),
     thirdPartyController.lowFareSearch);
+
+// NOTE: Book
+router
+  .post("/book",
+    (req, res, next) => {
+      console.log("Search flights", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType(["THIRD_PARTY"]),
+    checkAccess.checkUserAccess,
+    thirdPartyValidator.book.check(),
+    thirdPartyController.book);
 
 module.exports = router;

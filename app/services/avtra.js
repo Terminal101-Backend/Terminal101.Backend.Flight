@@ -71,10 +71,12 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   const originDestinations = [];
 
   originDestinations.push(`
-  <DepartureDateTime>${dateTimeHelper.excludeDateFromIsoString(new Date(departureDate).toISOString())}</DepartureDateTime>
-  <OriginLocation LocationCode="${originLocationCode}" />
-  <DestinationLocation LocationCode="${destinationLocationCode}" />
-  `);
+    <OriginDestinationInformation>
+      <DepartureDateTime>${dateTimeHelper.excludeDateFromIsoString(new Date(departureDate).toISOString())}</DepartureDateTime>
+      <OriginLocation LocationCode="${originLocationCode}" />
+      <DestinationLocation LocationCode="${destinationLocationCode}" />
+    </OriginDestinationInformation>
+    `);
 
   for (let index = 0; index < segments?.length ?? 0; index++) {
     originDestinations.push(`
