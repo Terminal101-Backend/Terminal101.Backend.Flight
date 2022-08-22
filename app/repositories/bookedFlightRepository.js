@@ -73,11 +73,13 @@ class BookedFlightRepository extends BaseRepository {
    */
   async getBookedFlights(bookedBy, page, pageSize) {
     const agrBookedFlight = BookedFlight.aggregate();
-    agrBookedFlight.append({
-      $match: {
-        bookedBy,
-      }
-    });
+    if (!!bookedBy) {
+      agrBookedFlight.append({
+        $match: {
+          bookedBy,
+        }
+      });
+    }
     agrBookedFlight.append({
       $lookup: {
         from: 'flightinfos',

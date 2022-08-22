@@ -63,21 +63,18 @@ const getUserInfo = async userCode => {
   return response;
 };
 
-const checkUserAccess = async (userCode, userType, serviceName, method, path, thirdPartyUsername, thirdPartyTestMode) => {
-  // const params = new URLSearchParams();
-  // params.append("userType", userType);
-  // params.append("method", method);
-  // params.append("path", path);
-  // params.append("serviceName", serviceName);
-  // params.append("thirdPartyUsername", thirdPartyUsername);
-  const params = {
-    userType,
-    method,
-    path,
-    serviceName,
-    thirdPartyUsername,
-    thirdPartyTestMode,
-  };
+const getUsersInfo = async userCodes => {
+  const { data: response } = await axiosApiInstance.put(`/user`, { userCodes });
+
+  return response;
+};
+
+const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
+  const params = new URLSearchParams();
+  params.append("userType", userType);
+  params.append("method", method);
+  params.append("path", path);
+  params.append("serviceName", serviceName);
 
   const { data: response } = await axiosApiInstance.get(`/user/${userCode}/access`, { params });
 
@@ -87,5 +84,6 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path, th
 module.exports = {
   loginAsService,
   getUserInfo,
+  getUsersInfo,
   checkUserAccess,
 };

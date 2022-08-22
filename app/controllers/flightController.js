@@ -715,7 +715,7 @@ function transformDataAmadeus(data) {
   data.forEach(element => {
     newData.push({
       subType: element.subType,
-      name: element.name,
+      name: toCamelCase(element.name),
       code: element.iataCode,
       geoCode: element.geoCode,
       address: element.address
@@ -726,5 +726,14 @@ function transformDataAmadeus(data) {
   return {
     data: newData
   };
+}
+
+function toCamelCase(input) {
+  var result = input.toLowerCase().replace(/\s+(\w)?/gi,
+    (match, letter) => {
+      return letter.toUpperCase()
+    }).replace(/([A-Z])/g, " $1");
+
+  return result.charAt(0).toUpperCase() + result.slice(1);
 }
 
