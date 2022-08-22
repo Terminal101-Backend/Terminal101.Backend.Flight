@@ -22,7 +22,7 @@ router
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT"]),
     bookFlightValidator.getBookedFlights.check(true),
     bookFlightController.getBookedFlights);
 

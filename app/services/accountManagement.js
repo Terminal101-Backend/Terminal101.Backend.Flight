@@ -63,6 +63,12 @@ const getUserInfo = async userCode => {
   return response;
 };
 
+const getUsersInfo = async userCodes => {
+  const { data: response } = await axiosApiInstance.put(`/user`, { userCodes });
+
+  return response;
+};
+
 const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
   const params = new URLSearchParams();
   params.append("userType", userType);
@@ -78,5 +84,6 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
 module.exports = {
   loginAsService,
   getUserInfo,
+  getUsersInfo,
   checkUserAccess,
 };
