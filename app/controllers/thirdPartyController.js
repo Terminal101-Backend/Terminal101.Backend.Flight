@@ -42,7 +42,7 @@ module.exports.lowFareSearch = async (req, res) => {
 };
 
 // NOTE: Book flight by provider
-module.exports.book = async (req, res) => {
+module.exports.bookFlight = async (req, res) => {
   try {
     const testMode = req.params[0] === "/test";
 
@@ -56,6 +56,31 @@ module.exports.book = async (req, res) => {
       req.body.segments,
       req.body.price,
       req.body.travelers,
+      testMode);
+
+    if (!!result.success) {
+      response.success(res, result.data);
+    } else {
+      throw "Provider error " + result.error.code + ": " + result.error.message;
+    }
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get booked flight by provider
+module.exports.getBookedFlight = async (req, res) => {
+  try {
+    const testMode = req.params[0] === "/test";
+
+    const provider = await providerRepository.findOne({ title: req.params.providerTitle });
+    if (!provider?.isActive) {
+      response.error(res, "provider_not_found", 404);
+      return;
+    }
+
+    const result = await avtra.getBooked(
+      req.params.bookedId,
       testMode);
 
     if (!!result.success) {

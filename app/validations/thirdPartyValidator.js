@@ -43,7 +43,7 @@ class LowFareSearch extends BaseValidator {
   }
 };
 
-class Book extends BaseValidator {
+class BookFlight extends BaseValidator {
   constructor() {
     const body = {
       segments: Joi.array().items(Joi.object().keys({
@@ -83,7 +83,24 @@ class Book extends BaseValidator {
   }
 };
 
+class GetBookedFlight extends BaseValidator {
+  constructor() {
+    const body = {
+    };
+
+    const params = {
+      providerTitle: Joi.string().required(),
+      bookedId: Joi.string().required(),
+      0: Joi.string().allow(null, ""),
+    };
+
+    super(body);
+    this.params(params);
+  }
+};
+
 module.exports = {
   lowFareSearch: new LowFareSearch(),
-  book: new Book(),
+  bookFlight: new BookFlight(),
+  getBookedFlight: new GetBookedFlight(),
 };

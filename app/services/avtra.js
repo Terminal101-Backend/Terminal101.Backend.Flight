@@ -254,3 +254,37 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
 
   return result;
 };
+
+module.exports.getBooked = async (id, testMode = false) => {
+  const query = `
+    <OTA_ReadRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
+    OTA_ReadRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+      <POS>
+        <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
+          <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
+        </Source>
+      </POS>
+      <UniqueID ID="${id}"/>
+    </OTA_ReadRQ>
+  `;
+
+  const {
+    data: response
+  } = await axiosApiInstance.post("/booking/read", query, { testMode });
+
+  const option = {
+    object: true
+  };
+  const responseJson = xmljsonParser.toJson(response, option);
+
+  const result = {
+    success: !!responseJson?.OTA_AirBookRS?.Success,
+    data: responseJson?.OTA_AirBookRS?.AirReservation,
+    error: {
+      code: responseJson?.OTA_AirBookRS?.Errors?.Error?.Code,
+      message: responseJson?.OTA_AirBookRS?.Errors?.Error?.ShortText,
+    }
+  };
+
+  return result;
+};
