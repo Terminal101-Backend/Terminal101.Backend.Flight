@@ -124,6 +124,8 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
 };
 
 const bookFlight = async (flight, passengers) => {
+  console.log(JSON.stringify({ passengers, flight }));
+
   const { data: response } = await axiosApiInstance.post("/Flight/AirBook",
     {
       passengers,

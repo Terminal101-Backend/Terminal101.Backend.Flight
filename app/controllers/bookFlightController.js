@@ -235,7 +235,7 @@ module.exports.bookFlight = async (req, res) => {
     // TODO: Set last flight's price in our DB
 
     let amount = 0;
-    let result = {};
+    let userWalletResult = {};
 
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
@@ -246,85 +246,57 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    let reserved = false;
-    let pnr;
-    let providerError;
-    
-    await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
-      .then(res => {
-        reserved = true;
-        pnr = res.bookedId;
-        console.log("Flight booked by ", providerName, res);
-      })
-      .catch(e => {
-        console.error("Provider error: ", e);
-        providerError = e;
-        // bookedFlight.providerError = e;
-        // bookedFlight.statuses.push({
-        //   status: "REJECTED",
-        //   description: e,
-        //   changedBy: "SERVICE",
-        // })
-        // bookedFlight.save();
-      });
+    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+    const userWallet = await wallet.getUserWallet(decodedToken.user);
 
-    if (!!reserved) {
-      const userWallet = await wallet.getUserWallet(decodedToken.user);
-
-      if (!!req.body.useWallet) {
-        amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-      } else {
-        amount = flightDetails.flights.price.total;
-        if (userWallet.credit < 0) {
-          amount += Math.abs(userWallet.credit);
-        }
-      }
-      const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, pnr, "", req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-
-      if (amount >= 1) {
-        switch (paymentMethod.type) {
-          case "STRIPE":
-            result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-            if (!result) {
-              throw "wallet_error";
-            }
-            break;
-
-          case "CRYPTOCURRENCY":
-            result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-            if (!result) {
-              throw "wallet_error";
-            }
-            break;
-
-          default:
-        }
-        bookedFlight.statuses.push({
-          status: "PAYING",
-          description: 'Payment is in progress',
-          changedBy: "SERVICE",
-        });
-        bookedFlight.transactionId = result.externalTransactionId;
-
-      } else {
-        result = {
-          value: 0,
-        }
-      }
-      await bookedFlight.save();
-
-      if (amount === 0) {
-        await pay(bookedFlight);
-      }
-
-      response.success(res, {
-        code: bookedFlight.code,
-        ...result
-      });
+    if (!!req.body.useWallet) {
+      amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
     } else {
-      response.exception(res, providerError);
+      amount = flightDetails.flights.price.total;
+      if (userWallet.credit < 0) {
+        amount += Math.abs(userWallet.credit);
+      }
     }
 
+    if (amount >= 1) {
+      switch (paymentMethod.type) {
+        case "STRIPE":
+          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          if (!userWalletResult) {
+            throw "wallet_error";
+          }
+          break;
+
+        case "CRYPTOCURRENCY":
+          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          if (!userWalletResult) {
+            throw "wallet_error";
+          }
+          break;
+
+        default:
+      }
+
+      const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.transactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+
+      bookedFlight.statuses.push({
+        status: "PAYING",
+        description: 'Payment is in progress',
+        changedBy: "SERVICE",
+      });
+      // bookedFlight.transactionId = result.externalTransactionId;
+      await bookedFlight.save();
+    } else {
+      userWalletResult = {
+        value: 0,
+      }
+      await pay(bookedFlight);
+    }
+
+    response.success(res, {
+      code: bookedFlight.code,
+      ...userWalletResult
+    });
   } catch (e) {
     response.exception(res, e);
   }

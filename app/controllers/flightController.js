@@ -5,7 +5,7 @@ const { getIpInfo } = require("../services/ip");
 const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -207,6 +207,7 @@ module.exports.searchFlights = async (req, res) => {
           response.success(res, result);
         }
       }).catch(e => {
+        console.error(`Provider (${provider.title}) returns error: `, e);
         if (++providerNumber === activeProviderCount) {
           if (!hasResult) {
             response.exception(res, e);

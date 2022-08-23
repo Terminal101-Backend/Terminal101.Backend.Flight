@@ -12,7 +12,7 @@ const flightDetails = new Schema({
     required: true,
   },
   providerData: {
-    type: Object,
+    type: Schema.Types.Mixed,
     default: {},
   },
   owner: {
