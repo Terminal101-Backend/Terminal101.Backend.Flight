@@ -249,7 +249,7 @@ module.exports.bookFlight = async (req, res) => {
     let reserved = false;
     let pnr;
     let providerError;
-    
+
     await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
       .then(res => {
         reserved = true;
@@ -514,6 +514,9 @@ module.exports.getBookedFlights = async (req, res) => {
       userCode = decodedToken.user;
     }
     const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+    if (bookedFlights.length === 0) {
+      response.success(res, { ...result, items: bookedFlights })
+    }
     const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
 
     response.success(res, {
@@ -651,7 +654,7 @@ module.exports.getBookedFlightStatus = async (req, res) => {
 
     response.success(res, {
       code: bookedFlight.code,
-      status: bookedFlight.statuses.map(status => ({
+      status: bookedFlight.statuses?.map(status => ({
         status: EBookedFlightStatus.find(status.status) ?? status.status,
         time: status.time,
         changedBy: status.changedBy,
