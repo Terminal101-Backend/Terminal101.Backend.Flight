@@ -148,7 +148,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   return result;
 };
 
-module.exports.book = async (segments, price, travelers) => {
+module.exports.book = async (segments, price, travelers, testMode = false) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`
@@ -165,7 +165,7 @@ module.exports.book = async (segments, price, travelers) => {
   const travelersInfo = [];
   travelers.forEach(traveler => {
     travelersInfo.push(`
-      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.nationality}">
+      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.genderCode}" TravelerNationality="${traveler.nationality}">
         <PersonName>
           <NamePrefix>${traveler.namePrefix}</NamePrefix>
           <GivenName>${traveler.firstName}</GivenName>
@@ -178,46 +178,46 @@ module.exports.book = async (segments, price, travelers) => {
   });
 
   const query = `
-  <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-  OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
-  <POS>
-    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
-      <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
-    </Source>
-  </POS>
-			<AirItinerary>
-				<OriginDestinationOptions>
+    <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
+    OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+      <POS>
+        <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
+          <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
+        </Source>
+      </POS>
+      <AirItinerary>
+        <OriginDestinationOptions>
           ${originDestinations.join("\n")}
-				</OriginDestinationOptions>
-			</AirItinerary>
-			<PriceInfo>
-				<ItinTotalFare>
-					<BaseFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.base}"/>
-					<TotalFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
-				</ItinTotalFare>
-			</PriceInfo>
-			<TravelerInfo>
+        </OriginDestinationOptions>
+      </AirItinerary>
+      <PriceInfo>
+        <ItinTotalFare>
+          <BaseFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${price.base}"/>
+          <TotalFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${price.total}"/>
+        </ItinTotalFare>
+      </PriceInfo>
+      <TravelerInfo>
         ${travelersInfo.join("\n")}
-			</TravelerInfo>
-			<ContactPerson>
-				<PersonName>
-					<GivenName>AHMED</GivenName>
-					<Surname>MOHAMMED</Surname>
-				</PersonName>
-			  <Telephone PhoneNumber="(44)1233222344"/>
-			  <HomeTelephone PhoneNumber="(44)1233225744"/>
-			  <Email>tba@tba.com</Email>
-	    </ContactPerson>
-  	  <Fulfillment>
+      </TravelerInfo>
+      <ContactPerson>
+        <PersonName>
+          <GivenName>AHMED</GivenName>
+          <Surname>MOHAMMED</Surname>
+        </PersonName>
+        <Telephone PhoneNumber="(44)1233222344"/>
+        <HomeTelephone PhoneNumber="(44)1233225744"/>
+        <Email>tba@tba.com</Email>
+      </ContactPerson>
+      <Fulfillment>
         <PaymentDetails>
-            <PaymentDetail PaymentType="2">
-                <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
-                    <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
-                </DirectBill>
-                <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
-            </PaymentDetail>
+          <PaymentDetail PaymentType="2">
+            <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
+              <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
+            </DirectBill>
+            <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
+          </PaymentDetail>
         </PaymentDetails>
-    	</Fulfillment>
+      </Fulfillment>
     </OTA_AirBookRQ>
   `;
 
@@ -234,93 +234,6 @@ module.exports.book = async (segments, price, travelers) => {
     success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
     data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary
   };
-
-  return result;
-};
-
-module.exports.book = async (segments, price, travelers) => {
-  const originDestinations = [];
-  segments.forEach(segment => {
-    originDestinations.push(`
-      <OriginDestinationOption>
-        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${segment.date}">
-          <OriginLocation LocationCode="${segment.originCode}" />
-          <DestinationLocation LocationCode="${segment.destinationCode}" />
-          <OperatingAirline Code="${segment.airlineCode}"/>
-        </FlightSegment>
-      </OriginDestinationOption>
-      `);
-  });
-
-  const travelersInfo = [];
-  travelers.forEach(traveler => {
-    travelersInfo.push(`
-      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.nationality}">
-        <PersonName>
-          <NamePrefix>${traveler.namePrefix}</NamePrefix>
-          <GivenName>${traveler.firstName}</GivenName>
-          <Surname>${traveler.lastName}</Surname>
-        </PersonName>
-        <TravelerRefNumber RPH="1"/>
-        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${traveler.document.expireDate}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.nationality}"/>
-      </AirTraveler>
-    `);
-  });
-
-  const query = `
-  <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-  OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
-  <POS>
-    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
-      <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
-    </Source>
-  </POS>
-			<AirItinerary>
-				<OriginDestinationOptions>
-          ${originDestinations.join("\n")}
-				</OriginDestinationOptions>
-			</AirItinerary>
-			<PriceInfo>
-				<ItinTotalFare>
-					<BaseFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.base}"/>
-					<TotalFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
-				</ItinTotalFare>
-			</PriceInfo>
-			<TravelerInfo>
-        ${travelersInfo.join("\n")}
-			</TravelerInfo>
-			<ContactPerson>
-				<PersonName>
-					<GivenName>AHMED</GivenName>
-					<Surname>MOHAMMED</Surname>
-				</PersonName>
-			  <Telephone PhoneNumber="(44)1233222344"/>
-			  <HomeTelephone PhoneNumber="(44)1233225744"/>
-			  <Email>tba@tba.com</Email>
-	    </ContactPerson>
-  	  <Fulfillment>
-        <PaymentDetails>
-            <PaymentDetail PaymentType="2">
-                <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
-                    <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
-                </DirectBill>
-                <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
-            </PaymentDetail>
-        </PaymentDetails>
-    	</Fulfillment>
-    </OTA_AirBookRQ>
-  `;
-
-  const {
-    data: response
-  } = await axiosApiInstance.post("/availability/lowfaresearch", query);
-
-  const option = {
-    object: true
-  };
-  const responseJson = xmljsonParser.toJson(response, option);
-
-  const result = { success: !!responseJson?.OTA_AirLowFareSearchRS?.Success, data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary };
 
   return result;
 };

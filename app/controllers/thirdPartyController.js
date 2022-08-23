@@ -48,20 +48,10 @@ module.exports.book = async (req, res) => {
       return;
     }
 
-    const result = await avtra.lowFareSearch(
-      req.query.originLocationCode,
-      req.query.destinationLocationCode,
-      req.query.departureDate,
-      req.query.returnDate,
-      req.query.segments,
-      req.query.adults,
-      req.query.children,
-      req.query.infants,
-      req.query.travelClass,
-      req.query.includedAirlineCodes,
-      req.query.excludedAirlineCodes,
-      req.query.nonStop,
-      req.query.currencyCode,
+    const result = await avtra.book(
+      req.body.segments,
+      req.body.price,
+      req.body.travelers,
       testMode);
 
     response.success(res, result);

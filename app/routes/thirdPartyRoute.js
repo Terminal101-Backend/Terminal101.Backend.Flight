@@ -12,7 +12,7 @@ router
       next();
     },
     checkAccess.checkUserType(["THIRD_PARTY"]),
-    // checkAccess.checkUserAccess,
+    checkAccess.checkUserAccess,
     thirdPartyValidator.lowFareSearch.check(),
     thirdPartyController.lowFareSearch);
 
@@ -24,7 +24,7 @@ router
       next();
     },
     checkAccess.checkUserType(["THIRD_PARTY"]),
-    checkAccess.checkUserAccess,
+    // checkAccess.checkUserAccess,
     thirdPartyValidator.book.check(),
     thirdPartyController.book);
 
