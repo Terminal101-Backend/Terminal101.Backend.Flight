@@ -163,7 +163,7 @@ class BookedFlightRepository extends BaseRepository {
     });
 
     const result = await agrBookedFlight.exec();
-    return !!result && !!result[0] ? result[0] : {};
+    return !!result && !!result[0] ? result[0] : undefined;
   }
 
   /**
