@@ -1,7 +1,7 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 const xmljsonParser = require("xml2json");
-const { dateTimeHelper, flightHelper } = require("../helpers");
+const { dateTimeHelper, flightHelper, stringHelper } = require("../helpers");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -153,9 +153,9 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
   segments.forEach(segment => {
     originDestinations.push(`
       <OriginDestinationOption>
-        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${segment.date}">
-          <OriginLocation LocationCode="${segment.originCode}" />
-          <DestinationLocation LocationCode="${segment.destinationCode}" />
+        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${segment.date.toISOString().replace(/Z$/, "+00:00")}">
+          <DepartureAirport LocationCode="${segment.originCode}" />
+          <ArrivalAirport LocationCode="${segment.destinationCode}" />
           <OperatingAirline Code="${segment.airlineCode}"/>
         </FlightSegment>
       </OriginDestinationOption>
@@ -164,15 +164,28 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
 
   const travelersInfo = [];
   travelers.forEach(traveler => {
+    let namePrefix;
+    switch (traveler.genderCode) {
+      case "M":
+        namePrefix = "Mr";
+        break;
+
+      case "F":
+        namePrefix = "Mrs";
+        break;
+
+      default:
+        namePrefix = "Mx";
+    }
     travelersInfo.push(`
-      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.genderCode}" TravelerNationality="${traveler.nationality}">
+      <AirTraveler BirthDate="${dateTimeHelper.excludeDateFromIsoString(traveler.birthDate.toISOString())}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.genderCode}" TravelerNationality="${traveler.nationality}">
         <PersonName>
-          <NamePrefix>${traveler.namePrefix}</NamePrefix>
+          <NamePrefix>${namePrefix}</NamePrefix>
           <GivenName>${traveler.firstName}</GivenName>
           <Surname>${traveler.lastName}</Surname>
         </PersonName>
         <TravelerRefNumber RPH="1"/>
-        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${traveler.document.expireDate}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.nationality}"/>
+        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${dateTimeHelper.excludeDateFromIsoString(traveler.document.expireDate.toISOString())}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.nationality}"/>
       </AirTraveler>
     `);
   });
@@ -192,8 +205,8 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
       </AirItinerary>
       <PriceInfo>
         <ItinTotalFare>
-          <BaseFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${price.base}"/>
-          <TotalFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${price.total}"/>
+          <BaseFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
+          <TotalFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
         </ItinTotalFare>
       </PriceInfo>
       <TravelerInfo>
@@ -214,7 +227,7 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
             <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
               <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
             </DirectBill>
-            <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
+            <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
           </PaymentDetail>
         </PaymentDetails>
       </Fulfillment>
@@ -223,7 +236,7 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
 
   const {
     data: response
-  } = await axiosApiInstance.post("/availability/lowfaresearch", query, { testMode });
+  } = await axiosApiInstance.post("/booking/create", query, { testMode });
 
   const option = {
     object: true
@@ -231,8 +244,12 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
   const responseJson = xmljsonParser.toJson(response, option);
 
   const result = {
-    success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-    data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary
+    success: !!responseJson?.OTA_AirBookRS?.Success,
+    data: responseJson?.OTA_AirBookRS?.AirReservation,
+    error: {
+      code: responseJson?.OTA_AirBookRS?.Errors?.Error?.Code,
+      message: responseJson?.OTA_AirBookRS?.Errors?.Error?.ShortText,
+    }
   };
 
   return result;

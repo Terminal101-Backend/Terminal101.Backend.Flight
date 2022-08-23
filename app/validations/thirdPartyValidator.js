@@ -61,7 +61,7 @@ class Book extends BaseValidator {
         type: Joi.string().required().regex(/ADT|CHD|INF/),
         genderCode: Joi.string().required().regex(/M|F/),
         document: Joi.object().keys({
-          issuedAt: Joi.string().required().length(3),
+          issuedAt: Joi.string().required().length(2),
           expireDate: Joi.date().required(),
           code: Joi.string().required(),
         }),

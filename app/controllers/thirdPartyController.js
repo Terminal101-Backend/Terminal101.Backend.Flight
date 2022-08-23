@@ -31,7 +31,11 @@ module.exports.lowFareSearch = async (req, res) => {
       req.query.currencyCode,
       testMode);
 
-    response.success(res, result);
+    if (!!result.success) {
+      response.success(res, result.data);
+    } else {
+      throw "Provider error " + result.error.code + ": " + result.error.message;
+    }
   } catch (e) {
     response.exception(res, e);
   }
@@ -54,7 +58,11 @@ module.exports.book = async (req, res) => {
       req.body.travelers,
       testMode);
 
-    response.success(res, result);
+    if (!!result.success) {
+      response.success(res, result.data);
+    } else {
+      throw "Provider error " + result.error.code + ": " + result.error.message;
+    }
   } catch (e) {
     response.exception(res, e);
   }
