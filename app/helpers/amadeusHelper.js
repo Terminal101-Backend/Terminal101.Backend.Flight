@@ -554,7 +554,6 @@ module.exports.airReValidate = async flightInfo => {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
     let { result: airReValidate } = await amadeusSoap.airReValidate(flightInfoAmadeusObject);
     if (!airReValidate){ 
-      console.log('**', airReValidate)
       return {error: 'ReValidation failed'}}
     return makePriceObject(airReValidate.price, airReValidate.price.offerPrices);
 
