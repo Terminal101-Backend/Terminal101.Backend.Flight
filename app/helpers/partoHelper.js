@@ -313,3 +313,15 @@ module.exports.cancelBookFlight = async bookedFlight => {
 module.exports.issueBookedFlight = async bookedFlight => {
   return await parto.airBookIssuing(bookedFlight.providerPnr);
 }
+
+module.exports.airReValidate = async flightInfo => {
+  try {
+    const fareSourceCode = flightInfo.flights.providerData.fareSourceCode;
+    const airReValidate = await parto.airReValidate(fareSourceCode);
+    if (!airReValidate) return {error: 'ReValidation failed'}
+    return makePriceObject(airReValidate.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare, airReValidate.PricedItinerary.AirItineraryPricingInfo.PtcFareBreakdown);
+
+  } catch (e) {
+    return e
+  }
+}

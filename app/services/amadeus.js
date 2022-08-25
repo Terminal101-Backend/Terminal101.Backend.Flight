@@ -228,11 +228,25 @@ const deleteFlightOrder = async (orderId) => {
 const searchAirportAndCityWithAccessToken = async keyword => {
   const accessToken = await getAccessToken();
 
-  axiosApiInstance.headers = {'Authorization': 'Bearer '+ accessToken.access_token};
+  axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
   const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations", {
     params: {
       subType: "AIRPORT,CITY",
       keyword
+    },
+  });
+  return response;
+};
+
+const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations/airports", {
+    params: {
+      latitude,
+      longitude
+
     },
   });
   return response;
@@ -249,5 +263,6 @@ module.exports = {
   flightCreateOrder,
   getFlightOrder,
   deleteFlightOrder,
-  searchAirportAndCityWithAccessToken
+  searchAirportAndCityWithAccessToken,
+  searchAirportAndCityNearestWithAccessToken
 };
