@@ -485,8 +485,8 @@ module.exports.getBookedFlights = async (req, res) => {
     if (EUserType.check(["CLIENT"], decodedToken.type)) {
       userCode = decodedToken.user;
     }
-    const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
-    const { data: users } = await accountManagement.getUsersInfo([] ?? bookedFlights.map(flight => flight.bookedBy));
+    const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
 
     response.success(res, {
       ...result,

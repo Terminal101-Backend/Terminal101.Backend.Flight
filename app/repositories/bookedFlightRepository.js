@@ -2,7 +2,7 @@ const BaseRepository = require("../core/baseRepository");
 const { BookedFlight } = require("../models/documents");
 const { EBookedFlightStatus } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
-const { paginationHelper } = require("../helpers");
+const { paginationHelper, filterHelper } = require("../helpers");
 
 /**
  * @typedef {Object} PassengerInfo
@@ -71,7 +71,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} bookedBy 
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlights(bookedBy, page, pageSize) {
+  async getBookedFlights(bookedBy, page, pageSize, filters, sort) {
     const agrBookedFlight = BookedFlight.aggregate();
     if (!!bookedBy) {
       agrBookedFlight.append({
@@ -108,6 +108,12 @@ class BookedFlightRepository extends BaseRepository {
       }
     });
 
+    if (sort[0] === "-") {
+      sort = { [sort.substring(1)]: -1 };
+    } else {
+      sort = { sort: 1 };
+    }
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
     return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
 
     // return await agrBookedFlight.exec();

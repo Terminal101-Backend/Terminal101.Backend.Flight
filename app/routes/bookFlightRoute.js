@@ -23,7 +23,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT"]),
-    bookFlightValidator.getBookedFlights.check(true),
+    bookFlightValidator.getBookedFlights.check(true, true),
     bookFlightController.getBookedFlights);
 
 // NOTE: Get booked flight's statuses
