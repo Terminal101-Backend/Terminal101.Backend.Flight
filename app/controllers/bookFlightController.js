@@ -258,7 +258,7 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    if (amount >= 1) {
+    if (amount > 0) {
       switch (paymentMethod.type) {
         case "STRIPE":
           userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
@@ -276,20 +276,23 @@ module.exports.bookFlight = async (req, res) => {
 
         default:
       }
-
-      const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.transactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-
-      bookedFlight.statuses.push({
-        status: "PAYING",
-        description: 'Payment is in progress',
-        changedBy: "SERVICE",
-      });
-      // bookedFlight.transactionId = result.externalTransactionId;
-      await bookedFlight.save();
     } else {
       userWalletResult = {
         value: 0,
       }
+    }
+
+    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.transactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+
+    bookedFlight.statuses.push({
+      status: "PAYING",
+      description: 'Payment is in progress',
+      changedBy: "SERVICE",
+    });
+    // bookedFlight.transactionId = result.externalTransactionId;
+    await bookedFlight.save();
+
+    if (amount <=> 0) {
       await pay(bookedFlight);
     }
 
