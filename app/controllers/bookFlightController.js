@@ -251,95 +251,95 @@ module.exports.bookFlight = async (req, res) => {
     let providerError;
 
     const newPrice = await providerHelper.airReValidate(flightDetails);
-
-    let oldPrice = flightDetails.flights.price.total;
-
-    let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
-
     // TODO if reValidate Faild ???
     if (!!newPrice.error) {
-      response.exception(res, newPrice.error)
-    }
-    if (!!priceChange) {
-      await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
-      flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+      response.exception(res,
+        newPrice);
+    } else {
 
-      response.success(res, {
-        priceChange,
-        price: flightDetails.flights.price,
-      });
-    }
-    else {
-      await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
-        .then(res => {
-          reserved = true;
-          pnr = res.bookedId;
-          console.log("Flight booked by ", providerName, res);
-        })
-        .catch(e => {
-          console.error("Provider error: ", e);
-          providerError = `The booking failed with reason < ${e} >`;
-        });
+      let oldPrice = flightDetails.flights.price.total;
 
-      if (!!reserved) {
-        const userWallet = await wallet.getUserWallet(decodedToken.user);
-
-        if (!!req.body.useWallet) {
-          amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
-        } else {
-          amount = flightDetails.flights.price.total;
-          if (userWallet.credit < 0) {
-            amount += Math.abs(userWallet.credit);
-          }
-        }
-        const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, pnr, "", req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-
-        if (amount >= 1) {
-          switch (paymentMethod.type) {
-            case "STRIPE":
-              result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-              if (!result) {
-                throw "wallet_error";
-              }
-              break;
-
-            case "CRYPTOCURRENCY":
-              result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-              if (!result) {
-                throw "wallet_error";
-              }
-              break;
-
-            default:
-          }
-          bookedFlight.statuses.push({
-            status: "PAYING",
-            description: 'Payment is in progress',
-            changedBy: "SERVICE",
-          });
-          bookedFlight.transactionId = result.externalTransactionId;
-
-        } else {
-          result = {
-            value: 0,
-          }
-        }
-        await bookedFlight.save();
-
-        if (amount === 0) {
-          await pay(bookedFlight);
-        }
+      let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
+      if (!!priceChange) {
+        await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
+        flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
 
         response.success(res, {
           priceChange,
-          code: bookedFlight.code,
-          ...result
+          price: flightDetails.flights.price,
         });
-      } else {
-        response.exception(res, providerError);
+      }
+      else {
+        await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+          .then(res => {
+            reserved = true;
+            pnr = res.bookedId;
+            console.log("Flight booked by ", providerName, res);
+          })
+          .catch(e => {
+            console.error("Provider error: ", e);
+            providerError = `The booking failed with reason < ${e} >`;
+          });
+
+        if (!!reserved) {
+          const userWallet = await wallet.getUserWallet(decodedToken.user);
+
+          if (!!req.body.useWallet) {
+            amount = Math.max(0, flightDetails.flights.price.total - userWallet.credit);
+          } else {
+            amount = flightDetails.flights.price.total;
+            if (userWallet.credit < 0) {
+              amount += Math.abs(userWallet.credit);
+            }
+          }
+          const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, pnr, "", req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+
+          if (amount >= 1) {
+            switch (paymentMethod.type) {
+              case "STRIPE":
+                result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+                if (!result) {
+                  throw "wallet_error";
+                }
+                break;
+
+              case "CRYPTOCURRENCY":
+                result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+                if (!result) {
+                  throw "wallet_error";
+                }
+                break;
+
+              default:
+            }
+            bookedFlight.statuses.push({
+              status: "PAYING",
+              description: 'Payment is in progress',
+              changedBy: "SERVICE",
+            });
+            bookedFlight.transactionId = result.externalTransactionId;
+
+          } else {
+            result = {
+              value: 0,
+            }
+          }
+          await bookedFlight.save();
+
+          if (amount === 0) {
+            await pay(bookedFlight);
+          }
+
+          response.success(res, {
+            priceChange,
+            code: bookedFlight.code,
+            ...result
+          });
+        } else {
+          response.exception(res, providerError);
+        }
       }
     }
-
   } catch (e) {
     response.exception(res, e);
   }

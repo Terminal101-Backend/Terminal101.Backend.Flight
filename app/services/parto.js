@@ -332,18 +332,22 @@ const airBookIssuing = async bookId => {
  * @param {String} fareSourceCode
  * @returns 
  */
- const airReValidate = async fareSourceCode => {
+const airReValidate = async fareSourceCode => {
   const params = {
     FareSourceCode: fareSourceCode,
     SessionId: sessionId,
   };
 
-  const {
-    data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRevalidate", params, {
-  });
+  try {
+    const {
+      data: response
+    } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRevalidate", params, {
+    });
 
-  return response.data;
+    return response.data;
+  } catch (e) { 
+    console.log('error soap => ', airReValidate) ;
+    return e}
 };
 
 module.exports = {
