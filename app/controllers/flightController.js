@@ -17,7 +17,9 @@ module.exports.searchOriginDestination = async (req, res) => {
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
         console.log({ ip, ipInfo });
@@ -474,131 +476,154 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+    let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
     if (!flightInfo) {
       response.error(res, "flight_not_found", 404);
       return;
     }
 
-    response.success(res, {
-      code: req.params.searchId,
-      origin: {
-        code: flightInfo.origin.code,
-        name: flightInfo.origin.name,
-        description: flightInfo.origin.description,
-      },
-      destination: {
-        code: flightInfo.destination.code,
-        name: flightInfo.destination.name,
-        description: flightInfo.destination.description,
-      },
-      time: flightInfo.time,
-      flight: {
-        code: flightInfo.flights.code,
-        availableSeats: flightInfo.flights.availableSeats,
-        currencyCode: flightInfo.flights.currencyCode,
-        // price: flightInfo.flights.price,
-        price: {
-          total: flightInfo.flights.price.total,
-          grandTotal: flightInfo.flights.price.grandTotal,
-          base: flightInfo.flights.price.base,
-          travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
-            type: travelerPrice.travelerType,
-            total: travelerPrice.total,
-            base: travelerPrice.base,
-            count: travelerPrice.count,
-            fees: travelerPrice.fees.map(fee => ({
+    const providerName = flightInfo.flights.provider.toLowerCase();
+    const providerHelper = eval(providerName + "Helper");
+    const newPrice = await providerHelper.airReValidate(flightInfo);
+    
+    // if(!newPrice){
+    //   console.log('err :', newPrice)
+    //   response.exception(res, 'This Flight Not Available, Please try booking another flight.')
+    // }
+
+    if (!newPrice.error) {
+      let oldPrice = flightInfo.flights.price.total;
+
+      let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
+      if (!!priceChange) {
+        await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
+        flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+      }
+
+      response.success(res, {
+        code: req.params.searchId,
+        origin: {
+          code: flightInfo.origin.code,
+          name: flightInfo.origin.name,
+          description: flightInfo.origin.description,
+        },
+        destination: {
+          code: flightInfo.destination.code,
+          name: flightInfo.destination.name,
+          description: flightInfo.destination.description,
+        },
+        time: flightInfo.time,
+        flight: {
+          code: flightInfo.flights.code,
+          availableSeats: flightInfo.flights.availableSeats,
+          currencyCode: flightInfo.flights.currencyCode,
+          // price: flightInfo.flights.price,
+          price: {
+            total: flightInfo.flights.price.total,
+            grandTotal: flightInfo.flights.price.grandTotal,
+            base: flightInfo.flights.price.base,
+            travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
+              type: travelerPrice.travelerType,
+              total: travelerPrice.total,
+              base: travelerPrice.base,
+              count: travelerPrice.count,
+              fees: travelerPrice.fees.map(fee => ({
+                amount: fee.amount,
+                type: EFeeType.find(fee.type),
+              })),
+              taxes: travelerPrice.taxes.map(tax => ({
+                amount: tax.amount,
+                code: tax.code,
+              })),
+            })),
+            fees: flightInfo.flights.price.fees.map(fee => ({
               amount: fee.amount,
               type: EFeeType.find(fee.type),
             })),
-            taxes: travelerPrice.taxes.map(tax => ({
+            taxes: flightInfo.flights.price.taxes.map(tax => ({
               amount: tax.amount,
               code: tax.code,
             })),
-          })),
-          fees: flightInfo.flights.price.fees.map(fee => ({
-            amount: fee.amount,
-            type: EFeeType.find(fee.type),
-          })),
-          taxes: flightInfo.flights.price.taxes.map(tax => ({
-            amount: tax.amount,
-            code: tax.code,
-          })),
-        },
-        itineraries: flightInfo.flights.itineraries.map(itinerary => ({
-          duration: itinerary.duration,
-          segments: itinerary.segments.map(segment => ({
-            duration: segment.duration,
-            flightNumber: segment.flightNumber,
-            aircraft: segment.aircraft,
-            airline: {
-              code: segment.airline.code,
-              name: segment.airline.name,
-              description: segment.airline.description,
-            },
-            departure: {
-              airport: {
-                code: segment.departure.airport.code,
-                name: segment.departure.airport.name,
-                description: segment.departure.airport.description,
+          },
+          itineraries: flightInfo.flights.itineraries.map(itinerary => ({
+            duration: itinerary.duration,
+            segments: itinerary.segments.map(segment => ({
+              duration: segment.duration,
+              flightNumber: segment.flightNumber,
+              aircraft: segment.aircraft,
+              airline: {
+                code: segment.airline.code,
+                name: segment.airline.name,
+                description: segment.airline.description,
               },
-              city: {
-                code: segment.departure.city.code,
-                name: segment.departure.city.name,
-                description: segment.departure.city.description,
+              departure: {
+                airport: {
+                  code: segment.departure.airport.code,
+                  name: segment.departure.airport.name,
+                  description: segment.departure.airport.description,
+                },
+                city: {
+                  code: segment.departure.city.code,
+                  name: segment.departure.city.name,
+                  description: segment.departure.city.description,
+                },
+                country: {
+                  code: segment.departure.country.code,
+                  name: segment.departure.country.name,
+                  description: segment.departure.country.description,
+                },
+                terminal: segment.departure.terminal,
+                at: segment.departure.at,
               },
-              country: {
-                code: segment.departure.country.code,
-                name: segment.departure.country.name,
-                description: segment.departure.country.description,
+              arrival: {
+                airport: {
+                  code: segment.arrival.airport.code,
+                  name: segment.arrival.airport.name,
+                  description: segment.arrival.airport.description,
+                },
+                city: {
+                  code: segment.arrival.city.code,
+                  name: segment.arrival.city.name,
+                  description: segment.arrival.country.description,
+                },
+                country: {
+                  code: segment.arrival.country.code,
+                  name: segment.arrival.country.name,
+                  description: segment.arrival.city.description,
+                },
+                terminal: segment.arrival.terminal,
+                at: segment.arrival.at,
               },
-              terminal: segment.departure.terminal,
-              at: segment.departure.at,
-            },
-            arrival: {
-              airport: {
-                code: segment.arrival.airport.code,
-                name: segment.arrival.airport.name,
-                description: segment.arrival.airport.description,
-              },
-              city: {
-                code: segment.arrival.city.code,
-                name: segment.arrival.city.name,
-                description: segment.arrival.country.description,
-              },
-              country: {
-                code: segment.arrival.country.code,
-                name: segment.arrival.country.name,
-                description: segment.arrival.city.description,
-              },
-              terminal: segment.arrival.terminal,
-              at: segment.arrival.at,
-            },
-            stops: segment.stops.map(stop => ({
-              duration: stop.duration,
-              arrivalAt: stop.arrivalAt,
-              departureAt: stop.departureAt,
-              airport: {
-                code: stop.airport.code,
-                name: stop.airport.name,
-                description: stop.airport.description,
-              },
-              city: {
-                code: stop.city.code,
-                name: stop.city.name,
-                description: stop.city.description,
-              },
-              country: {
-                code: stop.country.code,
-                name: stop.country.name,
-                description: stop.country.description,
-              },
+              stops: segment.stops.map(stop => ({
+                duration: stop.duration,
+                arrivalAt: stop.arrivalAt,
+                departureAt: stop.departureAt,
+                airport: {
+                  code: stop.airport.code,
+                  name: stop.airport.name,
+                  description: stop.airport.description,
+                },
+                city: {
+                  code: stop.city.code,
+                  name: stop.city.name,
+                  description: stop.city.description,
+                },
+                country: {
+                  code: stop.country.code,
+                  name: stop.country.name,
+                  description: stop.country.description,
+                },
+              })),
             })),
           })),
-        })),
-      }
-    });
+        }
+      });
+    } 
+    // TODO if reValidate Faild ???
+    else {
+      response.exception(res, newPrice.error);
+    }
   } catch (e) {
     response.exception(res, e);
   }
@@ -687,21 +712,28 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
         ipInfo = await getIpInfo(ip);
-        // ipInfo = await getIpInfo("5.239.149.82");
+
+        // ipInfo = await getIpInfo("161.185.160.93");
         console.log({ ip, ipInfo });
-        if (ipInfo.status === "success") {
-          keyword = ipInfo.city;
-        }
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.countryCode;
+        // }
+        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const { data: resultTransformed } = transformDataAmadeus(result);
+        response.success(res, resultTransformed);
       } else {
         response.error(res, "keyword_required", 400);
         return;
       }
+    } else {
+      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const { data: resultTransformed } = transformDataAmadeus(result);
+      response.success(res, resultTransformed);
     }
-    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const { data: resultTransformed } = transformDataAmadeus(result);
-    response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
   }
