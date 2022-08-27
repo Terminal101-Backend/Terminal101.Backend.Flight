@@ -246,7 +246,27 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers })
+    const newPrice = await providerHelper.airReValidate(flightDetails);
+    if (!!newPrice.error) {
+      response.exception(res, newPrice);
+      return;
+    }
+
+    let oldPrice = flightDetails.flights.price.total;
+
+    let priceChanged = (oldPrice - newPrice.total !== 0) ? true : false;
+    if (!!priceChanged) {
+      await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
+      flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+
+      response.success(res, {
+        priceChanged,
+        price: newPrice,
+      });
+      return;
+    }
+
+    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
     const userWallet = await wallet.getUserWallet(decodedToken.user);
 
     if (!!req.body.useWallet) {
