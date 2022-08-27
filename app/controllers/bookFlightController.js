@@ -292,7 +292,7 @@ module.exports.bookFlight = async (req, res) => {
     // bookedFlight.transactionId = result.externalTransactionId;
     await bookedFlight.save();
 
-    if (amount <=> 0) {
+    if (amount <= 0) {
       await pay(bookedFlight);
     }
 
