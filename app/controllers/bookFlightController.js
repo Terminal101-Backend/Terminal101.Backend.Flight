@@ -180,7 +180,7 @@ module.exports.bookFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+    let flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
     if (!flightDetails) {
       response.error(res, "flight_not_found", 404);
       return;
@@ -268,8 +268,8 @@ module.exports.bookFlight = async (req, res) => {
           break;
 
         case "CRYPTOCURRENCY":
-          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-          if (!userWalletResult) {
+          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          if (!result) {
             throw "wallet_error";
           }
           break;

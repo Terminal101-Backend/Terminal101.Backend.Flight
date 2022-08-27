@@ -394,7 +394,7 @@ module.exports.regenerateAmadeusFlightOfferObject = async (searchCode, flightCod
     return result.replace(/\.\d+Z$/, "");
   }
 
-  const flightInfo = await this.getFlight(searchCode, flightCode);
+  const flightInfo = await flightInfoRepository.getFlight(searchCode, flightCode);
   let travelClass;
   switch (flightInfo.flight.travelClass) {
     case "ECONOMY":
@@ -500,7 +500,7 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
         baseAmount: 0,
         taxesAmount: 0,
         passengerType: (price.travelerType === "ADULT" ? "ADT" : (price.travelerType === "CHILD" ? "CHD" : "INF")),
-        numberOfUnits: 1,
+        numberOfUnits: price.count,
       }))
     },
     owner: flightInfo.flights.owner.code,
@@ -546,4 +546,17 @@ module.exports.cancelBookFlight = async bookedFlight => {
 }
 
 module.exports.issueBookedFlight = async bookedFlight => {
+}
+
+module.exports.airReValidate = async flightInfo => {
+  try {
+    const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
+    let { result: airReValidate } = await amadeusSoap.airReValidate(flightInfoAmadeusObject);
+    if (!airReValidate){ 
+      return {error: 'ReValidation failed'}}
+    return makePriceObject(airReValidate.price, airReValidate.price.offerPrices);
+
+  } catch (e) {
+    return e
+  }
 }
