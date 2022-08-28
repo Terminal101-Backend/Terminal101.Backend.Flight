@@ -288,8 +288,8 @@ module.exports.bookFlight = async (req, res) => {
           break;
 
         case "CRYPTOCURRENCY":
-          result = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
-          if (!result) {
+          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          if (!userWalletResult) {
             throw "wallet_error";
           }
           break;
@@ -309,7 +309,7 @@ module.exports.bookFlight = async (req, res) => {
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
-    // bookedFlight.transactionId = result.externalTransactionId;
+    // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
     if (amount <= 0) {
@@ -509,7 +509,7 @@ module.exports.getBookedFlights = async (req, res) => {
       userCode = decodedToken.user;
     }
     const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
-    const { data: users } = await accountManagement.getUsersInfo([] ?? bookedFlights.map(flight => flight.bookedBy));
+    const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
 
     response.success(res, {
       ...result,
