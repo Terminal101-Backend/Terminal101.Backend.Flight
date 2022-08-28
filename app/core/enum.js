@@ -38,6 +38,24 @@ class Enum {
     return result;
   }
 
+  validator({ required = false, default: def } = {}) {
+    let result = Joi.string().regex(new RegExp(Object.keys(this.#list).join("|")));
+
+    if (this.#type === EEnumType.NUMERIC) {
+      result = Joi.array().items(result);
+    }
+
+    if (!!required) {
+      result = result.required();
+    }
+
+    if (!!def) {
+      result = result.default((this.#type === EEnumType.SYMBOLIC) ? def : [def]);
+    }
+
+    return result;
+  }
+
   get list() {
     switch (this.#type) {
       case EEnumType.SYMBOLIC:

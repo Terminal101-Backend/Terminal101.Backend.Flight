@@ -11,3 +11,4 @@ module.exports.flightHelper = require("./flightHelper");
 module.exports.socketHelper = require("./socketHelper");
 module.exports.emailHelper = require("./emailHelper");
 module.exports.stringHelper = require("./stringHelper");
+module.exports.filterHelper = require("./filterHelper");

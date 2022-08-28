@@ -9,6 +9,7 @@ const fs = require("fs");
 const { l10n } = require("./middlewares");
 // const pdf = require("express-pdf");
 const { twilio } = require("./services");
+const socket = require("./helpers/socketHelper");
 
 require("dotenv").config();
 global.config = require("./config");
@@ -16,6 +17,7 @@ global.config = require("./config");
 twilio.initialize();
 
 const apiRouter = require("./routes");
+const socketMessages = require("./messages");
 const BaseValidator = require("./core/baseValidator");
 
 // NOTE: Express setup
@@ -44,6 +46,7 @@ app.use(l10n.translate);
 
 // NOTE: Routes
 apiRouter(app);
+socket.use(socketMessages);
 
 app.use(BaseValidator.errors);
 

@@ -29,10 +29,15 @@ class BaseValidator {
     this.#cookies = validation;
   }
 
-  check(pagination = false) {
+  check(pagination = false, filter) {
     if (!!pagination) {
       this.#header.page = Joi.number().default(0);
       this.#header.pageSize = Joi.number().default(config.application.pagination.pageSize);
+    }
+
+    if (!!filter || (!!pagination && (filter === undefined))) {
+      this.#query.sort = Joi.string().default("");
+      this.#query.filter = Joi.object().default({});
     }
 
     return celebrate({
