@@ -55,6 +55,16 @@ const pay = async (bookedFlight) => {
         description: "Wait for booking by backoffice.",
         changedBy: bookedFlight.bookedBy,
       });
+
+      (async () => {
+        // TODO: Send notification to user
+        const userToken = token.newToken({ user: bookedFlight.bookedBy });
+        await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+        // TODO: Send SMS
+        // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
+        await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+        // TODO: If user wallet's credit is less than flight price do... what???!!!
+      })();
     } else {
       issued = false;
       console.log('Your credit is not enough');
@@ -67,15 +77,6 @@ const pay = async (bookedFlight) => {
     }
 
     await bookedFlight.save();
-
-    (async () => {
-      // TODO: Send notification to user
-      const userToken = token.newToken({ user: bookedFlight.bookedBy });
-      await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
-      // TODO: Send SMS
-      // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
-      await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
-    })();
   } catch (e) {
     console.error("Pay error: ", e);
     throw e;
