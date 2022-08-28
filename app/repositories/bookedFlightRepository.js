@@ -108,11 +108,6 @@ class BookedFlightRepository extends BaseRepository {
       }
     });
 
-    if (sort[0] === "-") {
-      sort = { [sort.substring(1)]: -1 };
-    } else {
-      sort = { sort: 1 };
-    }
     filterHelper.filterAndSort(agrBookedFlight, filters, sort);
     return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
 

@@ -6,14 +6,24 @@
  * @returns {Aggregate}
  */
 module.exports.filterAndSort = async (aggregate, filters, sort) => {
+  if (!!sort) {
+    if (sort[0] === "-") {
+      sort = { [sort.substring(1)]: -1 };
+    } else {
+      sort = { sort: 1 };
+    }
+  }
+
   aggregate.append({
     $match: {
       ...filters
     }
   });
-  aggregate.append({
-    $sort: sort
-  });
+  if (!!sort) {
+    aggregate.append({
+      $sort: sort
+    });
+  }
 
   return aggregate;
 };

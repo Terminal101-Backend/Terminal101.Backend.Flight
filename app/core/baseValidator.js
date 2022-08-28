@@ -49,7 +49,7 @@ class BaseValidator {
     });
   }
 
-  static get errors() {
+  static errors() {
     return errors();
   }
 }
