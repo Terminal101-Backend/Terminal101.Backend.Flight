@@ -136,7 +136,7 @@ module.exports.initialize = server => {
       try {
         const req = {
           ...msg.req,
-          header: key => Object.entries(msg?.req?.headers ?? {}).find(([k, v]) => [k.toLowerCase() === key.toLowerCase()])?.[1],
+          header: key => Object.entries(msg?.req?.headers ?? {}).find(([k, v]) => k.toLowerCase() === key.toLowerCase())?.[1],
         }
 
         if (EUserType.check(["SERVICE"], decodedToken.type)) {
