@@ -66,7 +66,6 @@ const pay = async (bookedFlight) => {
         // TODO: If user wallet's credit is less than flight price do... what???!!!
       })();
     } else {
-      issued = false;
       console.log('Your credit is not enough');
       bookedFlight.statuses.push({
         status: "PAYING",
