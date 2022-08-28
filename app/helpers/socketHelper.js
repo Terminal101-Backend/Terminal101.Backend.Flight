@@ -4,10 +4,6 @@ const responseHelper = require("./responseHelper");
 const { common } = require("../services");
 
 let io;
-const service = {
-  token: undefined,
-  id: undefined,
-};
 
 class Response {
   #statusCode = 200;
@@ -111,7 +107,7 @@ Object.defineProperty(module.exports, "router", {
 module.exports.use = router => {
   if (router instanceof Router) {
     messages = router;
-    getAllRoutes(router.middlewares).forEach(route => {
+    getAllRoutes(messages.middlewares).forEach(route => {
       common.addSocketEvent(route);
     });
   } else {
@@ -123,7 +119,10 @@ module.exports.initialize = server => {
   io = require('socket.io')(server);
   io.on('connection', socket => {
     console.log(`socket.io connected: ${socket.id}`);
-    service.id = socket.id;
+
+    getAllRoutes(messages.middlewares).forEach(route => {
+      common.addSocketEvent(route);
+    });
 
     socket.on("request", msg => {
       const decodedToken = decodeToken(msg.token);
@@ -132,7 +131,7 @@ module.exports.initialize = server => {
         event: msg.event,
         clientId: msg.clientId,
       };
-      const res = new Response(service.id, msg.clientId, msg.event);
+      const res = new Response(socket.id, msg.clientId, msg.event);
 
       try {
         const req = {
