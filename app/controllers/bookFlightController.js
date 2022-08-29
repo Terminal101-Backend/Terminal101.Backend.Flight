@@ -344,7 +344,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
     }
 
     const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
-    if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
+    if (EBookedFlightStatus.check(["PAYING", "RESERVED", "PAID", "INPROGRESS", "BOOKED"], lastStatus)) {
       // const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND";
       const status = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") ? "REFUND" : "CANCEL";
 
@@ -368,6 +368,8 @@ module.exports.cancelBookedFlight = async (req, res) => {
             changedBy: "SERVICE",
           });
         }
+
+        bookedFlight.statuses.push(lastStatus);
       }
 
       await bookedFlight.save();
