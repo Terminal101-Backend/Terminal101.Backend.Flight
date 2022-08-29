@@ -12,6 +12,11 @@ const parto = require("../services/parto");
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {
   try {
+    const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
+    if (!!paid) {
+      throw "duplicate_paid";
+    }
+
     const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
     if (!bookedFlight) {
       throw "flight_not_found";
@@ -99,11 +104,15 @@ module.exports.payForFlight = async (req, res) => {
 module.exports.generateNewPaymentInfo = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-
     const bookedFlight = await bookedFlightRepository.findOne({ bookedBy: decodedToken.user, code: req.params.bookedFlightCode });
     const flightDetails = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     const now = new Date();
+
+    const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
+    if (!!paid) {
+      throw "duplicate_paid";
+    }
 
     if (now - flightDetails.searchedTime > process.env.SEARCH_TIMEOUT) {
       throw "search_expired";
