@@ -343,8 +343,8 @@ module.exports.cancelBookedFlight = async (req, res) => {
       throw "flight_not_found";
     }
 
-    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
-    if (EBookedFlightStatus.check(["PAYING", "RESERVED", "PAID", "INPROGRESS", "BOOKED"], lastStatus)) {
+    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1];
+    if (EBookedFlightStatus.check(["REFUND", "PAYING", "RESERVED", "PAID", "INPROGRESS", "BOOKED"], lastStatus.status)) {
       // const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND";
       const status = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") ? "REFUND" : "CANCEL";
 
@@ -369,7 +369,11 @@ module.exports.cancelBookedFlight = async (req, res) => {
           });
         }
 
-        bookedFlight.statuses.push(lastStatus);
+        bookedFlight.statuses.push({
+          status: lastStatus.status,
+          description: lastStatus.description,
+          changedBy: "SERVICE",
+        });
       }
 
       await bookedFlight.save();
