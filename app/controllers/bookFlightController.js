@@ -60,6 +60,7 @@ const pay = async (bookedFlight) => {
         description: "Wait for booking by backoffice.",
         changedBy: bookedFlight.bookedBy,
       });
+      await bookedFlight.save();
 
       (async () => {
         // TODO: Send notification to user
@@ -78,9 +79,9 @@ const pay = async (bookedFlight) => {
         changedBy: "SERVICE",
       });
       //TODO: send email or SMS to user message -> (Your credit is not enough, please resharge your wallet and book again)
+      await bookedFlight.save();
     }
 
-    await bookedFlight.save();
   } catch (e) {
     console.error("Pay error: ", e);
     throw e;
