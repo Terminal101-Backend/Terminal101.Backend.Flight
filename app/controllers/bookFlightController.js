@@ -14,7 +14,7 @@ const pay = async (bookedFlight) => {
   try {
     const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
     if (!!paid) {
-      throw "duplicate_paid";
+      throw "paid";
     }
 
     const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
@@ -60,6 +60,7 @@ const pay = async (bookedFlight) => {
         description: "Wait for booking by backoffice.",
         changedBy: bookedFlight.bookedBy,
       });
+      await bookedFlight.save();
 
       (async () => {
         // TODO: Send notification to user
@@ -78,9 +79,9 @@ const pay = async (bookedFlight) => {
         changedBy: "SERVICE",
       });
       //TODO: send email or SMS to user message -> (Your credit is not enough, please resharge your wallet and book again)
+      await bookedFlight.save();
     }
 
-    await bookedFlight.save();
   } catch (e) {
     console.error("Pay error: ", e);
     throw e;
@@ -111,7 +112,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 
     const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
     if (!!paid) {
-      throw "duplicate_paid";
+      throw "paid";
     }
 
     if (now - flightDetails.searchedTime > process.env.SEARCH_TIMEOUT) {
@@ -510,6 +511,9 @@ module.exports.getBookedFlights = async (req, res) => {
 
         return {
           bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
+          provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
+          pnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
+          email: user.email,
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,
           flightDetailsCode: bookedFlight.flightDetailsCode,
@@ -583,6 +587,10 @@ module.exports.getBookedFlight = async (req, res) => {
 
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
+      bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
+      provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
+      pnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
+      email: user.email,
       code: bookedFlight.code,
       searchedFlightCode: bookedFlight.searchedFlightCode,
       flightDetailsCode: bookedFlight.flightDetailsCode,
