@@ -345,8 +345,8 @@ module.exports.cancelBookedFlight = async (req, res) => {
 
     const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
     if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
-      // bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
-      const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND"
+      // const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND";
+      const status = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") ? "REFUND" : "CANCEL";
 
       bookedFlight.statuses.push({
         status,
@@ -361,11 +361,13 @@ module.exports.cancelBookedFlight = async (req, res) => {
       try {
         await providerHelper.cancelBookFlight(bookedFlight);
       } catch (e) {
-        bookedFlight.statuses.push({
-          status: "REFUND_REJECTED",
-          description: e?.message ?? e,
-          changedBy: "SERVICE",
-        });
+        if (status === "REFUND") {
+          bookedFlight.statuses.push({
+            status: "REFUND_REJECTED",
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
       }
 
       await bookedFlight.save();
