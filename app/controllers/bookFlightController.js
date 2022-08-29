@@ -14,7 +14,7 @@ const pay = async (bookedFlight) => {
   try {
     const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
     if (!!paid) {
-      throw "duplicate_paid";
+      throw "paid";
     }
 
     const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
@@ -112,7 +112,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 
     const paid = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID");
     if (!!paid) {
-      throw "duplicate_paid";
+      throw "paid";
     }
 
     if (now - flightDetails.searchedTime > process.env.SEARCH_TIMEOUT) {
