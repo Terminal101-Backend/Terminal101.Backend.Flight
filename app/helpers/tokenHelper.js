@@ -10,6 +10,6 @@ exports.newToken = json => {
 }
 
 exports.decodeToken = token => {
-  token = token.replace(/^bearer\s*/i, "");
+  token = (token ?? "").replace(/^bearer\s*/i, "");
   return !!token ? jwt.verify(token, process.env.JWT_SECRET) : undefined;
 }
