@@ -501,9 +501,14 @@ module.exports.getBookedFlights = async (req, res) => {
     if (EUserType.check(["CLIENT"], decodedToken.type)) {
       userCode = decodedToken.user;
     }
+    console.time("Get booked flights: Get booked flight");
     const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+    console.timeEnd("Get booked flights");
+    console.time("Get booked flights: Get users");
     const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
+    console.timeEnd("Get booked flights: Get users");
 
+    console.time("Get booked flights: Prepaire result");
     response.success(res, {
       ...result,
       items: bookedFlights.map(bookedFlight => {
@@ -538,6 +543,7 @@ module.exports.getBookedFlights = async (req, res) => {
         };
       })
     });
+    console.timeEnd("Get booked flights: Prepaire result");
   } catch (e) {
     response.exception(res, e);
   }
