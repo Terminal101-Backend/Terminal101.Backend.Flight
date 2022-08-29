@@ -33,7 +33,14 @@ exports.exception = (res, error) => {
         data = error.data
         message = error.message
     }
-
+    if (message === 'ReValidation failed') {
+        console.error(`Code: 404, Message: ${message}`);
+        return res.status(404).send({
+            status: false,
+            message: 'flight_not_available',
+            data,
+        });
+    }
     console.error(`Code: 500, Message: ${message}`);
     return res.status(500).send({
         status: false,
