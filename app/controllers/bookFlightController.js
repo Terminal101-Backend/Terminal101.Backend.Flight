@@ -343,10 +343,10 @@ module.exports.cancelBookedFlight = async (req, res) => {
       throw "flight_not_found";
     }
 
-    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
-    if (EBookedFlightStatus.check(["PAYING", "INPROGRESS", "BOOKED"], lastStatus)) {
-      // bookedFlight.status = EBookedFlightStatus.check(bookedFlight.status, "PAYING") ? "CANCEL" : "REFUND";
-      const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND"
+    const lastStatus = bookedFlight.statuses[bookedFlight.statuses.length - 1];
+    if (EBookedFlightStatus.check(["REFUND", "PAYING", "RESERVED", "PAID", "INPROGRESS", "BOOKED"], lastStatus.status)) {
+      // const status = EBookedFlightStatus.check(lastStatus, "PAYING") ? "CANCEL" : "REFUND";
+      const status = await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") ? "REFUND" : "CANCEL";
 
       bookedFlight.statuses.push({
         status,
@@ -361,9 +361,17 @@ module.exports.cancelBookedFlight = async (req, res) => {
       try {
         await providerHelper.cancelBookFlight(bookedFlight);
       } catch (e) {
+        if (status === "REFUND") {
+          bookedFlight.statuses.push({
+            status: "REFUND_REJECTED",
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
+
         bookedFlight.statuses.push({
-          status: "REFUND_REJECTED",
-          description: e?.message ?? e,
+          status: lastStatus.status,
+          description: lastStatus.description,
           changedBy: "SERVICE",
         });
       }
@@ -501,9 +509,14 @@ module.exports.getBookedFlights = async (req, res) => {
     if (EUserType.check(["CLIENT"], decodedToken.type)) {
       userCode = decodedToken.user;
     }
+    console.time("Get booked flights: Get booked flight");
     const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+    console.timeEnd("Get booked flights");
+    console.time("Get booked flights: Get users");
     const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
+    console.timeEnd("Get booked flights: Get users");
 
+    console.time("Get booked flights: Prepaire result");
     response.success(res, {
       ...result,
       items: bookedFlights.map(bookedFlight => {
@@ -538,6 +551,7 @@ module.exports.getBookedFlights = async (req, res) => {
         };
       })
     });
+    console.timeEnd("Get booked flights: Prepaire result");
   } catch (e) {
     response.exception(res, e);
   }
