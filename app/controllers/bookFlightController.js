@@ -50,13 +50,13 @@ const pay = async (bookedFlight) => {
     if (userWallet.credit >= flightInfo.flights.price.total) {
       await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
       bookedFlight.statuses.push({
-        status: "PAID",
+        status: EBookedFlightStatus.get("PAID"),
         description: 'Payment is done.',
         changedBy: "SERVICE",
       });
 
       bookedFlight.statuses.push({
-        status: "INPROGRESS",
+        status: EBookedFlightStatus.get("INPROGRESS"),
         description: "Wait for booking by backoffice.",
         changedBy: bookedFlight.bookedBy,
       });
@@ -74,7 +74,7 @@ const pay = async (bookedFlight) => {
     } else {
       console.log('Your credit is not enough');
       bookedFlight.statuses.push({
-        status: "PAYING",
+        status: EBookedFlightStatus.get("PAYING"),
         description: "Client credit is not enough",
         changedBy: "SERVICE",
       });
@@ -298,7 +298,7 @@ module.exports.bookFlight = async (req, res) => {
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
 
     bookedFlight.statuses.push({
-      status: "PAYING",
+      status: EBookedFlightStatus.get("PAYING"),
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
@@ -360,10 +360,15 @@ module.exports.cancelBookedFlight = async (req, res) => {
       providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
       try {
         await providerHelper.cancelBookFlight(bookedFlight);
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("REJECTED"),
+          description: req.body.description,
+          changedBy: decodedToken.user,
+        });
       } catch (e) {
         if (status === "REFUND") {
           bookedFlight.statuses.push({
-            status: "REFUND_REJECTED",
+            status: EBookedFlightStatus.get("REFUND_REJECTED"),
             description: e?.message ?? e,
             changedBy: "SERVICE",
           });
@@ -450,23 +455,57 @@ module.exports.editUserBookedFlight = async (req, res) => {
 
     providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
     switch (status) {
-      case "BOOKED":
+      case "BOOK":
         try {
           await providerHelper.issueBookedFlight(bookedFlight);
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('BOOKED'),
+            description: 'The Flight Booked by Provider.',
+            changedBy: 'SERVER',
+          });
         } catch (e) {
           bookedFlight.statuses.push({
-            status: "REJECTED",
+            status: EBookedFlightStatus.get("ERROR"),
             description: e?.message ?? e,
             changedBy: "SERVICE",
           });
         }
         break;
 
-      case "CANCEL":
-      case "REJECTED":
-        await providerHelper.cancelBookFlight(bookedFlight);
+      case "CANCEL" | "REJECT":
+        try {
+          await providerHelper.cancelBookFlight(bookedFlight);
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('REJECTED'),
+            description: 'The Flight rejected by Provider.',
+            changedBy: 'SERVER',
+          });
+        } catch (e) {
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("ERROR"),
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
         break;
 
+      case "REFUND":
+        try {
+          //TODO: refund to wallet's user
+          //TODO: refundInfo & refundTo
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('REFUNDED'),
+            description: 'The Flight refunded by Provider.',
+            changedBy: 'SERVER',
+          });
+        } catch (e) {
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("ERROR"),
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
+        break;
       default:
         break;
     }
@@ -530,7 +569,7 @@ module.exports.getBookedFlights = async (req, res) => {
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,
           flightDetailsCode: bookedFlight.flightDetailsCode,
-          status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+          status: EUserType.check(["CLIENT"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
           time: bookedFlight.time,
           passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
           contact: {
@@ -608,7 +647,7 @@ module.exports.getBookedFlight = async (req, res) => {
       code: bookedFlight.code,
       searchedFlightCode: bookedFlight.searchedFlightCode,
       flightDetailsCode: bookedFlight.flightDetailsCode,
-      status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+      status: EUserType.check(["CLIENT"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
       time: bookedFlight.time,
       contact: {
         email: bookedFlight.contact.email,
@@ -665,7 +704,7 @@ module.exports.getBookedFlightStatus = async (req, res) => {
         time: status.time,
         changedBy: status.changedBy,
         description: status.description,
-      })),
+      })).filter(status => status.status !== 'ERROR'),
     });
   } catch (e) {
     response.exception(res, e);
