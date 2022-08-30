@@ -697,7 +697,59 @@ module.exports.getUserBookedFlightStatus = async (req, res) => {
 // NOTE: Get specific user's booked flight's details
 module.exports.getUserBookedFlight = async (req, res) => {
   try {
-    response.success(res, result);
+    const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
+
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.userCode, req.params.bookedFlightCode);
+    const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(req.params.userCode, bookedFlight.transactionId) : {};
+
+    response.success(res, {
+      // bookedBy: bookedFlight.bookedBy,
+      bookedBy: bookedFlight.bookedBy,
+      provider: bookedFlight.providerName,
+      pnr: bookedFlight.providerPnr,
+      email: user.email,
+      code: bookedFlight.code,
+      searchedFlightCode: bookedFlight.searchedFlightCode,
+      flightDetailsCode: bookedFlight.flightDetailsCode,
+      status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+      time: bookedFlight.time,
+      contact: {
+        email: bookedFlight.contact.email,
+        mobileNumber: bookedFlight.contact.mobileNumber,
+      },
+      passengers: bookedFlight.passengers.map(passenger => {
+        const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
+        return {
+          type: person.type,
+          gender: person.gender,
+          firstName: person.firstName,
+          lastName: person.lastName,
+          middleName: person.middleName,
+          nickName: person.nickName,
+          birthDate: person.birthDate,
+          type: person.type,
+          document: {
+            type: person.document.type,
+            code: person.document.code,
+            issuedAt: person.document.issuedAt,
+            expirationDate: person.document.expirationDate,
+            postCode: person.document.postCode,
+          },
+        };
+      }),
+      origin: {
+        code: bookedFlight.flightInfo.origin.code,
+        name: bookedFlight.flightInfo.origin.name,
+      },
+      destination: {
+        code: bookedFlight.flightInfo.destination.code,
+        name: bookedFlight.flightInfo.destination.name,
+      },
+      travelClass: bookedFlight.flightInfo.travelClass,
+      price: bookedFlight.flightInfo.flights.price.total,
+      currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+      transaction,
+    });
   } catch (e) {
     response.exception(res, e);
   }
