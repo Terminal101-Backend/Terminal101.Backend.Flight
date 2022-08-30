@@ -503,6 +503,34 @@ paths:
           schema:
             $ref: "#/definitions/BookFlightResult"
 
+  /flight/book/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          required: true
+          type: string
+          example: 23rwf4rf4fr34
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
     # NOTE: Cancel/refund booked flight
     delete:
       tags:
