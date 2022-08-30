@@ -388,7 +388,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
       code: result.code,
-      status: EBookedFlightStatus.find(result.status) ?? result.status,
+      status: result.statuses.filter((status => status.status !== 'ERROR')).pop()?.status,
       time: result.time,
       passengers: result.passengers.map(passenger => ({
         documentCode: passenger.documentCode,
