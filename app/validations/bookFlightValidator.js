@@ -1,6 +1,7 @@
-const { Joi } = require("celebrate");
+const {Joi} = require("celebrate");
 
-const { BaseValidator } = require("../core");
+const {BaseValidator} = require("../core");
+const {EBookedFlightStatus} = require("../constants");
 
 class BookFlight extends BaseValidator {
   constructor() {
@@ -28,8 +29,7 @@ class BookFlight extends BaseValidator {
 
 class BookFlightForUser extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       userCode: Joi.string().required(),
@@ -55,7 +55,7 @@ class EditUserBookedFlight extends BaseValidator {
       //   documentCode: Joi.string().required(),
       //   documentIssuedAt: Joi.string().required(),
       // })),
-      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOK|REJECT/),
+      status: EBookedFlightStatus.validator({required: true}),
       description: Joi.string().default(""),
     };
 
@@ -71,8 +71,7 @@ class EditUserBookedFlight extends BaseValidator {
 
 class GetBookedFlights extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     super(body);
   }
@@ -80,8 +79,7 @@ class GetBookedFlights extends BaseValidator {
 
 class GetUserBookedFlights extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       userCode: Joi.string().required(),
@@ -130,8 +128,7 @@ class GenerateNewPaymentInfo extends BaseValidator {
 
 class GetBookedFlightStatus extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       bookedFlightCode: Joi.string().required(),
@@ -144,8 +141,7 @@ class GetBookedFlightStatus extends BaseValidator {
 
 class GetUserBookedFlightStatus extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       userCode: Joi.string().required(),
@@ -159,8 +155,7 @@ class GetUserBookedFlightStatus extends BaseValidator {
 
 class GetBookedFlight extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       bookedFlightCode: Joi.string().required(),
@@ -173,8 +168,7 @@ class GetBookedFlight extends BaseValidator {
 
 class GetUserBookedFlight extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       userCode: Joi.string().required(),

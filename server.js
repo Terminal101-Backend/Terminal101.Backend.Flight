@@ -9,15 +9,15 @@ const server = app.listen(process.env.PORT, () => {
   console.log(`🚀 Server running at port:${process.env.PORT}`);
 });
 
-const io = require('socket.io')(server, {
-  cors: {
-    // origin: "https://test-terminal101-flight.herokuapp.com/",
-    origin: "*",
-    methods: ["GET", "POST"],
-    // allowedHeaders: ["my-custom-header"],
-    credentials: true,
-  },
-});
+// const io = require('socket.io')(server, {
+//   cors: {
+//     // origin: "https://test-terminal101-flight.herokuapp.com/",
+//     origin: "*",
+//     methods: ["GET", "POST"],
+//     // allowedHeaders: ["my-custom-header"],
+//     credentials: true,
+//   },
+// });
 
 // io.on('connection', function (socket) {
 //   console.log(`User connected: ${socket.id}`);

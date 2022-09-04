@@ -10,7 +10,6 @@ module.exports = (app) => {
   app.use("/provider", require("./providerRoute"));
   app.use("/restriction", require("./restrictionRoute"));
   app.use("/condition", require("./flightConditionRoute"));
-  app.use("/socket", require("./socketRoute"));
 
 
   app.use("/temp", require("./tempRoute"));

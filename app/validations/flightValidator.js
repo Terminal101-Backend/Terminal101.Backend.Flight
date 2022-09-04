@@ -1,14 +1,14 @@
-const { Joi } = require("celebrate");
+const {Joi} = require("celebrate");
 
-const { BaseValidator } = require("../core");
+const {BaseValidator} = require("../core");
+const {EFlightWaypoint, ETravelClass} = require("../constants");
 
 class SearchOriginDestination extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
-      waypointType: Joi.string().required(),
+      waypointType: EFlightWaypoint.validator({required: true}),
     };
 
     const query = {
@@ -23,11 +23,10 @@ class SearchOriginDestination extends BaseValidator {
 
 class GetPopularWaypoints extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
-      waypointType: Joi.string().required(),
+      waypointType: EFlightWaypoint.validator({required: true}),
     };
 
     super(body);
@@ -37,8 +36,7 @@ class GetPopularWaypoints extends BaseValidator {
 
 class SearchFlights extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const query = {
       origin: Joi.string().required(),
@@ -48,7 +46,7 @@ class SearchFlights extends BaseValidator {
       adults: Joi.number().default(1),
       children: Joi.number(),
       infants: Joi.number(),
-      travelClass: Joi.string().default("ECONOMY"),
+      travelClass: ETravelClass.validator({default: "ECONOMY"}),
       segments: [
         Joi.string(),
         Joi.array().items(Joi.string()),
@@ -62,8 +60,7 @@ class SearchFlights extends BaseValidator {
 
 class GetFilters extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       searchId: Joi.string().required(),
@@ -76,8 +73,7 @@ class GetFilters extends BaseValidator {
 
 class FilterFlights extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       searchId: Joi.string().required(),
@@ -114,8 +110,7 @@ class FilterFlights extends BaseValidator {
 
 class GetFlightPrice extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       searchId: Joi.string().required(),
@@ -129,8 +124,7 @@ class GetFlightPrice extends BaseValidator {
 
 class GetFlight extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       searchId: Joi.string().required(),
@@ -144,8 +138,7 @@ class GetFlight extends BaseValidator {
 
 class GetPopularFlights extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     super(body);
   }
@@ -153,8 +146,7 @@ class GetPopularFlights extends BaseValidator {
 
 class GetCountries extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     super(body);
   }
@@ -162,8 +154,7 @@ class GetCountries extends BaseValidator {
 
 class GetCities extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       code: Joi.string().required(),
@@ -176,8 +167,7 @@ class GetCities extends BaseValidator {
 
 class GetAirports extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       countryCode: Joi.string().required(),
@@ -191,8 +181,7 @@ class GetAirports extends BaseValidator {
 
 class GetAirlines extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     super(body);
   }
@@ -200,8 +189,7 @@ class GetAirlines extends BaseValidator {
 
 class RestrictionCovid19 extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
       countryCode: Joi.string().required(),
@@ -215,11 +203,10 @@ class RestrictionCovid19 extends BaseValidator {
 
 class SearchOriginDestinationAmadeus extends BaseValidator {
   constructor() {
-    const body = {
-    };
+    const body = {};
 
     const params = {
-      waypointType: Joi.string().required(),
+      waypointType: EFlightWaypoint.validator({required: true}),
     };
 
     const query = {
