@@ -245,7 +245,8 @@ const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) =
   const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations/airports", {
     params: {
       latitude,
-      longitude
+      longitude,
+      sort: distance
 
     },
   });
