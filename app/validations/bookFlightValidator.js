@@ -55,7 +55,7 @@ class EditUserBookedFlight extends BaseValidator {
       //   documentCode: Joi.string().required(),
       //   documentIssuedAt: Joi.string().required(),
       // })),
-      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOKED|REJECTED/),
+      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOK|REJECT/),
       description: Joi.string().default(""),
     };
 
