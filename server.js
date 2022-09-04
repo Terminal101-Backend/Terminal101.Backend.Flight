@@ -2,7 +2,8 @@ const app = require("./app");
 const path = require("path");
 const mongo = require("./app/core/db/mongo");
 // const redis = require("./app/core/db/redis");
-const socketMessages = require("./app/socket");
+// const socketMessages = require("./app/socket");
+const socket = require("./app/helpers/socketHelper");
 
 const server = app.listen(process.env.PORT, () => {
   console.log(`🚀 Server running at port:${process.env.PORT}`);
@@ -18,12 +19,13 @@ const io = require('socket.io')(server, {
   },
 });
 
-io.on('connection', function (socket) {
-  console.log(`User connected: ${socket.id}`);
+// io.on('connection', function (socket) {
+//   console.log(`User connected: ${socket.id}`);
+//
+//   socketMessages(io, socket);
+// });
 
-  socketMessages(io, socket);
-});
-
+socket.initialize(server);
 mongo.startDatabase();
 // redis.startDatabase();
 
