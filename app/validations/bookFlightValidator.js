@@ -89,14 +89,14 @@ module.exports.generateNewPaymentInfo = baseValidator({
   },
 });
 
-module.exports.getBookedFlightStatus = baseValidator({
+module.exports.getBookedFlightStatuses = baseValidator({
   body: {},
   params: {
     bookedFlightCode: Joi.string().required(),
   },
 }, true);
 
-module.exports.getUserBookedFlightStatus = baseValidator({
+module.exports.getUserBookedFlightStatuses = baseValidator({
   body: {},
   params: {
     userCode: Joi.string().required(),

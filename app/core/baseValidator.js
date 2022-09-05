@@ -2,7 +2,7 @@ const Joi = require("joi");
 const response = require("../helpers/responseHelper");
 
 module.exports = ({query = {}, body = {}, params = {}, headers = {}}, pagination = false, filter = undefined) => {
-  headers.language = Joi.string().default("EN");
+  headers.language = Joi.string().allow("", null).default("EN");
   if (!!pagination) {
     headers.page = Joi.number().default(0);
     headers.pageSize = Joi.number().default(25);
