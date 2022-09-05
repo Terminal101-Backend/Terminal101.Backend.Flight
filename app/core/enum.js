@@ -1,5 +1,5 @@
 const EEnumType = require("../constants/EEnumType");
-const {Joi} = require("celebrate");
+const Joi = require("joi");
 
 class Enum {
   #type

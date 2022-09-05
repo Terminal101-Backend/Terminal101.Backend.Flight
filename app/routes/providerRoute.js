@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { providerController } = require("../controllers");
-const { providerValidator } = require("../validations");
-const { checkAccess } = require("../middlewares");
+const {providerController} = require("../controllers");
+const {providerValidator} = require("../validations");
+const {checkAccess} = require("../middlewares");
 
 // NOTE: Get all providers
 router
@@ -12,7 +12,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.getProviders.check(),
+    providerValidator.getProviders.check,
     providerController.getProviders);
 
 // NOTE: Edit provider
@@ -23,7 +23,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.editProvider.check(),
+    providerValidator.editProvider.check,
     providerController.editProvider);
 
 // NOTE: Add provider
@@ -34,7 +34,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.addProvider.check(),
+    providerValidator.addProvider.check,
     providerController.addProvider);
 
 // NOTE: Delete provider
@@ -45,7 +45,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.deleteProvider.check(),
+    providerValidator.deleteProvider.check,
     providerController.deleteProvider);
 
 module.exports = router;

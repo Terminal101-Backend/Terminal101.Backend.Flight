@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { bookFlightController } = require("../controllers");
-const { bookFlightValidator } = require("../validations");
-const { checkAccess } = require("../middlewares");
+const {bookFlightController} = require("../controllers");
+const {bookFlightValidator} = require("../validations");
+const {checkAccess} = require("../middlewares");
 
 // NOTE: Success payment callback
 router
@@ -12,7 +12,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE"]),
-    bookFlightValidator.payForFlight.check(),
+    bookFlightValidator.payForFlight.check,
     bookFlightController.payForFlight);
 
 // NOTE: Get all booked flights list by user
@@ -23,7 +23,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT"]),
-    bookFlightValidator.getBookedFlights.check(true, true),
+    bookFlightValidator.getBookedFlights.check,
     bookFlightController.getBookedFlights);
 
 // NOTE: Get booked flight's statuses
@@ -34,7 +34,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.getBookedFlightStatus.check(true),
+    bookFlightValidator.getBookedFlightStatus.check,
     bookFlightController.getBookedFlightStatus);
 
 // NOTE: Get user's booked flight's statuses
@@ -45,7 +45,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlightStatus.check(true),
+    bookFlightValidator.getUserBookedFlightStatus.check,
     bookFlightController.getUserBookedFlightStatus);
 
 // NOTE: Change booked flight's status
@@ -56,7 +56,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.cancelBookedFlight.check(),
+    bookFlightValidator.cancelBookedFlight.check,
     bookFlightController.cancelBookedFlight);
 
 // NOTE: Get specific user's booked flights list
@@ -67,7 +67,7 @@ router
 //       next();
 //     },
 //     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-//     bookFlightValidator.getUserBookedFlights.check(),
+//     bookFlightValidator.getUserBookedFlights.check,
 //     bookFlightController.getUserBookedFlights);
 
 // NOTE: Generate new payment information
@@ -78,7 +78,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.generateNewPaymentInfo.check(),
+    bookFlightValidator.generateNewPaymentInfo.check,
     bookFlightController.generateNewPaymentInfo);
 
 // NOTE: Get specific booked flight's details by user
@@ -89,7 +89,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.getBookedFlight.check(),
+    bookFlightValidator.getBookedFlight.check,
     bookFlightController.getBookedFlight);
 
 // NOTE: Get specific user's booked flights
@@ -100,7 +100,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlights.check(),
+    bookFlightValidator.getUserBookedFlights.check,
     bookFlightController.getUserBookedFlights);
 
 // NOTE: Edit specific user's booked flight
@@ -111,7 +111,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.editUserBookedFlight.check(),
+    bookFlightValidator.editUserBookedFlight.check,
     bookFlightController.editUserBookedFlight);
 
 // NOTE: Get specific user's booked flight's details
@@ -122,7 +122,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlight.check(),
+    bookFlightValidator.getUserBookedFlight.check,
     bookFlightController.getUserBookedFlight);
 
 // NOTE: Book a flight by user
@@ -133,7 +133,7 @@ router
       next();
     },
     checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.bookFlight.check(),
+    bookFlightValidator.bookFlight.check,
     bookFlightController.bookFlight);
 
 // NOTE: Book a flight for a user
@@ -144,7 +144,7 @@ router
 //       next();
 //     },
 //     checkAccess.checkUserType(["CLIENT"]),
-//     bookFlightValidator.bookFlightForUser.check(),
+//     bookFlightValidator.bookFlightForUser.check,
 //     bookFlightController.bookFlightForUser);
 
 // NOTE: Cancel booked flight by user
@@ -155,7 +155,7 @@ router
 //       next();
 //     },
 //     checkAccess.checkUserType(["CLIENT"]),
-//     bookFlightValidator.editBookedFlight.check(),
+//     bookFlightValidator.editBookedFlight.check,
 //     bookFlightController.editBookedFlight);
 
 // NOTE: Book flight for user
@@ -166,7 +166,7 @@ router
 //       next();
 //     },
 //     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-//     bookFlightValidator.editBookedFlightForUser.check(),
+//     bookFlightValidator.editBookedFlightForUser.check,
 //     bookFlightController.editBookedFlightForUser);
 
 module.exports = router;

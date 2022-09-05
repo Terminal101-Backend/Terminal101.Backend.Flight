@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const { flightConditionController } = require("../controllers");
-const { flightConditionValidator } = require("../validations");
-const { checkAccess } = require("../middlewares");
+const {flightConditionController} = require("../controllers");
+const {flightConditionValidator} = require("../validations");
+const {checkAccess} = require("../middlewares");
 
 // NOTE: Get all flight conditions
 router
@@ -12,7 +12,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.getFlightConditions.check(true),
+    flightConditionValidator.getFlightConditions.check,
     flightConditionController.getFlightConditions);
 
 // NOTE: Get one flight condition
@@ -23,7 +23,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.getFlightCondition.check(),
+    flightConditionValidator.getFlightCondition.check,
     flightConditionController.getFlightCondition);
 
 // NOTE: Edit flight condition
@@ -34,7 +34,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.editFlightCondition.check(),
+    flightConditionValidator.editFlightCondition.check,
     flightConditionController.editFlightCondition);
 
 // NOTE: Add flight condition
@@ -45,7 +45,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.addFlightCondition.check(),
+    flightConditionValidator.addFlightCondition.check,
     flightConditionController.addFlightCondition);
 
 // NOTE: Delete flight condition
@@ -56,7 +56,7 @@ router
       next();
     },
     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.deleteFlightCondition.check(),
+    flightConditionValidator.deleteFlightCondition.check,
     flightConditionController.deleteFlightCondition);
 
 module.exports = router;
