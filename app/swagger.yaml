@@ -1,5 +1,5 @@
 swagger: "2.0"
-info:
+info: 
   version: v1.0.0
   title: "Terminal 101: Flight"
   description: Terminal 101 - Flight service
