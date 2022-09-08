@@ -1,7 +1,7 @@
-const { decodeToken } = require("../helpers/tokenHelper");
-const { EUserType } = require("../constants");
+const {decodeToken} = require("../helpers/tokenHelper");
+const {EUserType} = require("../constants");
 const responseHelper = require("./responseHelper");
-const { common } = require("../services");
+const {common} = require("../services");
 
 let io;
 
@@ -39,6 +39,10 @@ class Response {
 class Router {
   #middlewares = {};
 
+  get middlewares() {
+    return this.#middlewares;
+  }
+
   #getRouteMiddlewares(route, middlewares) {
     const [base, ...path] = route.split("/");
     middlewares = middlewares[base];
@@ -57,7 +61,7 @@ class Router {
       if (route === "") {
         this.#middlewares[route] = [router, ...middlewares];
       } else {
-        this.#middlewares[route] = { "": [router, ...middlewares] };
+        this.#middlewares[route] = {"": [router, ...middlewares]};
       }
     }
   }
@@ -71,14 +75,10 @@ class Router {
 
     return this.#getRouteMiddlewares(route, this.middlewares);
   }
-
-  get middlewares() {
-    return this.#middlewares;
-  }
 }
 
 /**
- * @param {Array} middlewares 
+ * @param {Array} middlewares
  * @param {String} base
  * @returns {String[]}
  */
@@ -98,6 +98,15 @@ const getAllRoutes = (middlewares, base = "") => {
 
 let messages = new Router();
 
+const addMessageToCommon = route => {
+  common.addSocketEvent(route).then(() => {
+    console.log(`Message ${route} added for socket`);
+  }).catch(e => {
+    console.error("Common microservice is not available\nThis method will send request automatically again");
+    setTimeout(() => addMessageToCommon(route), 500);
+  });
+};
+
 module.exports.Response = Response;
 
 Object.defineProperty(module.exports, "router", {
@@ -108,7 +117,7 @@ module.exports.use = router => {
   if (router instanceof Router) {
     messages = router;
     getAllRoutes(messages.middlewares).forEach(route => {
-      common.addSocketEvent(route);
+      addMessageToCommon(route);
     });
   } else {
     throw "router_type_error";
@@ -121,7 +130,7 @@ module.exports.initialize = server => {
     console.log(`socket.io connected: ${socket.id}`);
 
     getAllRoutes(messages.middlewares).forEach(route => {
-      common.addSocketEvent(route);
+      addMessageToCommon(route);
     });
 
     socket.on("request", msg => {
@@ -145,7 +154,8 @@ module.exports.initialize = server => {
             if (!!middlewares[++i]) {
               return () => middlewares[i](req, res, nextGenerator(i));
             } else {
-              return () => { };
+              return () => {
+              };
             }
           }
           middlewares[0](req, res, nextGenerator(0));
