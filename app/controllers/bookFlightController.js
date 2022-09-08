@@ -565,11 +565,7 @@ module.exports.getBookedFlights = async (req, res) => {
     const {
       items: bookedFlights,
       ...result
-<<<<<<< HEAD
     } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
-=======
-    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
->>>>>>> dev-sprint-18
     console.timeEnd("Get booked flights");
     console.time("Get booked flights: Get users");
     const {data: users} = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
