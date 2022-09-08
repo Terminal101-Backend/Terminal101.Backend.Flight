@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {partoHelper, amadeusHelper, emailHelper, stringHelper, arrayHelper} = require("../helpers");
+const {partoHelper, amadeusHelper, emailHelper, arrayHelper} = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
 const {accountManagement, wallet, amadeus} = require("../services");
@@ -304,7 +304,7 @@ module.exports.bookFlight = async (req, res) => {
     } else {
       userWalletResult = {
         value: 0,
-      }
+      };
     }
 
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
@@ -565,7 +565,11 @@ module.exports.getBookedFlights = async (req, res) => {
     const {
       items: bookedFlights,
       ...result
+<<<<<<< HEAD
     } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+=======
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+>>>>>>> dev-sprint-18
     console.timeEnd("Get booked flights");
     console.time("Get booked flights: Get users");
     const {data: users} = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
