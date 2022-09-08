@@ -1,11 +1,11 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
+const {partoHelper, amadeusHelper, emailHelper, stringHelper} = require("../helpers");
 const token = require("../helpers/tokenHelper");
-const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { accountManagement, wallet, amadeus } = require("../services");
-const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
-const { twilio } = require("../services");
+const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
+const {accountManagement, wallet, amadeus} = require("../services");
+const {EBookedFlightStatus, EProvider, EUserType} = require("../constants");
+const {twilio} = require("../services");
 const flightTicketController = require("./flightTicketController");
 const parto = require("../services/parto");
 
@@ -50,13 +50,13 @@ const pay = async (bookedFlight) => {
     if (userWallet.credit >= flightInfo.flights.price.total) {
       await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
       bookedFlight.statuses.push({
-        status: "PAID",
+        status: EBookedFlightStatus.get("PAID"),
         description: 'Payment is done.',
         changedBy: "SERVICE",
       });
 
       bookedFlight.statuses.push({
-        status: "INPROGRESS",
+        status: EBookedFlightStatus.get("INPROGRESS"),
         description: "Wait for booking by backoffice.",
         changedBy: bookedFlight.bookedBy,
       });
@@ -64,7 +64,7 @@ const pay = async (bookedFlight) => {
 
       (async () => {
         // TODO: Send notification to user
-        const userToken = token.newToken({ user: bookedFlight.bookedBy });
+        const userToken = token.newToken({user: bookedFlight.bookedBy});
         await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
         // TODO: Send SMS
         // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
@@ -74,7 +74,7 @@ const pay = async (bookedFlight) => {
     } else {
       console.log('Your credit is not enough');
       bookedFlight.statuses.push({
-        status: "PAYING",
+        status: EBookedFlightStatus.get("PAYING"),
         description: "Client credit is not enough",
         changedBy: "SERVICE",
       });
@@ -91,7 +91,7 @@ const pay = async (bookedFlight) => {
 // NOTE: Success payment callback
 module.exports.payForFlight = async (req, res) => {
   try {
-    const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
+    const bookedFlight = await bookedFlightRepository.findOne({transactionId: req.body.externalTransactionId});
     // TODO: Get last flight price from our DB
     await pay(bookedFlight);
 
@@ -105,7 +105,10 @@ module.exports.payForFlight = async (req, res) => {
 module.exports.generateNewPaymentInfo = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    const bookedFlight = await bookedFlightRepository.findOne({ bookedBy: decodedToken.user, code: req.params.bookedFlightCode });
+    const bookedFlight = await bookedFlightRepository.findOne({
+      bookedBy: decodedToken.user,
+      code: req.params.bookedFlightCode
+    });
     const flightDetails = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     const now = new Date();
@@ -179,11 +182,15 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
     const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
-    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+    const {data: user} = await accountManagement.getUserInfo(decodedToken.user);
 
     // TODO: Check if the user has not booked similar flight
     // const existsBookedFlight = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itinerarry);
-    const existsBookedFlight = await bookedFlightRepository.findOne({ bookedBy: decodedToken.user, searchedFlightCode: req.body.searchedFlightCode, flightDetailsCode: req.body.flightDetailsCode });
+    const existsBookedFlight = await bookedFlightRepository.findOne({
+      bookedBy: decodedToken.user,
+      searchedFlightCode: req.body.searchedFlightCode,
+      flightDetailsCode: req.body.flightDetailsCode
+    });
     if (!!existsBookedFlight && !EBookedFlightStatus.check(["CANCEL", "REJECTED"], existsBookedFlight.statuses[existsBookedFlight.statuses.length - 1].status)) {
       response.error(res, "booked_flight_duplicated", 406);
       return;
@@ -259,7 +266,12 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
 
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
+    const providerBookResult = await providerHelper.bookFlight({
+      flightDetails,
+      userCode: decodedToken.user,
+      contact: req.body.contact,
+      passengers: req.body.passengers
+    });
     const userWallet = await wallet.getUserWallet(decodedToken.user);
 
     if (!!req.body.useWallet) {
@@ -292,13 +304,13 @@ module.exports.bookFlight = async (req, res) => {
     } else {
       userWalletResult = {
         value: 0,
-      }
+      };
     }
 
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
 
     bookedFlight.statuses.push({
-      status: "PAYING",
+      status: EBookedFlightStatus.get("PAYING"),
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
@@ -310,6 +322,7 @@ module.exports.bookFlight = async (req, res) => {
     }
 
     response.success(res, {
+      priceChanged,
       code: bookedFlight.code,
       ...userWalletResult
     });
@@ -331,8 +344,8 @@ module.exports.bookFlightForUser = async (req, res) => {
 module.exports.cancelBookedFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
-    const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
+    const {data: user} = await accountManagement.getUserInfo(decodedToken.user);
+    const bookedFlight = await bookedFlightRepository.findOne({code: req.params.bookedFlightCode});
     const providerName = bookedFlight.providerName;
 
     if (!user) {
@@ -360,10 +373,15 @@ module.exports.cancelBookedFlight = async (req, res) => {
       providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
       try {
         await providerHelper.cancelBookFlight(bookedFlight);
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("REJECTED"),
+          description: req.body.description,
+          changedBy: decodedToken.user,
+        });
       } catch (e) {
         if (status === "REFUND") {
           bookedFlight.statuses.push({
-            status: "REFUND_REJECTED",
+            status: EBookedFlightStatus.get("REFUND_REJECTED"),
             description: e?.message ?? e,
             changedBy: "SERVICE",
           });
@@ -383,7 +401,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
       code: result.code,
-      status: EBookedFlightStatus.find(result.status) ?? result.status,
+      status: result.statuses.filter((status => status.status !== 'ERROR')).pop()?.status,
       time: result.time,
       passengers: result.passengers.map(passenger => ({
         documentCode: passenger.documentCode,
@@ -410,8 +428,8 @@ module.exports.cancelBookedFlight = async (req, res) => {
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
-    const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
+    const {data: user} = await accountManagement.getUserInfo(req.params.userCode);
+    const bookedFlight = await bookedFlightRepository.findOne({code: req.params.bookedFlightCode});
     const providerName = bookedFlight.providerName;
 
     let status = req.body.status;
@@ -450,23 +468,57 @@ module.exports.editUserBookedFlight = async (req, res) => {
 
     providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
     switch (status) {
-      case "BOOKED":
+      case "BOOK":
         try {
           await providerHelper.issueBookedFlight(bookedFlight);
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('BOOKED'),
+            description: 'The Flight Booked by Provider.',
+            changedBy: 'SERVER',
+          });
         } catch (e) {
           bookedFlight.statuses.push({
-            status: "REJECTED",
+            status: EBookedFlightStatus.get("ERROR"),
             description: e?.message ?? e,
             changedBy: "SERVICE",
           });
         }
         break;
 
-      case "CANCEL":
-      case "REJECTED":
-        await providerHelper.cancelBookFlight(bookedFlight);
+      case "CANCEL" | "REJECT":
+        try {
+          await providerHelper.cancelBookFlight(bookedFlight);
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('REJECTED'),
+            description: 'The Flight rejected by Provider.',
+            changedBy: 'SERVER',
+          });
+        } catch (e) {
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("ERROR"),
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
         break;
 
+      case "REFUND":
+        try {
+          //TODO: refund to wallet's user
+          //TODO: refundInfo & refundTo
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get('REFUNDED'),
+            description: 'The Flight refunded by Provider.',
+            changedBy: 'SERVER',
+          });
+        } catch (e) {
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("ERROR"),
+            description: e?.message ?? e,
+            changedBy: "SERVICE",
+          });
+        }
+        break;
       default:
         break;
     }
@@ -510,10 +562,13 @@ module.exports.getBookedFlights = async (req, res) => {
       userCode = decodedToken.user;
     }
     console.time("Get booked flights: Get booked flight");
-    const { items: bookedFlights, ...result } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+    const {
+      items: bookedFlights,
+      ...result
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
     console.timeEnd("Get booked flights");
     console.time("Get booked flights: Get users");
-    const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
+    const {data: users} = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
     console.timeEnd("Get booked flights: Get users");
 
     console.time("Get booked flights: Prepaire result");
@@ -530,7 +585,7 @@ module.exports.getBookedFlights = async (req, res) => {
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,
           flightDetailsCode: bookedFlight.flightDetailsCode,
-          status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+          status: EUserType.check(["CLIENT"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
           time: bookedFlight.time,
           passengers: bookedFlight.passengers.map(passenger => user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info),
           contact: {
@@ -594,7 +649,7 @@ module.exports.getUserBookedFlights = async (req, res) => {
 module.exports.getBookedFlight = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+    const {data: user} = await accountManagement.getUserInfo(decodedToken.user);
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
     const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
@@ -608,7 +663,7 @@ module.exports.getBookedFlight = async (req, res) => {
       code: bookedFlight.code,
       searchedFlightCode: bookedFlight.searchedFlightCode,
       flightDetailsCode: bookedFlight.flightDetailsCode,
-      status: EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+      status: EUserType.check(["CLIENT"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
       time: bookedFlight.time,
       contact: {
         email: bookedFlight.contact.email,
@@ -665,7 +720,7 @@ module.exports.getBookedFlightStatus = async (req, res) => {
         time: status.time,
         changedBy: status.changedBy,
         description: status.description,
-      })),
+      })).filter(status => status.status !== 'ERROR'),
     });
   } catch (e) {
     response.exception(res, e);
@@ -697,7 +752,7 @@ module.exports.getUserBookedFlightStatus = async (req, res) => {
 // NOTE: Get specific user's booked flight's details
 module.exports.getUserBookedFlight = async (req, res) => {
   try {
-    const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
+    const {data: user} = await accountManagement.getUserInfo(req.params.userCode);
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.userCode, req.params.bookedFlightCode);
     const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(req.params.userCode, bookedFlight.transactionId) : {};
