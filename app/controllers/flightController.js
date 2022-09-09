@@ -187,9 +187,6 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
 
 module.exports.searchFlights = async (req, res) => {
   try {
-    // response.error(res, "use_socket", 503);
-    // return;
-
     const activeProviders = await providerRepository.getActiveProviders();
 
     // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
@@ -221,6 +218,10 @@ module.exports.searchFlights = async (req, res) => {
 
         searchCode = result.code;
         hasResult = true;
+
+        if (req.method === "SOCKET") {
+          result.completed = true;
+        }
 
         if (++providerNumber === activeProviderCount) {
           response.success(res, result);
