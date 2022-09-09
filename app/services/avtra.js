@@ -175,7 +175,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   return result;
 };
 
-module.exports.book = async (segments, price, travelers) => {
+module.exports.book = async (segments, price, contact, travelers) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`
@@ -191,15 +191,33 @@ module.exports.book = async (segments, price, travelers) => {
 
   const travelersInfo = [];
   travelers.forEach(traveler => {
+    let namePrefix;
+    const infant = 2 * 365 * 24 * 3600 * 1000;
+    const child = 12 * 365 * 24 * 3600 * 1000
+    const age = new Date() - new Date(traveler.birthDate);
+    if ((traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
+      traveler.gender = "MALE";
+    }
+    const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
+    switch (traveler.gender) {
+      case "MALE":
+        namePrefix = "Mr";
+        break;
+
+      case "FEMALE":
+        namePrefix = "Mrs";
+        break;
+    }
+
     travelersInfo.push(`
-      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.nationality}">
+      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.document.issuedAt}">
         <PersonName>
-          <NamePrefix>${traveler.namePrefix}</NamePrefix>
+          <NamePrefix>${namePrefix}</NamePrefix>
           <GivenName>${traveler.firstName}</GivenName>
           <Surname>${traveler.lastName}</Surname>
         </PersonName>
         <TravelerRefNumber RPH="1"/>
-        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${traveler.document.expireDate}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.nationality}"/>
+        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${traveler.document.expirationDate}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.document.issuedAt}"/>
       </AirTraveler>
     `);
   });
@@ -208,7 +226,7 @@ module.exports.book = async (segments, price, travelers) => {
   <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
   OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
   <POS>
-    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
+    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="${price.currency}">
       <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
     </Source>
   </POS>
@@ -219,8 +237,8 @@ module.exports.book = async (segments, price, travelers) => {
 			</AirItinerary>
 			<PriceInfo>
 				<ItinTotalFare>
-					<BaseFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.base}"/>
-					<TotalFare CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
+					<BaseFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${price.base}"/>
+					<TotalFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${price.total}"/>
 				</ItinTotalFare>
 			</PriceInfo>
 			<TravelerInfo>
@@ -228,12 +246,12 @@ module.exports.book = async (segments, price, travelers) => {
 			</TravelerInfo>
 			<ContactPerson>
 				<PersonName>
-					<GivenName>AHMED</GivenName>
-					<Surname>MOHAMMED</Surname>
+					<GivenName>${travelers[0].firstName}</GivenName>
+					<Surname>${travelers[0].lastName}</Surname>
 				</PersonName>
-			  <Telephone PhoneNumber="(44)1233222344"/>
-			  <HomeTelephone PhoneNumber="(44)1233225744"/>
-			  <Email>tba@tba.com</Email>
+			  <Telephone PhoneNumber="${contact.mobileNumber}"/>
+			  <HomeTelephone PhoneNumber="${contact.mobileNumber}"/>
+			  <Email>${contact.email}</Email>
 	    </ContactPerson>
   	  <Fulfillment>
         <PaymentDetails>
@@ -241,7 +259,7 @@ module.exports.book = async (segments, price, travelers) => {
                 <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
                     <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
                 </DirectBill>
-                <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${price.total}"/>
+                <PaymentAmount CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${price.total}"/>
             </PaymentDetail>
         </PaymentDetails>
     	</Fulfillment>

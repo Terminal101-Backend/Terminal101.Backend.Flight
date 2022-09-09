@@ -497,7 +497,7 @@ module.exports.getFlight = async (req, res) => {
     if (!isBookedFlight) {
       const providerName = flightInfo.flights.provider.toLowerCase();
       const providerHelper = eval(providerName + "Helper");
-      const newPrice = await providerHelper.airReValidate(flightInfo);
+      const newPrice = await providerHelper.airRevalidate(flightInfo);
 
       // if(!newPrice){
       //   console.log('err :', newPrice)

@@ -5,6 +5,16 @@ const {flightInfoRepository, countryRepository, airlineRepository} = require("..
 const {accountManagement} = require("../services");
 const {EProvider} = require("../constants");
 
+const regenerateBookSegment = segments => {
+  return segments.map(segment => ({
+    originCode,
+    destinationCode,
+    flightNumber,
+    airlineCode,
+    date,
+  }))
+};
+
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
   if (!Array.isArray(segments)) {
@@ -202,14 +212,12 @@ module.exports.searchFlights = async params => {
       }), {})
   );
 
-  const aircrafts = Object.keys(
-    avtraSearchResult
-      .reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
-      .reduce((res, cur) => ({
-        ...res,
-        [cur.FlightSegment.Equipment.AirEquipType]: 1,
-      }), {})
-  );
+  const aircrafts = avtraSearchResult
+    .reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
+    .reduce((res, cur) => ({
+      ...res,
+      [cur.FlightSegment.Equipment.AirEquipType]: cur.FlightSegment.Equipment.AirEquipType,
+    }), {});
 
   const airports = await countryRepository.getAirportsByCode([params.origin, params.destination, ...stops]);
   const airlines = await airlineRepository.getAirlinesByCode(carriers);
@@ -238,7 +246,7 @@ module.exports.bookFlight = async params => {
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
       return {
-        birthDate: user.info.birthDate,
+        birthDate: new Date(user.info.birthDate).toISOString().replace(/Z.*$/, ""),
         gender: user.info.gender,
         // nationalId: user.info.nationalId,
         // nationality: user.info.nationality,
@@ -259,7 +267,7 @@ module.exports.bookFlight = async params => {
       }
 
       return {
-        birthDate: person.birthDate,
+        birthDate: new Date(person.birthDate).toISOString().replace(/Z.*$/, ""),
         gender: person.gender,
         // nationalId: person.nationalId,
         // nationality: person.nationality,
@@ -278,7 +286,25 @@ module.exports.bookFlight = async params => {
   const flightInfo = await flightInfoRepository.findOne({code: params.flightDetails.code});
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const {data: bookedFlight} = await avtra.book(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
+  const segments = params.flightDetails.flights.itineraries.map(itinerary => {
+    const segment = itinerary.segments[0];
+
+    return {
+      date: new Date(segment.departure.at).toISOString().replace(/Z.*$/, ""),
+      originCode: segment.departure.airport.code,
+      destinationCode: segment.arrival.airport.code,
+      airlineCode: segment.airline.code,
+      flightNumber: segment.flightNumber,
+    }
+  });
+
+  const price = {
+    total: params.flightDetails.flights.price.total,
+    base: params.flightDetails.flights.price.base,
+    currency: params.flightDetails.flights.currencyCode,
+  };
+
+  const {data: bookedFlight} = await avtra.book(segments, price, params.contact, travelers);
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
 
@@ -291,4 +317,8 @@ module.exports.cancelBookFlight = async bookedFlight => {
 
 module.exports.issueBookedFlight = async bookedFlight => {
   throw "prvoider_unavailable";
+};
+
+module.exports.airRevalidate = async flightInfo => {
+  return flightInfo.flights.price;
 };

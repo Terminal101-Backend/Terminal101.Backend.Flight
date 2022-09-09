@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {partoHelper, amadeusHelper, emailHelper, stringHelper} = require("../helpers");
+const {partoHelper, amadeusHelper, avtraHelper, emailHelper, stringHelper} = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
 const {accountManagement, wallet, amadeus} = require("../services");
@@ -246,7 +246,7 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    const newPrice = await providerHelper.airReValidate(flightDetails);
+    const newPrice = await providerHelper.airRevalidate(flightDetails);
     if (!!newPrice.error) {
       response.exception(res, newPrice);
       return;

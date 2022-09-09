@@ -134,20 +134,20 @@ const bookFlight = async (flight, passengers) => {
   return response;
 };
 
-const airReValidate = async flightInfo => {
+const airRevalidate = async flightInfo => {
   try {
-    const {data: response} = await axiosApiInstance.post("/Flight/AirRevalidate",
+    const {data: response} = await axiosApiInstance.post("/Flight/airRevalidate",
       flightInfo
     );
 
     return response;
   } catch (e) {
-    console.log('error soap => ', airReValidate)
+    console.log('error soap => ', airRevalidate)
   }
 };
 
 module.exports = {
   searchFlight,
   bookFlight,
-  airReValidate,
+  airRevalidate,
 };
