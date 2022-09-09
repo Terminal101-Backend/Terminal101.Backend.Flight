@@ -55,7 +55,7 @@ class EditUserBookedFlight extends BaseValidator {
       //   documentCode: Joi.string().required(),
       //   documentIssuedAt: Joi.string().required(),
       // })),
-      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOKED|REJECTED/),
+      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOK|REJECT/),
       description: Joi.string().default(""),
     };
 
@@ -96,8 +96,8 @@ class CancelBookedFlight extends BaseValidator {
   constructor() {
     const body = {
       description: Joi.string().required(),
-      refundTo: Joi.string().required().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/),
-      refundInfo: Joi.string().required(),
+      refundTo: Joi.string().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/).default("WALLET"),
+      refundInfo: Joi.string(),
     };
 
     const params = {

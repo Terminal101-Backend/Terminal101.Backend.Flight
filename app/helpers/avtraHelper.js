@@ -14,7 +14,7 @@ const makeSegmentsArray = segments => {
       segments = [segments];
     }
   }
-  ;
+
   segments = segments.map(segment => {
     const segment_date = segment.trim().split(":");
     return {
@@ -48,49 +48,43 @@ const makeSegmentStopsArray = airports => {
   });
 };
 
-const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
-  return segment => {
-    let result = {
-      duration: dateTimeHelper.convertAvtraTimeToMinutes(segment.Duration),
-      flightNumber: segment.FlightNumber,
-      aircraft: aircrafts[segment.Equipment.AirEquipType],
-      airline: airlines[segment.OperatingAirline.Code],
-      stops: [],
-      departure: {
-        airport: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].airport : {
-          code: segment.DepartureAirport.LocationCode,
-          name: "UNKNOWN"
-        },
-        city: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].city : {
-          code: "UNKNOWN",
-          name: "UNKNOWN"
-        },
-        country: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].country : {
-          code: "UNKNOWN",
-          name: "UNKNOWN"
-        },
-        at: segment.DepartureDateTime,
-      },
-      arrival: {
-        airport: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].airport : {
-          code: segment.ArrivalAirport.LocationCode,
-          name: "UNKNOWN"
-        },
-        city: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].city : {
-          code: "UNKNOWN",
-          name: "UNKNOWN"
-        },
-        country: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].country : {
-          code: "UNKNOWN",
-          name: "UNKNOWN"
-        },
-        at: segment.ArrivalDateTime,
-      },
-    };
-
-    return result;
-  };
-};
+const makeFlightSegmentsArray = (aircrafts, airlines, airports) => segment => ({
+  duration: dateTimeHelper.convertAvtraTimeToMinutes(segment.Duration),
+  flightNumber: segment.FlightNumber,
+  aircraft: aircrafts[segment.Equipment.AirEquipType],
+  airline: airlines[segment.OperatingAirline.Code],
+  stops: [],
+  departure: {
+    airport: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].airport : {
+      code: segment.DepartureAirport.LocationCode,
+      name: "UNKNOWN"
+    },
+    city: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
+    country: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].country : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
+    at: segment.DepartureDateTime,
+  },
+  arrival: {
+    airport: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].airport : {
+      code: segment.ArrivalAirport.LocationCode,
+      name: "UNKNOWN"
+    },
+    city: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].city : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
+    country: !!airports[segment.ArrivalAirport.LocationCode] ? airports[segment.ArrivalAirport.LocationCode].country : {
+      code: "UNKNOWN",
+      name: "UNKNOWN"
+    },
+    at: segment.ArrivalDateTime,
+  },
+});
 
 const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.TotalFare.Amount),
@@ -142,7 +136,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
         amount: parseFloat(tax.$t),
         code: tax.TaxCode,
       })),
-    }
+    };
   }),
 });
 
@@ -161,14 +155,10 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
         fareSourceCode: flight,
       },
       price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare, flight.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown),
-      itineraries: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.map(itinerary => {
-        let result = {
-          duration: dateTimeHelper.convertAvtraTimeToMinutes(itinerary.FlightSegment.Duration),
-          segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
-        };
-
-        return result;
-      }),
+      itineraries: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.map(itinerary => ({
+        duration: dateTimeHelper.convertAvtraTimeToMinutes(itinerary.FlightSegment.Duration),
+        segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+      })),
     };
 
     return result;
@@ -296,9 +286,9 @@ module.exports.bookFlight = async params => {
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {
-  // return await avtra.airBookCancel(bookedFlight.providerPnr);
+  throw "prvoider_unavailable";
 };
 
 module.exports.issueBookedFlight = async bookedFlight => {
-  // return await avtra.airBookIssuing(bookedFlight.providerPnr);
+  throw "prvoider_unavailable";
 };

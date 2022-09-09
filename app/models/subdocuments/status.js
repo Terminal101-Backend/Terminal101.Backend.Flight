@@ -11,7 +11,7 @@ const status = (statusType, defaultValue) => new Schema({
 	status: statusType.mongoField({ required: true, default: defaultValue }),
 	time: {
 		type: Date,
-		default: new Date(),
+		default: Date.now,
 	},
 	description: {
 		type: String,

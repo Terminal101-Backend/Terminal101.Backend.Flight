@@ -15,6 +15,10 @@ class EFlightBook extends Enum {
         this.add("REMOVE");
         this.add("BOOKED");
         this.add("REJECTED");
+        this.add("RESERVED");
+        this.add("PAID");
+        this.add("BOOK");
+        this.add("ERROR");
 
         this.freeze();
     }

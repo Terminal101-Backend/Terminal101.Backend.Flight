@@ -157,24 +157,26 @@ module.exports.deleteFlightCondition = async (req, res) => {
   try {
     const flightCondition = await flightConditionRepository.deleteOne({ code: req.params.code });
 
-    response.success(res, {
-      code: flightCondition.code,
-      origin: {
-        items: flightCondition.origin.items,
-        exclude: flightCondition.origin.exclude,
-      },
-      destination: {
-        items: flightCondition.destination.items,
-        exclude: flightCondition.destination.exclude,
-      },
-      airline: {
-        items: flightCondition.airline.items,
-        exclude: flightCondition.airline.exclude,
-      },
-      providerNames: flightCondition.providerNames,
-      isActive: flightCondition.isActive,
-      isRestricted: flightCondition.isRestricted,
-    });
+    !!flightCondition ?
+      response.success(res, {
+        code: flightCondition.code,
+        origin: {
+          items: flightCondition.origin.items,
+          exclude: flightCondition.origin.exclude,
+        },
+        destination: {
+          items: flightCondition.destination.items,
+          exclude: flightCondition.destination.exclude,
+        },
+        airline: {
+          items: flightCondition.airline.items,
+          exclude: flightCondition.airline.exclude,
+        },
+        providerNames: flightCondition.providerNames,
+        isActive: flightCondition.isActive,
+        isRestricted: flightCondition.isRestricted,
+      }) :
+      response.exception(res, 'condition_not_exist');
   } catch (e) {
     response.exception(res, e);
   }

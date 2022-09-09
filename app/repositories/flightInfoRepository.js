@@ -207,6 +207,27 @@ class FlightInfoRepository extends BaseRepository {
       return searches[0];
     }
   }
+
+  async updateFlightDetails(code, flightDetailsCode, newPrice) {
+    // TODO: Update Other fields
+    await FlightInfo.updateOne(
+      {
+        code,
+        "flights.code": flightDetailsCode
+      },
+      {
+        // TODO:: Update more Fields
+        $set: {
+          "flights.$.price": newPrice,
+        }
+      }
+    ).then((res) => {
+      return res
+    })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
 };
 
 module.exports = new FlightInfoRepository();
