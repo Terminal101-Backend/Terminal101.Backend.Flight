@@ -32,6 +32,43 @@ axiosApiInstance.interceptors.request.use(
 //   }
 //   return Promise.reject(error);
 // });
+const reformatSearchResponse = searchResponse => {
+  if (!Array.isArray(searchResponse)) {
+    searchResponse = [searchResponse];
+  }
+
+  searchResponse.forEach(itinerary => {
+    if (!Array.isArray(itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption)) {
+      itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption = !!itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption ? [itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption] : [];
+    }
+
+    itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.forEach(od => {
+      if (!Array.isArray(od.FlightSegment.BookingClassAvails.BookingClassAvail)) {
+        od.FlightSegment.BookingClassAvails.BookingClassAvail = !!od.FlightSegment.BookingClassAvails.BookingClassAvail ? [od.FlightSegment.BookingClassAvails.BookingClassAvail] : [];
+      }
+    });
+
+    if (!Array.isArray(itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown)) {
+      itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown = !!itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown ? [itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown] : [];
+    }
+
+    itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.forEach(fareBreakdown => {
+      if (!Array.isArray(fareBreakdown.FareBasisCodes.FareBasisCode)) {
+        fareBreakdown.FareBasisCodes.FareBasisCode = !!fareBreakdown.FareBasisCodes.FareBasisCode ? [fareBreakdown.FareBasisCodes.FareBasisCode] : [];
+      }
+
+      if (!Array.isArray(fareBreakdown.PassengerFare.Taxes.Tax)) {
+        fareBreakdown.PassengerFare.Taxes.Tax = !!fareBreakdown.PassengerFare.Taxes.Tax ? [fareBreakdown.PassengerFare.Taxes.Tax] : [];
+      }
+    });
+
+    if (!Array.isArray(itinerary.AirItineraryPricingInfo.FareInfos.FareInfo)) {
+      itinerary.AirItineraryPricingInfo.FareInfos.FareInfo = !!itinerary.AirItineraryPricingInfo.FareInfos.FareInfo ? [itinerary.AirItineraryPricingInfo.FareInfos.FareInfo] : [];
+    }
+  });
+
+  return searchResponse;
+};
 
 module.exports.ping = async message => {
   const {
@@ -53,7 +90,7 @@ module.exports.ping = async message => {
   };
   const responseJson = xmljsonParser.toJson(response, option);
 
-  const result = { success: !!responseJson?.OTA_PingRS?.Success, data: responseJson?.OTA_PingRS?.EchoData };
+  const result = {success: !!responseJson?.OTA_PingRS?.Success, data: responseJson?.OTA_PingRS?.EchoData};
 
   return result;
 };
@@ -61,9 +98,11 @@ module.exports.ping = async message => {
 module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
   const originDestinations = [];
   originDestinations.push(`
-  <DepartureDateTime>${departureDate}</DepartureDateTime>
-  <OriginLocation LocationCode="${originLocationCode}" />
-  <DestinationLocation LocationCode="${destinationLocationCode}" />
+    <OriginDestinationInformation>
+      <DepartureDateTime>${departureDate}</DepartureDateTime>
+      <OriginLocation LocationCode="${originLocationCode}" />
+      <DestinationLocation LocationCode="${destinationLocationCode}" />
+    </OriginDestinationInformation>
   `);
 
   for (let index = 0; index < segments?.length ?? 0; index++) {
@@ -128,7 +167,10 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   };
   const responseJson = xmljsonParser.toJson(response, option);
 
-  const result = { success: !!responseJson?.OTA_AirLowFareSearchRS?.Success, data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary };
+  const result = {
+    success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
+    data: reformatSearchResponse(responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary),
+  };
 
   return result;
 };
@@ -215,7 +257,10 @@ module.exports.book = async (segments, price, travelers) => {
   };
   const responseJson = xmljsonParser.toJson(response, option);
 
-  const result = { success: !!responseJson?.OTA_AirLowFareSearchRS?.Success, data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary };
+  const result = {
+    success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
+    data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary
+  };
 
   return result;
 };

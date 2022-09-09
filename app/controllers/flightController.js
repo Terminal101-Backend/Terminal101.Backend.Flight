@@ -1,11 +1,17 @@
-const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
+const {EProvider, EFlightWaypoint, ETravelClass, EFeeType} = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
+const {getIpInfo} = require("../services/ip");
+const {
+  providerRepository,
+  countryRepository,
+  airlineRepository,
+  flightInfoRepository,
+  flightConditionRepository
+} = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const {amadeus} = require("../services");
+const {flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper} = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -20,7 +26,7 @@ module.exports.searchOriginDestination = async (req, res) => {
         const ip = request.getRequestIpAddress(req);
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
-        console.log({ ip, ipInfo });
+        console.log({ip, ipInfo});
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
         }
@@ -119,7 +125,8 @@ module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, act
         return false;
       } else {
         return false
-      };
+      }
+      ;
     });
 
     return !providerIsRestricted;
@@ -618,7 +625,11 @@ module.exports.getPopularFlights = async (req, res) => {
 module.exports.getCountries = async (req, res) => {
   try {
     const countries = await countryRepository.findMany({}, "name");
-    response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
+    response.success(res, countries.map(country => ({
+      code: country.code,
+      name: country.name,
+      dialingCode: country.dialingCode
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -627,8 +638,8 @@ module.exports.getCountries = async (req, res) => {
 // NOTE: Get cities of country
 module.exports.getCities = async (req, res) => {
   try {
-    const country = await countryRepository.findOne({ code: req.params.code });
-    response.success(res, country.cities.map(city => ({ code: city.code, name: city.name })));
+    const country = await countryRepository.findOne({code: req.params.code});
+    response.success(res, country.cities.map(city => ({code: city.code, name: city.name})));
   } catch (e) {
     response.exception(res, e);
   }
@@ -639,7 +650,7 @@ module.exports.getAirports = async (req, res) => {
   try {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
-    response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
+    response.success(res, country.cities.airports.map(airport => ({code: airport.code, name: airport.name})));
   } catch (e) {
     response.exception(res, e);
   }
@@ -650,7 +661,11 @@ module.exports.getAirlines = async (req, res) => {
   try {
     const airline = await airlineRepository.findMany();
 
-    response.success(res, airline.map(airline => ({ code: airline.code, name: airline.name, description: airline.description })));
+    response.success(res, airline.map(airline => ({
+      code: airline.code,
+      name: airline.name,
+      description: airline.description
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -689,7 +704,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         const ip = request.getRequestIpAddress(req);
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
-        console.log({ ip, ipInfo });
+        console.log({ip, ipInfo});
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
         }
@@ -698,8 +713,8 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         return;
       }
     }
-    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const { data: resultTransformed } = transformDataAmadeus(result);
+    const {data: result} = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+    const {data: resultTransformed} = transformDataAmadeus(result);
     response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);

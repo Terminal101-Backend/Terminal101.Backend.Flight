@@ -3,16 +3,17 @@ require("dotenv").config();
 global.config = require("../config");
 const db = require("./db/mongo");
 
-const { providerRepository, countryRepository, airlineRepository, flightInfoRepository } = require("../repositories");
-const { Country, Airline } = require("../models/documents");
+const {providerRepository, countryRepository, airlineRepository, flightInfoRepository} = require("../repositories");
+const {Country, Airline} = require("../models/documents");
 
 const data = require("./initData");
-const { ETravelClass } = require("../constants");
+const {ETravelClass} = require("../constants");
 
 const addProviders = async () => {
   await providerRepository.deleteMany();
   await providerRepository.createProvider("AMADEUS", "Amadeus");
   await providerRepository.createProvider("PARTO", "Parto");
+  await providerRepository.createProvider("AVTRA", "Avtra");
 };
 
 const addCountriesCitiesAirports = async () => {
@@ -59,8 +60,8 @@ const addSampleFlightInfos = async () => {
   // const waypoints = data.airports.map(airport => airport.AirportCode);
 
   const agrCountry = Country.aggregate();
-  agrCountry.append({ $unwind: "$cities" });
-  agrCountry.append({ $unwind: "$cities.airports" });
+  agrCountry.append({$unwind: "$cities"});
+  agrCountry.append({$unwind: "$cities.airports"});
   // agrCountry.append({ $replaceRoot: { newRoot: "$cities" } });
   const waypoints = (await agrCountry.exec()).map(country => ({
     airport: {
@@ -77,7 +78,11 @@ const addSampleFlightInfos = async () => {
       name: country.name,
     },
   }));
-  const airlines = data.airlines.map(airline => ({ code: airline.AirLineCode, name: airline.AirLineName, description: airline.Fulltext }));
+  const airlines = data.airlines.map(airline => ({
+    code: airline.AirLineCode,
+    name: airline.AirLineName,
+    description: airline.Fulltext
+  }));
 
   const count = 30;
   const maxSearchCount = 200;
