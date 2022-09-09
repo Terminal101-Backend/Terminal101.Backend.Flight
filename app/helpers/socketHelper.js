@@ -145,6 +145,7 @@ module.exports.initialize = server => {
       try {
         const req = {
           ...msg.req,
+          method: "SOCKET",
           header: key => Object.entries(msg?.req?.headers ?? {}).find(([k, v]) => k.toLowerCase() === key.toLowerCase())?.[1],
         }
 
