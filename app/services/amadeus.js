@@ -238,6 +238,21 @@ const searchAirportAndCityWithAccessToken = async keyword => {
   return response;
 };
 
+const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations/airports", {
+    params: {
+      latitude,
+      longitude,
+      sort: distance
+
+    },
+  });
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
@@ -249,5 +264,6 @@ module.exports = {
   flightCreateOrder,
   getFlightOrder,
   deleteFlightOrder,
-  searchAirportAndCityWithAccessToken
+  searchAirportAndCityWithAccessToken,
+  searchAirportAndCityNearestWithAccessToken
 };

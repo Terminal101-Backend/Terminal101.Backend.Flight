@@ -55,7 +55,7 @@ let sessionId = "";
 // Response interceptor for API calls
 axiosApiInstance.interceptors.response.use(async response => {
   if (!!response.data.Success) {
-    return { data: response };
+    return {data: response};
   } else {
     const originalRequest = response.config;
 
@@ -84,8 +84,7 @@ const createSession = async () => {
 
   const {
     data: response
-  } = await axios.post(process.env.PARTO_BASE_URL + "/Authenticate/CreateSession", params, {
-  });
+  } = await axios.post(process.env.PARTO_BASE_URL + "/Authenticate/CreateSession", params, {});
 
   sessionId = response.SessionId;
 
@@ -188,11 +187,11 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 };
 
 /**
- * 
- * @param {String} fareSourceCode 
- * @param {LeaderInfo} contact 
- * @param {TravelerInfo[]} travelers 
- * @returns 
+ *
+ * @param {String} fareSourceCode
+ * @param {LeaderInfo} contact
+ * @param {TravelerInfo[]} travelers
+ * @returns
  */
 const airBook = async (fareSourceCode, contact, travelers) => {
   const params = {
@@ -244,16 +243,15 @@ const airBook = async (fareSourceCode, contact, travelers) => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {
-  });
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {});
 
   return response;
 };
 
 /**
- * 
- * @param {String} bookId 
- * @returns 
+ *
+ * @param {String} bookId
+ * @returns
  */
 const airBookData = async bookId => {
   const params = {
@@ -263,16 +261,15 @@ const airBookData = async bookId => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {
-  });
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {});
 
   return response;
 };
 
 /**
- * 
- * @param {String} bookId 
- * @returns 
+ *
+ * @param {String} bookId
+ * @returns
  */
 const airBookCancel = async bookId => {
   const params = {
@@ -282,16 +279,15 @@ const airBookCancel = async bookId => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {
-  });
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {});
 
   return response;
 };
 
 /**
- * 
- * @param {String} bookId 
- * @returns 
+ *
+ * @param {String} bookId
+ * @returns
  */
 const airBookRefund = async bookId => {
   const params = {
@@ -302,16 +298,15 @@ const airBookRefund = async bookId => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRefund", params, {
-  });
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRefund", params, {});
 
   return response;
 };
 
 /**
- * 
- * @param {String} bookId 
- * @returns 
+ *
+ * @param {String} bookId
+ * @returns
  */
 const airBookIssuing = async bookId => {
   const params = {
@@ -321,10 +316,32 @@ const airBookIssuing = async bookId => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirOrderTicket", params, {
-  });
+  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirOrderTicket", params, {});
 
   return response;
+};
+
+/**
+ *
+ * @param {String} fareSourceCode
+ * @returns
+ */
+const airRevalidate = async fareSourceCode => {
+  const params = {
+    FareSourceCode: fareSourceCode,
+    SessionId: sessionId,
+  };
+
+  try {
+    const {
+      data: response
+    } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/airRevalidate", params, {});
+
+    return response.data;
+  } catch (e) {
+    console.log('error soap => ', airRevalidate);
+    return e
+  }
 };
 
 module.exports = {
@@ -335,4 +352,5 @@ module.exports = {
   airBookCancel,
   airBookRefund,
   airBookIssuing,
+  airRevalidate
 };

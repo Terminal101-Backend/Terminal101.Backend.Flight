@@ -1,9 +1,31 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const { parto } = require("../services");
-const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
-const { accountManagement } = require("../services");
-const { EProvider } = require("../constants");
+const {parto} = require("../services");
+const {flightInfoRepository, countryRepository, airlineRepository} = require("../repositories");
+const {accountManagement} = require("../services");
+const {EProvider} = require("../constants");
+
+const makeSegmentsArray = segments => {
+  segments = segments ?? [];
+  if (!Array.isArray(segments)) {
+    try {
+      segments = segments.split(",");
+    } catch (e) {
+      segments = [segments];
+    }
+  }
+  ;
+  segments = segments.map(segment => {
+    const segment_date = segment.trim().split(":");
+    return {
+      originCode: segment_date[0],
+      destinationCode: segment_date[1],
+      date: segment_date[2],
+    };
+  });
+
+  return segments;
+};
 
 const makeSegmentStopsArray = airports => {
   return stop => ({
@@ -201,7 +223,10 @@ module.exports.searchFlights = async params => {
   const airlines = await airlineRepository.getAirlinesByCode(carriers);
   const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, airlines, airports, params.travelClass));
 
-  const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
+  const {
+    origin,
+    destination
+  } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
   // let origin = await countryRepository.getCityByCode(params.origin);
   // let destination = await countryRepository.getCityByCode(params.destination);
@@ -228,12 +253,12 @@ module.exports.searchFlights = async params => {
 };
 
 /**
- *  
- * @param {Object} params 
+ *
+ * @param {Object} params
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const { data: user } = await accountManagement.getUserInfo(params.userCode);
+  const {data: user} = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -275,14 +300,14 @@ module.exports.bookFlight = async params => {
     }
   });
 
-  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
+  const flightInfo = await flightInfoRepository.findOne({code: params.flightDetails.code});
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const { data: bookedFlight } = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
+  const {data: bookedFlight} = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
 
-  return { ...bookedFlight, bookedId: bookedFlight.UniqueId };
+  return {...bookedFlight, bookedId: bookedFlight.UniqueId};
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {
@@ -291,4 +316,20 @@ module.exports.cancelBookFlight = async bookedFlight => {
 
 module.exports.issueBookedFlight = async bookedFlight => {
   return await parto.airBookIssuing(bookedFlight.providerPnr);
+}
+
+module.exports.airRevalidate = async flightInfo => {
+  try {
+    const fareSourceCode = flightInfo.flights.providerData.fareSourceCode;
+    const airRevalidate = await parto.airRevalidate(fareSourceCode);
+    if (!airRevalidate.PricedItinerary) {
+      return {
+        error: 'Revalidation failed',
+        message: airRevalidate,
+      };
+    }
+    return makePriceObject(airRevalidate.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare, airRevalidate.PricedItinerary.AirItineraryPricingInfo.PtcFareBreakdown);
+  } catch (e) {
+    return e
+  }
 }

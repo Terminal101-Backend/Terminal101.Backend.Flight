@@ -118,15 +118,13 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
     },
   };
 
-  const { data: response } = await axiosApiInstance.post("/Flight/Search", requestData);
+  const {data: response} = await axiosApiInstance.post("/Flight/Search", requestData);
 
   return response;
 };
 
 const bookFlight = async (flight, passengers) => {
-  console.log(JSON.stringify({ passengers, flight }));
-
-  const { data: response } = await axiosApiInstance.post("/Flight/AirBook",
+  const {data: response} = await axiosApiInstance.post("/Flight/AirBook",
     {
       passengers,
       flight,
@@ -136,8 +134,20 @@ const bookFlight = async (flight, passengers) => {
   return response;
 };
 
+const airRevalidate = async flightInfo => {
+  try {
+    const {data: response} = await axiosApiInstance.post("/Flight/airRevalidate",
+      flightInfo
+    );
+
+    return response;
+  } catch (e) {
+    console.log('error soap => ', airRevalidate)
+  }
+};
 
 module.exports = {
   searchFlight,
   bookFlight,
+  airRevalidate,
 };

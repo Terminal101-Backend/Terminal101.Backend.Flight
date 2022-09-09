@@ -56,7 +56,7 @@ class BookedFlightRepository extends BaseRepository {
   async changeStatus(code, status, changedBy, description) {
     const bookedFlight = await this.findOne({ code });
 
-    if (!bookedFlihgt) {
+    if (!bookedFlight) {
       throw "flight_not_found";
     }
 
@@ -64,6 +64,54 @@ class BookedFlightRepository extends BaseRepository {
     await bookedFlight.save();
 
     return bookedFlight.status;
+  }
+
+  /**
+   * 
+   * @param {String} code 
+   * @param {EBookedFlightStatus} status 
+   * @returns {Promise<Status[]>}
+   */
+  async getStatuses(code, status) {
+    const agrBookedFlight = BookedFlight.aggregate();
+    agrBookedFlight.append({
+      $match: {
+        code,
+      }
+    });
+    agrBookedFlight.append({
+      $unwind: "$statuses",
+    });
+    agrBookedFlight.append({
+      $replaceRoot: {
+        newRoot: "$statuses"
+      },
+    });
+    agrBookedFlight.append({
+      $match: {
+        status,
+      }
+    });
+
+    const bookedFlightStatuses = await agrBookedFlight.exec();
+
+    if (!bookedFlightStatuses) {
+      throw "flight_not_found";
+    }
+
+    return bookedFlightStatuses;
+  }
+
+  /**
+   * 
+   * @param {String} code 
+   * @param {EBookedFlightStatus} status 
+   * @returns {Promise<Boolean>}
+   */
+  async hasStatus(code, status) {
+    const bookedFlight = await this.findOne({ code, "statuses.status": status });
+
+    return !!bookedFlight;
   }
 
   /**
@@ -163,7 +211,7 @@ class BookedFlightRepository extends BaseRepository {
     });
 
     const result = await agrBookedFlight.exec();
-    return !!result && !!result[0] ? result[0] : {};
+    return !!result && !!result[0] ? result[0] : undefined;
   }
 
   /**

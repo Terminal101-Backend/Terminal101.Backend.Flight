@@ -1,7 +1,7 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 const xmljsonParser = require("xml2json");
-const { dateTimeHelper, flightHelper, stringHelper } = require("../helpers");
+const {dateTimeHelper, flightHelper, stringHelper} = require("../helpers");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -37,6 +37,43 @@ axiosApiInstance.interceptors.request.use(
 //   }
 //   return Promise.reject(error);
 // });
+const reformatSearchResponse = searchResponse => {
+  if (!Array.isArray(searchResponse)) {
+    searchResponse = [searchResponse];
+  }
+
+  searchResponse.forEach(itinerary => {
+    if (!Array.isArray(itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption)) {
+      itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption = !!itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption ? [itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption] : [];
+    }
+
+    itinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.forEach(od => {
+      if (!Array.isArray(od.FlightSegment.BookingClassAvails.BookingClassAvail)) {
+        od.FlightSegment.BookingClassAvails.BookingClassAvail = !!od.FlightSegment.BookingClassAvails.BookingClassAvail ? [od.FlightSegment.BookingClassAvails.BookingClassAvail] : [];
+      }
+    });
+
+    if (!Array.isArray(itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown)) {
+      itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown = !!itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown ? [itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown] : [];
+    }
+
+    itinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.forEach(fareBreakdown => {
+      if (!Array.isArray(fareBreakdown.FareBasisCodes.FareBasisCode)) {
+        fareBreakdown.FareBasisCodes.FareBasisCode = !!fareBreakdown.FareBasisCodes.FareBasisCode ? [fareBreakdown.FareBasisCodes.FareBasisCode] : [];
+      }
+
+      if (!Array.isArray(fareBreakdown.PassengerFare.Taxes.Tax)) {
+        fareBreakdown.PassengerFare.Taxes.Tax = !!fareBreakdown.PassengerFare.Taxes.Tax ? [fareBreakdown.PassengerFare.Taxes.Tax] : [];
+      }
+    });
+
+    if (!Array.isArray(itinerary.AirItineraryPricingInfo.FareInfos.FareInfo)) {
+      itinerary.AirItineraryPricingInfo.FareInfos.FareInfo = !!itinerary.AirItineraryPricingInfo.FareInfos.FareInfo ? [itinerary.AirItineraryPricingInfo.FareInfos.FareInfo] : [];
+    }
+  });
+
+  return searchResponse;
+};
 
 module.exports.ping = async (message, testMode = false) => {
   const {
@@ -51,7 +88,7 @@ module.exports.ping = async (message, testMode = false) => {
 </POS>
 <EchoData>${message ?? "Echo me back"}</EchoData>
 </OTA_PingRQ>
-  `, { testMode });
+  `, {testMode});
 
   const option = {
     object: true
@@ -81,7 +118,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   for (let index = 0; index < segments?.length ?? 0; index++) {
     originDestinations.push(`
     <OriginDestinationInformation>
-      <DepartureDateTime>${segments[index].date}</DepartureDateTime>
+      <DepartureDateTime>${new Date(segments[index].date).toISOString()}</DepartureDateTime>
       <OriginLocation LocationCode="${segments[index].originCode}" />
       <DestinationLocation LocationCode="${segments[index].destinationCode}" />
     </OriginDestinationInformation>
@@ -133,7 +170,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const {
     data: response
-  } = await axiosApiInstance.post("/availability/lowfaresearch", query, { testMode });
+  } = await axiosApiInstance.post("/availability/lowfaresearch", query, {testMode});
 
   const option = {
     object: true
@@ -142,13 +179,13 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const result = {
     success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-    data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary
+    data: reformatSearchResponse(responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary),
   };
 
   return result;
 };
 
-module.exports.book = async (segments, price, travelers, testMode = false) => {
+module.exports.book = async (segments, price, contact, travelers, testMode = false) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`
@@ -165,70 +202,75 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
   const travelersInfo = [];
   travelers.forEach(traveler => {
     let namePrefix;
-    switch (traveler.genderCode) {
-      case "M":
+    const infant = 2 * 365 * 24 * 3600 * 1000;
+    const child = 12 * 365 * 24 * 3600 * 1000
+    const age = new Date() - new Date(traveler.birthDate);
+    if ((traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
+      traveler.gender = "MALE";
+    }
+    const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
+    switch (traveler.gender) {
+      case "MALE":
         namePrefix = "Mr";
         break;
 
-      case "F":
+      case "FEMALE":
         namePrefix = "Mrs";
         break;
-
-      default:
-        namePrefix = "Mx";
     }
+
     travelersInfo.push(`
-      <AirTraveler BirthDate="${dateTimeHelper.excludeDateFromIsoString(traveler.birthDate.toISOString())}" PassengerTypeCode="${traveler.type}" AccompaniedByInfantInd="false" Gender="${traveler.genderCode}" TravelerNationality="${traveler.nationality}">
+      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.document.issuedAt}">
         <PersonName>
           <NamePrefix>${namePrefix}</NamePrefix>
           <GivenName>${traveler.firstName}</GivenName>
           <Surname>${traveler.lastName}</Surname>
         </PersonName>
         <TravelerRefNumber RPH="1"/>
-        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${dateTimeHelper.excludeDateFromIsoString(traveler.document.expireDate.toISOString())}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.nationality}"/>
+        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${new Date(traveler.document.expirationDate).toISOString()}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.document.issuedAt}"/>
       </AirTraveler>
     `);
   });
 
   const query = `
-    <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-    OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
-      <POS>
-        <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
-          <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
-        </Source>
-      </POS>
-      <AirItinerary>
-        <OriginDestinationOptions>
+  <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
+  OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+  <POS>
+    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="${price.currency}">
+      <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
+    </Source>
+  </POS>
+			<AirItinerary>
+				<OriginDestinationOptions>
           ${originDestinations.join("\n")}
-        </OriginDestinationOptions>
-      </AirItinerary>
-      <PriceInfo>
-        <ItinTotalFare>
-          <BaseFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
-          <TotalFare CurrencyCode="${price.currencyCode}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
-        </ItinTotalFare>
-      </PriceInfo>
-      <TravelerInfo>
+				</OriginDestinationOptions>
+			</AirItinerary>
+			<PriceInfo>
+				<ItinTotalFare>
+					<BaseFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
+					<TotalFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
+				</ItinTotalFare>
+			</PriceInfo>
+			<TravelerInfo>
         ${travelersInfo.join("\n")}
-      </TravelerInfo>
-      <ContactPerson>
-        <PersonName>
-          <GivenName>AHMED</GivenName>
-          <Surname>MOHAMMED</Surname>
-        </PersonName>
-        <Telephone PhoneNumber="(44)1233222344"/>
-        <HomeTelephone PhoneNumber="(44)1233225744"/>
-        <Email>tba@tba.com</Email>
-      </ContactPerson>
-      <Fulfillment>
+			</TravelerInfo>
+			<ContactPerson>
+				<PersonName>
+					<GivenName>${travelers[0].firstName}</GivenName>
+					<Surname>${travelers[0].lastName}</Surname>
+				</PersonName>
+			  <Telephone PhoneNumber="${contact.mobileNumber}"/>
+			  <HomeTelephone PhoneNumber="${contact.mobileNumber}"/>
+			  <Email>${contact.email}</Email>
+	    </ContactPerson>
+  	  <Fulfillment>
         <PaymentDetails>
-          <PaymentDetail PaymentType="2">
-            <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
-              <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
-            </DirectBill>
-            <PaymentAmount CurrencyCode="USD" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
-          </PaymentDetail>
+            <PaymentDetail PaymentType="2">
+                <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
+                    <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
+                </DirectBill>
+                <PaymentAmount CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
+            </PaymentDetail>
         </PaymentDetails>
       </Fulfillment>
     </OTA_AirBookRQ>
@@ -236,7 +278,7 @@ module.exports.book = async (segments, price, travelers, testMode = false) => {
 
   const {
     data: response
-  } = await axiosApiInstance.post("/booking/create", query, { testMode });
+  } = await axiosApiInstance.post("/booking/create", query, {testMode});
 
   const option = {
     object: true
@@ -270,7 +312,7 @@ module.exports.getBooked = async (id, testMode = false) => {
 
   const {
     data: response
-  } = await axiosApiInstance.post("/booking/read", query, { testMode });
+  } = await axiosApiInstance.post("/booking/read", query, {testMode});
 
   const option = {
     object: true
