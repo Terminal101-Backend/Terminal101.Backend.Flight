@@ -1,6 +1,6 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const {avtra} = require("../services");
+const avtra = require("../services/avtra");
 const {flightInfoRepository, countryRepository, airlineRepository} = require("../repositories");
 const {accountManagement} = require("../services");
 const {EProvider} = require("../constants");

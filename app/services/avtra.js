@@ -190,7 +190,7 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
   segments.forEach(segment => {
     originDestinations.push(`
       <OriginDestinationOption>
-        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${segment.date.toISOString().replace(/Z$/, "+00:00")}">
+        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${new Date(segment.date).toISOString().replace(/(\.\d{3})?Z$/, "+00:00")}">
           <DepartureAirport LocationCode="${segment.originCode}" />
           <ArrivalAirport LocationCode="${segment.destinationCode}" />
           <OperatingAirline Code="${segment.airlineCode}"/>
@@ -205,29 +205,32 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
     const infant = 2 * 365 * 24 * 3600 * 1000;
     const child = 12 * 365 * 24 * 3600 * 1000
     const age = new Date() - new Date(traveler.birthDate);
-    if ((traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
-      traveler.gender = "MALE";
+    if ((traveler.gender === "MALE") || (traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
+      traveler.gender = "M";
+    } else {
+      traveler.gender = "F";
     }
+
     const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
     switch (traveler.gender) {
-      case "MALE":
+      case "M":
         namePrefix = "Mr";
         break;
 
-      case "FEMALE":
+      case "F":
         namePrefix = "Mrs";
         break;
     }
 
     travelersInfo.push(`
-      <AirTraveler BirthDate="${traveler.birthDate}" PassengerTypeCode="${type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.document.issuedAt}">
+      <AirTraveler BirthDate="${new Date(traveler.birthDate).toISOString().replace(/(\.\d{3})Z.*$/, "")}" PassengerTypeCode="${type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.document.issuedAt}">
         <PersonName>
           <NamePrefix>${namePrefix}</NamePrefix>
           <GivenName>${traveler.firstName}</GivenName>
           <Surname>${traveler.lastName}</Surname>
         </PersonName>
         <TravelerRefNumber RPH="1"/>
-        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${new Date(traveler.document.expirationDate).toISOString()}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.document.issuedAt}"/>
+        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${new Date(traveler.document.expirationDate).toISOString().replace(/(\.\d{3})?Z.*$/, "")}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.document.issuedAt}"/>
       </AirTraveler>
     `);
   });
@@ -247,8 +250,8 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
 			</AirItinerary>
 			<PriceInfo>
 				<ItinTotalFare>
-					<BaseFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
-					<TotalFare CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
+					<BaseFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
+					<TotalFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
 				</ItinTotalFare>
 			</PriceInfo>
 			<TravelerInfo>
@@ -267,9 +270,9 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
         <PaymentDetails>
             <PaymentDetail PaymentType="2">
                 <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
-                    <CompanyName CompanyShortName="Avtra OTA" Code="${process.env.AVTRA_OFFICE_ID}"/>
+                    <CompanyName CompanyShortName="${process.env.AVTRA_OFFICE_ID}" Code="${process.env.AVTRA_OFFICE_ID}"/>
                 </DirectBill>
-                <PaymentAmount CurrencyCode=${price.currency} DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
+                <PaymentAmount CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
             </PaymentDetail>
         </PaymentDetails>
       </Fulfillment>
