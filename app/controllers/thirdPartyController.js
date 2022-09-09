@@ -1,15 +1,15 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { providerRepository } = require("../repositories");
-const { EProvider } = require("../constants");
-const { amadeus, parto, avtra } = require("../services");
+const {providerRepository} = require("../repositories");
+const {EProvider} = require("../constants");
+const {amadeus, parto, avtra} = require("../services");
 
 // NOTE: Search flights by provider
 module.exports.lowFareSearch = async (req, res) => {
   try {
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({ title: req.params.providerTitle });
+    const provider = await providerRepository.findOne({title: req.params.providerTitle});
     if (!provider?.isActive) {
       response.error(res, "provider_not_found", 404);
       return;
@@ -46,7 +46,7 @@ module.exports.bookFlight = async (req, res) => {
   try {
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({ title: req.params.providerTitle });
+    const provider = await providerRepository.findOne({title: req.params.providerTitle});
     if (!provider?.isActive) {
       response.error(res, "provider_not_found", 404);
       return;
@@ -55,6 +55,7 @@ module.exports.bookFlight = async (req, res) => {
     const result = await avtra.book(
       req.body.segments,
       req.body.price,
+      req.body.contact,
       req.body.travelers,
       testMode);
 
@@ -73,7 +74,7 @@ module.exports.getBookedFlight = async (req, res) => {
   try {
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({ title: req.params.providerTitle });
+    const provider = await providerRepository.findOne({title: req.params.providerTitle});
     if (!provider?.isActive) {
       response.error(res, "provider_not_found", 404);
       return;
