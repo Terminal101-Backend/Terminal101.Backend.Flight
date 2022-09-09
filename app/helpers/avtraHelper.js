@@ -305,10 +305,10 @@ module.exports.bookFlight = async params => {
   };
 
   const {data: bookedFlight} = await avtra.book(segments, price, params.contact, travelers);
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
+  flightInfo.flights[flightIndex].providerData.bookedData = bookedFlight;
   await flightInfo.save();
 
-  return {...bookedFlight, bookedId: bookedFlight.UniqueId};
+  return {...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID};
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {
