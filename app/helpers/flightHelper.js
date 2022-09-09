@@ -166,3 +166,25 @@ module.exports.getOriginDestinationCity = async (origin, destination, airports =
 
   return result;
 }
+
+
+module.exports.makeSegmentsArray = segments => {
+  segments = segments ?? [];
+  if (!Array.isArray(segments)) {
+    try {
+      segments = segments.split(",");
+    } catch (e) {
+      segments = [segments];
+    }
+  };
+  segments = segments.map(segment => {
+    const segment_date = segment.trim().split(":");
+    return {
+      originCode: segment_date[0],
+      destinationCode: segment_date[1],
+      date: segment_date[2],
+    };
+  });
+
+  return segments;
+};

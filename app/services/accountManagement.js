@@ -76,9 +76,9 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   params.append("path", path);
   params.append("serviceName", serviceName);
 
-  const {data: response} = await axiosApiInstance.get(`/user/${userCode}`, params);
+  const {data: response} = await axiosApiInstance.get(`/user/${userCode}/access`, {params});
 
-  return response;
+  return response.data;
 };
 
 module.exports = {

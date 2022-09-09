@@ -1,7 +1,7 @@
 const {decodeToken} = require("../helpers/tokenHelper");
 const {EUserType} = require("../constants");
 const responseHelper = require("./responseHelper");
-const {common} = require("../services");
+const common = require("../services/common");
 
 let io;
 

@@ -506,7 +506,7 @@ module.exports.getFlight = async (req, res) => {
     if (!isBookedFlight) {
       const providerName = flightInfo.flights.provider.toLowerCase();
       const providerHelper = eval(providerName + "Helper");
-      const newPrice = await providerHelper.airReValidate(flightInfo);
+      const newPrice = await providerHelper.airRevalidate(flightInfo);
 
       // if(!newPrice){
       //   console.log('err :', newPrice)
@@ -745,11 +745,14 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         ip = ip.includes(':') ? ip.split(':')[0] : ip;
 
         ipInfo = await getIpInfo(ip);
-
+        // ipInfo = await getIpInfo("5.239.149.82");
         // ipInfo = await getIpInfo("161.185.160.93");
         console.log({ip, ipInfo});
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.countryCode;
+        // }
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.city;
         // }
         const {data: result} = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
         const {data: resultTransformed} = transformDataAmadeus(result);

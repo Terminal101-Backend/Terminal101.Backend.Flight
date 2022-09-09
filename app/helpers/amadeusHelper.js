@@ -1,8 +1,8 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const { accountManagement, amadeus, amadeusSoap } = require("../services");
-const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
-const { EProvider } = require("../constants");
+const {accountManagement, amadeus, amadeusSoap} = require("../services");
+const {countryRepository, flightInfoRepository, airlineRepository} = require("../repositories");
+const {EProvider} = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -12,7 +12,8 @@ const makeSegmentsArray = segments => {
     } catch (e) {
       segments = [segments];
     }
-  };
+  }
+  ;
   segments = segments.map(segment => {
     const segment_date = segment.trim().split(":");
     return {
@@ -171,7 +172,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
 };
 
 module.exports.searchFlights_____OLD = async params => {
-  let segments = makeSegmentsArray(params.segments);
+  let segments = flightHelper.makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
@@ -230,7 +231,7 @@ module.exports.searchFlights_____OLD = async params => {
 };
 
 module.exports.searchFlights = async params => {
-  let segments = makeSegmentsArray(params.segments);
+  let segments = flightHelper.makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
   params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
@@ -238,7 +239,7 @@ module.exports.searchFlights = async params => {
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
-  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+  let {result: amadeusSearchResult} = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
   if (!amadeusSearchResult) {
     return {
@@ -274,7 +275,10 @@ module.exports.searchFlights = async params => {
   const carriers = await airlineRepository.getAirlinesByCode(Object.keys(carrierCodes));
 
   const flightDetails = amadeusSearchResult.flights.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
-  const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
+  const {
+    origin,
+    destination
+  } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
   // let origin = await countryRepository.getCityByCode(params.origin);
   // let destination = await countryRepository.getCityByCode(params.destination);
@@ -303,12 +307,12 @@ module.exports.searchFlights = async params => {
 
 
 /**
- *  
- * @param {Object} params 
+ *
+ * @param {Object} params
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const { data: user } = await accountManagement.getUserInfo(params.userCode);
+  const {data: user} = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -368,25 +372,26 @@ module.exports.bookFlight = async params => {
   const bookedFlight = await amadeusSoap.bookFlight(params.flightDetails.flights.providerData, travelers);
   if (!bookedFlight.succeed) {
     throw bookedFlight.errorMessage;
-  };
+  }
+  ;
   // flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.result.pnr;
   // flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
   // await flightInfo.save();
 
-  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
+  return {...bookedFlight.result, bookedId: bookedFlight.result.pnr};
 };
 
 /**
- * 
- * @param {String} searchCode 
- * @param {Number} flightCode 
- * @param {String<"flight-offers-pricing|flight-order">} type 
+ *
+ * @param {String} searchCode
+ * @param {Number} flightCode
+ * @param {String<"flight-offers-pricing|flight-order">} type
  * @returns {Promise}
  */
 module.exports.regenerateAmadeusFlightOfferObject = async (searchCode, flightCode) => {
   /**
-   * 
-   * @param {Date} date 
+   *
+   * @param {Date} date
    * @returns {String}
    */
   const dateToIsoString = date => {
@@ -453,16 +458,16 @@ module.exports.regenerateAmadeusFlightOfferObject = async (searchCode, flightCod
 }
 
 /**
- * 
- * @param {String} searchCode 
- * @param {Number} flightCode 
- * @param {String<"flight-offers-pricing|flight-order">} type 
+ *
+ * @param {String} searchCode
+ * @param {Number} flightCode
+ * @param {String<"flight-offers-pricing|flight-order">} type
  * @returns {}
  */
 module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
   /**
-   * 
-   * @param {Date} date 
+   *
+   * @param {Date} date
    * @returns {String}
    */
   const dateToIsoString = date => {
@@ -548,13 +553,16 @@ module.exports.cancelBookFlight = async bookedFlight => {
 module.exports.issueBookedFlight = async bookedFlight => {
 }
 
-module.exports.airReValidate = async flightInfo => {
+module.exports.airRevalidate = async flightInfo => {
   try {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
-    let { result: airReValidate } = await amadeusSoap.airReValidate(flightInfoAmadeusObject);
-    if (!airReValidate){ 
-      return {error: 'ReValidation failed'}}
-    return makePriceObject(airReValidate.price, airReValidate.price.offerPrices);
+    let {result: airRevalidate} = await amadeusSoap.airRevalidate(flightInfoAmadeusObject);
+    if (!airRevalidate) {
+      return {
+        error: 'Revalidation failed',
+      };
+    }
+    return makePriceObject(airRevalidate.price, airRevalidate.price.offerPrices);
 
   } catch (e) {
     return e
