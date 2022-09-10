@@ -223,7 +223,6 @@ module.exports.searchFlights = async (req, res) => {
           if (req.method === "SOCKET") {
             result.completed = true;
           }
-
           response.success(res, result);
         }
       }).catch(e => {
