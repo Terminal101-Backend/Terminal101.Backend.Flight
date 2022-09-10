@@ -1,6 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
-const xmljsonParser = require("xml2json");
+const xmljsonParser = require("xml-js");
 const {dateTimeHelper, flightHelper, stringHelper} = require("../helpers");
 
 // Request interceptor for API calls
