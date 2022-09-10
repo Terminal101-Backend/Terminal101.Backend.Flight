@@ -219,11 +219,11 @@ module.exports.searchFlights = async (req, res) => {
         searchCode = result.code;
         hasResult = true;
 
-        if (req.method === "SOCKET") {
-          result.completed = true;
-        }
-
         if (++providerNumber === activeProviderCount) {
+          if (req.method === "SOCKET") {
+            result.completed = true;
+          }
+          
           response.success(res, result);
         }
       }).catch(e => {
