@@ -12,7 +12,7 @@ module.exports = (app) => {
   app.use("/condition", require("./flightConditionRoute"));
 
 
-  app.use("/temp", require("./tempRoute"));
+  // app.use("/temp", require("./tempRoute"));
 
 
   app.use((req, res, next) => {
