@@ -34,7 +34,7 @@ class Enum {
       },
       set: value => {
         if (typeof value !== "symbol") {
-          value = this.get(value);
+          value = isNaN(value) ? this.get(value) : value;
         }
         return this.find(value);
       },
@@ -52,7 +52,7 @@ class Enum {
   }
 
   validator({required = false, default: def} = {}) {
-    let result = Joi.string().regex(new RegExp(Object.keys(this.#list).join("|")));
+    let result = Joi.string().regex(new RegExp(((this.#type === EEnumType.NUMERIC) ? Object.values(this.#list) : Object.keys(this.#list)).join("|")));
 
     if (this.#type === EEnumType.NUMERIC) {
       result = Joi.array().items(result);
@@ -107,9 +107,9 @@ class Enum {
           key = [key];
         }
 
-        let items = key.map(k => this.#list.indexOf(k));
+        let items = key.map(k => this.#list.indexOf(k)).filter(k => k !== -1);
 
-        return items.reduce((t, i) => (i >= 0) ? t += Math.pow(2, i) : t, 0);
+        return items.length === 0 ? -1 : items.reduce((t, i) => (i >= 0) ? t += Math.pow(2, i) : t, 0);
 
       default:
     }
