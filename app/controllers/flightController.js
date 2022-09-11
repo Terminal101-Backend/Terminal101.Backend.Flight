@@ -2,10 +2,10 @@ const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../const
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository } = require("../repositories");
+const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository, bookedFlightRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -17,7 +17,9 @@ module.exports.searchOriginDestination = async (req, res) => {
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
         console.log({ ip, ipInfo });
@@ -207,6 +209,7 @@ module.exports.searchFlights = async (req, res) => {
           response.success(res, result);
         }
       }).catch(e => {
+        console.error(`Provider (${provider.title}) returns error: `, e);
         if (++providerNumber === activeProviderCount) {
           if (!hasResult) {
             response.exception(res, e);
@@ -473,11 +476,33 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+    let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
     if (!flightInfo) {
       response.error(res, "flight_not_found", 404);
       return;
+    }
+    const isBookedFlight = await bookedFlightRepository.findOne({ searchedFlightCode: req.params.searchId, flightDetailsCode: req.params.flightCode });
+    if (!isBookedFlight) {
+      const providerName = flightInfo.flights.provider.toLowerCase();
+      const providerHelper = eval(providerName + "Helper");
+      const newPrice = await providerHelper.airReValidate(flightInfo);
+
+      // if(!newPrice){
+      //   console.log('err :', newPrice)
+      //   response.exception(res, 'This Flight Not Available, Please try booking another flight.')
+      // }
+      if (!!newPrice.error) {
+        response.exception(res, newPrice.error);
+        return;
+      }
+      let oldPrice = flightInfo.flights.price.total;
+
+      let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
+      if (!!priceChange) {
+        await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
+        flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+      }
     }
 
     response.success(res, {
@@ -598,6 +623,8 @@ module.exports.getFlight = async (req, res) => {
         })),
       }
     });
+
+
   } catch (e) {
     response.exception(res, e);
   }
@@ -686,21 +713,28 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
     let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
         ipInfo = await getIpInfo(ip);
-        // ipInfo = await getIpInfo("5.239.149.82");
+
+        // ipInfo = await getIpInfo("161.185.160.93");
         console.log({ ip, ipInfo });
-        if (ipInfo.status === "success") {
-          keyword = ipInfo.city;
-        }
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.countryCode;
+        // }
+        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const { data: resultTransformed } = transformDataAmadeus(result);
+        response.success(res, resultTransformed);
       } else {
         response.error(res, "keyword_required", 400);
         return;
       }
+    } else {
+      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const { data: resultTransformed } = transformDataAmadeus(result);
+      response.success(res, resultTransformed);
     }
-    const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-    const { data: resultTransformed } = transformDataAmadeus(result);
-    response.success(res, resultTransformed);
   } catch (e) {
     response.exception(res, e);
   }
@@ -715,7 +749,7 @@ function transformDataAmadeus(data) {
   data.forEach(element => {
     newData.push({
       subType: element.subType,
-      name: element.name,
+      name: toCamelCase(element.name),
       code: element.iataCode,
       geoCode: element.geoCode,
       address: element.address
@@ -726,5 +760,14 @@ function transformDataAmadeus(data) {
   return {
     data: newData
   };
+}
+
+function toCamelCase(input) {
+  var result = input.toLowerCase().replace(/\s+(\w)?/gi,
+    (match, letter) => {
+      return letter.toUpperCase()
+    }).replace(/([A-Z])/g, " $1");
+
+  return result.charAt(0).toUpperCase() + result.slice(1);
 }
 

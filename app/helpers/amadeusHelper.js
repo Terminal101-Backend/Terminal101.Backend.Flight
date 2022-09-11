@@ -152,9 +152,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
       currencyCode: flight.price.currency,
       travelClass,
       provider: EProvider.get("AMADEUS"),
-      providerData: {
-        offerId: flight.offerID,
-      },
+      providerData: flight,
       price: makePriceObject(flight.price, flight.price.offerPrices),
       itineraries: flight.flights.map(itinerary => {
         const segments = itinerary.flightSegments.map(makeFlightSegmentsArray(aircrafts, airlines, airports));
@@ -326,7 +324,7 @@ module.exports.bookFlight = async params => {
           phone: {
             areaCode: "",
             countryCode: "",
-            number: (!!user.mobileNumber) ? user.mobileNumber: params.contact.mobileNumber,
+            number: (!!user.mobileNumber) ? user.mobileNumber : params.contact.mobileNumber,
           },
         },
         document: {
@@ -363,16 +361,17 @@ module.exports.bookFlight = async params => {
     }
   });
 
-  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
-  const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
+  // const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
+  // const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const bookedFlight = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  // const bookedFlight = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
+  const bookedFlight = await amadeusSoap.bookFlight(params.flightDetails.flights.providerData, travelers);
   if (!bookedFlight.succeed) {
     throw bookedFlight.errorMessage;
   };
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.result.pnr;
-  flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
-  await flightInfo.save();
+  // flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.result.pnr;
+  // flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
+  // await flightInfo.save();
 
   return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
 };
@@ -395,7 +394,7 @@ module.exports.regenerateAmadeusFlightOfferObject = async (searchCode, flightCod
     return result.replace(/\.\d+Z$/, "");
   }
 
-  const flightInfo = await this.getFlight(searchCode, flightCode);
+  const flightInfo = await flightInfoRepository.getFlight(searchCode, flightCode);
   let travelClass;
   switch (flightInfo.flight.travelClass) {
     case "ECONOMY":
@@ -501,7 +500,7 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
         baseAmount: 0,
         taxesAmount: 0,
         passengerType: (price.travelerType === "ADULT" ? "ADT" : (price.travelerType === "CHILD" ? "CHD" : "INF")),
-        numberOfUnits: 1,
+        numberOfUnits: price.count,
       }))
     },
     owner: flightInfo.flights.owner.code,
@@ -547,4 +546,17 @@ module.exports.cancelBookFlight = async bookedFlight => {
 }
 
 module.exports.issueBookedFlight = async bookedFlight => {
+}
+
+module.exports.airReValidate = async flightInfo => {
+  try {
+    const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
+    let { result: airReValidate } = await amadeusSoap.airReValidate(flightInfoAmadeusObject);
+    if (!airReValidate){ 
+      return {error: 'ReValidation failed'}}
+    return makePriceObject(airReValidate.price, airReValidate.price.offerPrices);
+
+  } catch (e) {
+    return e
+  }
 }

@@ -39,15 +39,19 @@ axiosApiInstance.interceptors.response.use((response) => {
 });
 
 const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySource, currencyTarget) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
-    paymentMethodName,
-    currencySource,
-    currencyTarget,
-    amount,
-    serviceName: "FLIGHT"
-  });
+  try {
+    const { data: response } = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
+      paymentMethodName,
+      currencySource,
+      currencyTarget,
+      amount,
+      serviceName: "FLIGHT"
+    });
 
-  return response.data;
+    return response.data;
+  } catch (e) {
+    throw 'There was a problem with checkout, please try again.'
+  }
 };
 
 // const chargeUserWalletByCryptoCurrency = async (userCode, amount) => {

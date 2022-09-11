@@ -14,6 +14,7 @@ exports.success = (res, data) => {
 
 //making response for error by status code (default is 404)
 exports.error = (res, message, statusCode = 404, data = []) => {
+    console.error(`Code: ${statusCode}, Message: ${message}`);
     return res.status(statusCode).send(
         {
             status: false,
@@ -32,7 +33,23 @@ exports.exception = (res, error) => {
         data = error.data
         message = error.message
     }
-
+    if (message === `Passenger's passport number is not valid.`) {
+        console.error(`Code: 400, Message: ${message}`);
+        return res.status(404).send({
+            status: false,
+            message: 'passport_not_valid',
+            data,
+        });
+    }
+    if (message === 'ReValidation failed') {
+        console.error(`Code: 404, Message: ${message}`);
+        return res.status(404).send({
+            status: false,
+            message: 'flight_not_available',
+            data,
+        });
+    }
+    console.error(`Code: 500, Message: ${message}`);
     return res.status(500).send({
         status: false,
         message: `{{${message}}}`,

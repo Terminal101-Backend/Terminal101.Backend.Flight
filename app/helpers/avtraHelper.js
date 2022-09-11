@@ -1,6 +1,6 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const { parto } = require("../services");
+const { avtra } = require("../services");
 const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
 const { accountManagement } = require("../services");
 const { EProvider } = require("../constants");
@@ -148,7 +148,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
         .map(segment => segment.SeatsRemaining)),
       currencyCode: flight.AirItineraryPricingInfo.ItinTotalFare.Currency,
       travelClass,
-      provider: EProvider.get("PARTO"),
+      provider: EProvider.get("AVTRA"),
       providerData: {
         fareSourceCode: flight.FareSourceCode,
       },
@@ -168,84 +168,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
 };
 
 module.exports.searchFlights = async params => {
-  let segments = makeSegmentsArray(params.segments);
-
-  params.departureDate = new Date(params.departureDate);
-  params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
-
-  const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
-  const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
-
-  let partoSearchResult = await parto.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
-
-  if (!partoSearchResult) {
-    return {
-      flightDetails: [],
-    };
-  }
-
-  const stops = Object.keys(partoSearchResult
-    .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
-    .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-    .reduce((res, cur) => ({
-      ...res,
-      [cur.DepartureAirportLocationCode]: 1,
-      [cur.ArrivalAirportLocationCode]: 1
-    }), {}));
-  // .filter(segment => !!segment.TechnicalStops && (segment.TechnicalStops.length > 0))
-  // .reduce((res, cur) => [...res, ...cur.TechnicalStops], [])
-  // .map(stop => stop.ArrivalAirport);
-
-  const carriers = Object.keys(
-    partoSearchResult
-      .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
-      .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-      .reduce((res, cur) => ({
-        ...res,
-        [cur.MarketingAirlineCode]: 1
-      }), partoSearchResult.reduce((res, cur) => ({
-        ...res,
-        [cur.ValidatingAirlineCode]: 1
-      }), {}))
-  );
-
-  const aircrafts = partoSearchResult
-    .reduce((res, cur) => [...res, ...cur.OriginDestinationOptions], [])
-    .reduce((res, cur) => [...res, ...cur.FlightSegments], [])
-    .filter(segment => !!segment.OperatingAirline.Equipment)
-    .reduce((res, cur) => ({
-      ...res,
-      [cur.OperatingAirline.Equipment]: cur.OperatingAirline.Equipment
-    }), {});
-
-  const airports = await countryRepository.getAirportsByCode([params.origin, params.destination, ...stops]);
-  const airlines = await airlineRepository.getAirlinesByCode(carriers);
-  const flightDetails = partoSearchResult.map(makeFlightDetailsArray(aircrafts, airlines, airports, params.travelClass));
-
-  const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
-
-  // let origin = await countryRepository.getCityByCode(params.origin);
-  // let destination = await countryRepository.getCityByCode(params.destination);
-
-  // if (!origin) {
-  //   origin = !!airports[params.origin] ? airports[params.origin].city : {
-  //     code: "UNKNOWN",
-  //     name: "UNKNOWN"
-  //   };
-  // }
-
-  // if (!destination) {
-  //   destination = !!airports[params.destination] ? airports[params.destination].city : {
-  //     code: "UNKNOWN",
-  //     name: "UNKNOWN"
-  //   };
-  // }
-
-  return {
-    origin,
-    destination,
-    flightDetails,
-  };
+  throw "prvoider_unavailable";
 };
 
 /**
@@ -254,74 +177,13 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const { data: user } = await accountManagement.getUserInfo(params.userCode);
-
-  const travelers = params.passengers.map(passenger => {
-    if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
-      return {
-        birthDate: user.info.birthDate,
-        gender: user.info.gender,
-        // nationalId: user.info.nationalId,
-        // nationality: user.info.nationality,
-        firstName: user.info.firstName,
-        middleName: user.info.middleName,
-        lastName: user.info.lastName,
-        document: {
-          issuedAt: user.info.document.issuedAt,
-          expirationDate: user.info.document.expirationDate,
-          code: user.info.document.code,
-        },
-      };
-    } else {
-      const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt));
-
-      if (!person) {
-        throw "passenger_not_found";
-      }
-
-      return {
-        birthDate: person.birthDate,
-        gender: person.gender,
-        // nationalId: person.nationalId,
-        // nationality: person.nationality,
-        firstName: person.firstName,
-        middleName: person.middleName,
-        lastName: person.lastName,
-        document: {
-          issuedAt: person.document.issuedAt,
-          expirationDate: person.document.expirationDate,
-          code: person.document.code,
-        },
-      };
-    }
-  });
-
-  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
-  const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
-
-  const { data: bookedFlight } = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
-  await flightInfo.save();
-
-  return { ...bookedFlight, bookedId: bookedFlight.UniqueId };
+  throw "prvoider_unavailable";
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {
-  return await parto.airBookCancel(bookedFlight.providerPnr);
+  throw "prvoider_unavailable";
 }
 
 module.exports.issueBookedFlight = async bookedFlight => {
-  return await parto.airBookIssuing(bookedFlight.providerPnr);
-}
-
-module.exports.airReValidate = async flightInfo => {
-  try {
-    const fareSourceCode = flightInfo.flights.providerData.fareSourceCode;
-    const airReValidate = await parto.airReValidate(fareSourceCode);
-    if (!airReValidate.PricedItinerary) return {error: 'ReValidation failed', message: airReValidate}
-    return makePriceObject(airReValidate.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare, airReValidate.PricedItinerary.AirItineraryPricingInfo.PtcFareBreakdown);
-
-  } catch (e) {
-    return e
-  }
+  throw "prvoider_unavailable";
 }

@@ -7,7 +7,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
+host: test.flight.terminal101.co
 # host: localhost:8005
 basePath: /
 
@@ -492,6 +492,34 @@ paths:
           type: string
           value: Bearer
           required: true
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+  /flight/book/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          required: true
+          type: string
+          example: 23rwf4rf4fr34
         - name: bookedFlightCode
           in: path
           required: true
