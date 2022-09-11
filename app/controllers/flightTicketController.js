@@ -104,10 +104,8 @@ module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
     //   res.sendFile(pdfBuffer);
     // });
 
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      ignoreDefaultArgs: ['--disable-extensions'],
+    const browser = await puppeteer.connect({
+      browserWSEndpoint: 'wss://chrome.browserless.io/'
     });
     const page = await browser.newPage();
     await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${token}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
@@ -212,7 +210,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
         }
       }
     });
-    const {value: agencyPhoneNumber} = await common.getSetting('AGENCY_PHONE_NUMBER');
+    const { value: agencyPhoneNumber } = await common.getSetting('AGENCY_PHONE_NUMBER');
 
     const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
     // const template = fs.readFileSync(templatePath, "utf8");
