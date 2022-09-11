@@ -214,11 +214,11 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
     const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
     switch (traveler.gender) {
       case "M":
-        namePrefix = "Mr";
+        namePrefix = (type === "ADT") ? "Mr" : "Master";
         break;
 
       case "F":
-        namePrefix = "Mrs";
+        namePrefix = (type === "ADT") ? "Mrs" : "Miss";
         break;
     }
 
