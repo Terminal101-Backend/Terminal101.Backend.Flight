@@ -1,7 +1,8 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 const xmljsonParser = require("xml-js");
-const { dateTimeHelper, flightHelper, stringHelper } = require("../helpers");
+const xmljsonParser2 = require("xml2json");
+const { dateTimeHelper, flightHelper, stringHelper, parserHelper } = require("../helpers");
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -174,11 +175,10 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const option = {
     // object: true
-    compact: true, 
-    spaces: 4 
+    compact: true,
+    spaces: 4
   };
-  // const responseJson = xmljsonParser.toJson(response, option);
-  const responseJson = rmAttrTags(xmljsonParser.xml2js(response, option));
+  const responseJson = parserHelper.rmAttrTagsSearch(xmljsonParser.xml2js(response, option));
 
   const result = {
     success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
@@ -287,10 +287,12 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
   } = await axiosApiInstance.post("/booking/create", query, { testMode });
 
   const option = {
-    object: true
+    // object: true
+    compact: true,
+    spaces: 4
   };
-  const responseJson = xmljsonParser.toJson(response, option);
-
+  const responseJson = parserHelper.rmAttrTagsBook(xmljsonParser.xml2js(response, option));
+ 
   const result = {
     success: !!responseJson?.OTA_AirBookRS?.Success,
     data: responseJson?.OTA_AirBookRS?.AirReservation,
@@ -321,9 +323,11 @@ module.exports.getBooked = async (id, testMode = false) => {
   } = await axiosApiInstance.post("/booking/read", query, { testMode });
 
   const option = {
-    object: true
+    // object: true
+    compact: true,
+    spaces: 4
   };
-  const responseJson = xmljsonParser.toJson(response, option);
+  const responseJson = parserHelper.rmAttrTagsGetBook(xmljsonParser.xml2js(response, option));
 
   const result = {
     success: !!responseJson?.OTA_AirBookRS?.Success,
@@ -336,223 +340,3 @@ module.exports.getBooked = async (id, testMode = false) => {
 
   return result;
 };
-
-const rmAttrTags = (result) => {
-  if (!Array.isArray(result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary)) {
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary["SequenceNumber"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary._attributes.SequenceNumber
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["FlightNumber"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.FlightNumber;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["ResBookDesigCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.ResBookDesigCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["DepartureDateTime"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.DepartureDateTime;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["ArrivalDateTime"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.ArrivalDateTime;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["Duration"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.Duration;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["StopQuantity"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.StopQuantity;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["RPH"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.RPH;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["_attributes"];
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport["LocationCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport._attributes.LocationCode;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport["_attributes"];
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport["LocationCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport._attributes.LocationCode;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport["_attributes"];
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline["Code"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline._attributes.Code;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment["AirEquipType"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment._attributes.AirEquipType;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["ResBookDesigCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail._attributes.ResBookDesigCode
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["ResBookDesigQuantity"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail._attributes.ResBookDesigQuantity
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare["DecimalPlaces"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.DecimalPlaces;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.BaseFare["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare["DecimalPlaces"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.DecimalPlaces;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare.TotalFare["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["Code"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity._attributes.Code;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["Quantity"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity._attributes.Quantity;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["FlightSegmentRPH"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._attributes.FlightSegmentRPH;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["fareRPH"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._attributes.fareRPH;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["_attributes"]
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["$t"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._text
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["_text"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["DecimalPlaces"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.DecimalPlaces;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.Taxes.Tax.forEach(t => {
-      t["TaxCode"] = t._attributes.TaxCode;
-      t["TaxName"] = t._attributes.TaxName;
-      t["CurrencyCode"] = t._attributes.CurrencyCode;
-      t["DecimalPlaces"] = t._attributes.DecimalPlaces;
-      t["$t"] = t._text;
-      delete t["_attributes"]
-      delete t["_text"]
-    });
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["DecimalPlaces"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.DecimalPlaces;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["_attributes"]
-
-    if (!Array.isArray(result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance)) {
-      result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["FlightSegmentRPH"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.FlightSegmentRPH;
-      result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasureQuantity"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasureQuantity;
-      result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasure"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasure;
-      result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasureCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasureCode;
-      delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["_attributes"]
-    } else {
-      result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance.forEach(q => {
-        q["FlightSegmentRPH"] = q._attributes.FlightSegmentRPH;
-        q["UnitOfMeasureQuantity"] = q._attributes.UnitOfMeasureQuantity;
-        q["UnitOfMeasure"] = q._attributes.UnitOfMeasure;
-        q["UnitOfMeasureCode"] = q._attributes.UnitOfMeasureCode;
-        delete q["_attributes"]
-      })
-    }
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges["VolChangeInd"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges._attributes.VolChangeInd;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges["_attributes"]
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["PenaltyType"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.PenaltyType;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["DepartureStatus"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.DepartureStatus;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds["VolChangeInd"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds._attributes.VolChangeInd;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds["_attributes"]
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["PenaltyType"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.PenaltyType;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["DepartureStatus"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.DepartureStatus;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["CurrencyCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.CurrencyCode;
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["Amount"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.Amount;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport["LocationCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport._attributes.LocationCode;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport["_attributes"]
-
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport["LocationCode"] = result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport._attributes.LocationCode;
-    delete result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport["_attributes"]
-
-
-  } else {
-    result.OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.forEach(p => {
-      p["SequenceNumber"] = p._attributes.SequenceNumber
-      delete p["_attributes"]
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["FlightNumber"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.FlightNumber;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["ResBookDesigCode"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.ResBookDesigCode;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["DepartureDateTime"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.DepartureDateTime;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["ArrivalDateTime"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.ArrivalDateTime;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["Duration"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.Duration;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["StopQuantity"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.StopQuantity;
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["RPH"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment._attributes.RPH;
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment["_attributes"];
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport["LocationCode"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport._attributes.LocationCode;
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.DepartureAirport["_attributes"];
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport["LocationCode"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport._attributes.LocationCode;
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ArrivalAirport["_attributes"];
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline["Code"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline._attributes.Code;
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline["_attributes"]
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment["AirEquipType"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment._attributes.AirEquipType;
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Equipment["_attributes"]
-
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["ResBookDesigCode"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail._attributes.ResBookDesigCode
-      p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["ResBookDesigQuantity"] = p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail._attributes.ResBookDesigQuantity
-      delete p.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail["_attributes"]
-
-      p.AirItineraryPricingInfo.ItinTotalFare.BaseFare["CurrencyCode"] = p.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.ItinTotalFare.BaseFare["DecimalPlaces"] = p.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.DecimalPlaces;
-      p.AirItineraryPricingInfo.ItinTotalFare.BaseFare["Amount"] = p.AirItineraryPricingInfo.ItinTotalFare.BaseFare._attributes.Amount;
-      delete p.AirItineraryPricingInfo.ItinTotalFare.BaseFare["_attributes"]
-
-      p.AirItineraryPricingInfo.ItinTotalFare.TotalFare["CurrencyCode"] = p.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.ItinTotalFare.TotalFare["DecimalPlaces"] = p.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.DecimalPlaces;
-      p.AirItineraryPricingInfo.ItinTotalFare.TotalFare["Amount"] = p.AirItineraryPricingInfo.ItinTotalFare.TotalFare._attributes.Amount;
-      delete p.AirItineraryPricingInfo.ItinTotalFare.TotalFare["_attributes"]
-
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["Code"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity._attributes.Code;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["Quantity"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity._attributes.Quantity;
-      delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerTypeQuantity["_attributes"]
-
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["FlightSegmentRPH"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._attributes.FlightSegmentRPH;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["fareRPH"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._attributes.fareRPH;
-      delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["_attributes"]
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["$t"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode._text
-      delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode["_text"]
-
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["CurrencyCode"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["DecimalPlaces"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.DecimalPlaces;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["Amount"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare._attributes.Amount;
-      delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.BaseFare["_attributes"]
-
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.Taxes.Tax.forEach(t => {
-        t["TaxCode"] = t._attributes.TaxCode;
-        t["TaxName"] = t._attributes.TaxName;
-        t["CurrencyCode"] = t._attributes.CurrencyCode;
-        t["DecimalPlaces"] = t._attributes.DecimalPlaces;
-        t["$t"] = t._text;
-        delete t["_attributes"]
-        delete t["_text"]
-      });
-
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["CurrencyCode"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["DecimalPlaces"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.DecimalPlaces;
-      p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["Amount"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare._attributes.Amount;
-      delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.TotalFare["_attributes"]
-
-      if (!Array.isArray(p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance)) {
-        p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["FlightSegmentRPH"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.FlightSegmentRPH;
-        p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasureQuantity"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasureQuantity;
-        p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasure"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasure;
-        p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["UnitOfMeasureCode"] = p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance._attributes.UnitOfMeasureCode;
-        delete p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance["_attributes"]
-      } else {
-        p.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.FareBaggageAllowance.forEach(q => {
-          q["FlightSegmentRPH"] = q._attributes.FlightSegmentRPH;
-          q["UnitOfMeasureQuantity"] = q._attributes.UnitOfMeasureQuantity;
-          q["UnitOfMeasure"] = q._attributes.UnitOfMeasure;
-          q["UnitOfMeasureCode"] = q._attributes.UnitOfMeasureCode;
-          delete q["_attributes"]
-        })
-      }
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges["VolChangeInd"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges._attributes.VolChangeInd;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges["_attributes"]
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["PenaltyType"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.PenaltyType;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["DepartureStatus"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.DepartureStatus;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["CurrencyCode"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["Amount"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty._attributes.Amount;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty["_attributes"]
-
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds["VolChangeInd"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds._attributes.VolChangeInd;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds["_attributes"]
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["PenaltyType"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.PenaltyType;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["DepartureStatus"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.DepartureStatus;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["CurrencyCode"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.CurrencyCode;
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["Amount"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty._attributes.Amount;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty["_attributes"]
-
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport["LocationCode"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport._attributes.LocationCode;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.DepartureAirport["_attributes"]
-
-      p.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport["LocationCode"] = p.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport._attributes.LocationCode;
-      delete p.AirItineraryPricingInfo.FareInfos.FareInfo.ArrivalAirport["_attributes"]
-
-    })
-  }
-  return result;
-}
