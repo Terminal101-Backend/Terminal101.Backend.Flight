@@ -5,11 +5,11 @@ const getGmailService = async () => {
   const oAuth2Client = new google.auth.OAuth2(process.env.GMAIL_CLIENT_ID, process.env.GMAIL_CLIENT_SECRET, process.env.GMAIL_REDIRECT_URL);
   // const { tokens } = await oAuth2Client.getToken(process.env.GMAIL_CODE);
   const tokens = {
-    access_token: "ya29.a0ARrdaM-D-iaOL6PeicB9MaOufdwAsEyNcgS1HKrm0M6fuA7c37k45IwF_UB_N9tZUt0eKYe7-rMuYebCnRqzf9QU51tcPBLtsrfJmKw4Md5Ej9TBhFmYZuu_PaIM2DrabI0Opn4VMlF2bzT1zvJdK5_rSZ3h",
-    refresh_token: "1//095tsv6gjuwPyCgYIARAAGAkSNwF-L9Irz_EyWOwRbVzqvbc8rPxI4i6pm7iKL8AhjAl0fH81zW-wpAG4Z6rO-watamo-Rlx4h_M",
-    scope: "https://www.googleapis.com/auth/gmail.send",
-    token_type: "Bearer",
-    expiry_date: 1653559255803
+    access_token: process.env.EMAIL_ACCESS_TOKEN,
+    refresh_token: process.env.EMAIL_REFRESH_TOKEN,
+    scope: process.env.EMAIL_SCOPE,
+    token_type: process.env.EMAIL_TOKEN_TYPE,
+    expiry_date: process.env.EMAIL_EXPIRY_AT
   };
   oAuth2Client.setCredentials(tokens);
   const gmail = google.gmail({ version: 'v1', auth: oAuth2Client });
