@@ -1,5 +1,6 @@
 module.exports = {
-  ...require("./amadeus"),
-  ...require("./parto"),
-  ...require("./ip"),
+  amadeus: require("./amadeus"),
+  parto: require("./parto"),
+  avtra: require("./avtra"),
+  ip: require("./ip"),
 };

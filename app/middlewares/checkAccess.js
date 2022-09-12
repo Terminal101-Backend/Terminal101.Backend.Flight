@@ -36,7 +36,9 @@ exports.checkUserType = (userType = "CLIENT") => async (req, res, next) => {
 exports.checkUserAccess = async (req, res, next) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.headers.authorization);
-    if (!!decodedToken && await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, req.path)) {
+    const path = req.originalUrl.split("?")[0];
+    const testMode = req.params[0] === "/test";
+    if (!!decodedToken && await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, path, req.header("Username"), testMode)) {
       return next();
     } else {
       return response.error(res, "access_denied", 403);

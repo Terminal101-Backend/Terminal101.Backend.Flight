@@ -39,7 +39,7 @@ module.exports.translate = async (input, language) => {
       language,
     },
   };
-  const { data: response } = await axiosApiInstance.put(`/i18n/translate`, { input }, config);
+  const {data: response} = await axiosApiInstance.put(`/i18n/translate`, {input}, config);
 
   return response;
 };
@@ -52,7 +52,23 @@ module.exports.getSetting = async key => {
       Authorization: "Bearer " + user.data.token,
     },
   };
-  const { data: response } = await axiosApiInstance.get(`/setting/${key}`, {}, config);
+  const {data: response} = await axiosApiInstance.get(`/setting/${key}`, config);
 
   return response.data;
+};
+
+module.exports.addSocketEvent = async eventName => {
+  const user = await accountManagement.loginAsService();
+
+  const config = {
+    headers: {
+      Authorization: "Bearer " + user.data.token,
+    }
+  };
+  const {data: response} = await axiosApiInstance.post(`/socket/event`, {
+    serviceName: "FLIGHT",
+    eventName
+  }, config);
+
+  return response;
 };

@@ -1,13 +1,12 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {partoHelper, amadeusHelper, emailHelper, stringHelper} = require("../helpers");
+const {partoHelper, amadeusHelper, avtraHelper, emailHelper} = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
 const {accountManagement, wallet, amadeus} = require("../services");
 const {EBookedFlightStatus, EProvider, EUserType} = require("../constants");
 const {twilio} = require("../services");
 const flightTicketController = require("./flightTicketController");
-const parto = require("../services/parto");
 
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {
@@ -246,7 +245,7 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    const newPrice = await providerHelper.airReValidate(flightDetails);
+    const newPrice = await providerHelper.airRevalidate(flightDetails);
     if (!!newPrice.error) {
       response.exception(res, newPrice);
       return;
@@ -565,7 +564,7 @@ module.exports.getBookedFlights = async (req, res) => {
     const {
       items: bookedFlights,
       ...result
-    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"));
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
     console.timeEnd("Get booked flights");
     console.time("Get booked flights: Get users");
     const {data: users} = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
@@ -708,14 +707,20 @@ module.exports.getBookedFlight = async (req, res) => {
 };
 
 // NOTE: Get booked flight's statuses
-module.exports.getBookedFlightStatus = async (req, res) => {
+module.exports.getBookedFlightStatuses = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
+    const filteredResult = arrayHelper.filterAndSort(bookedFlight.statuses, req.query.filter, req.query.sort);
+    const {
+      items: paginatedResult,
+      ...result
+    } = arrayHelper.pagination(filteredResult, req.header("Page"), req.header("PageSize"));
 
     response.success(res, {
       code: bookedFlight.code,
-      status: bookedFlight.statuses?.map(status => ({
+      ...result,
+      items: paginatedResult.map(status => ({
         status: EBookedFlightStatus.find(status.status) ?? status.status,
         time: status.time,
         changedBy: status.changedBy,
@@ -728,7 +733,7 @@ module.exports.getBookedFlightStatus = async (req, res) => {
 };
 
 // NOTE: Get user's booked flight's statuses
-module.exports.getUserBookedFlightStatus = async (req, res) => {
+module.exports.getUserBookedFlightStatuses = async (req, res) => {
   try {
     const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.userCode, req.params.bookedFlightCode);
     if (!bookedFlight) {

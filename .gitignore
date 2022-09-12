@@ -7,3 +7,4 @@ package-lock.json
 app/static/tickets/*
 init.sh
 *.mongodb
+/app/services/amadeus-soap-wsdl-pack/

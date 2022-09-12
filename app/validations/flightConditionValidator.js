@@ -1,100 +1,62 @@
-const { Joi } = require("celebrate");
+const Joi = require("joi");
+const {baseValidator} = require("../core");
 
-const { BaseValidator } = require("../core");
+module.exports.getFlightConditions = baseValidator({
+  body: {},
+}, true);
 
-class GetFlightConditions extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getFlightCondition = baseValidator({
+  body: {},
+  params: {
+    code: Joi.number().required(),
+  },
+});
 
-    super(body);
-  }
-};
+module.exports.editFlightCondition = baseValidator({
+  body: {
+    origin: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    destination: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    airline: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    providerNames: Joi.array().items(Joi.string()),
+    isRestricted: Joi.boolean(),
+    isActive: Joi.boolean(),
+  },
+  params: {
+    code: Joi.string().required(),
+  },
+});
 
-class GetFlightCondition extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.deleteFlightCondition = baseValidator({
+  body: {},
+  params: {
+    code: Joi.number().required(),
+  },
+});
 
-    const params = {
-      code: Joi.number().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class EditFlightCondition extends BaseValidator {
-  constructor() {
-    const body = {
-      origin: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      destination: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      airline: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      providerNames: Joi.array().items(Joi.string()),
-      isRestricted: Joi.boolean(),
-      isActive: Joi.boolean(),
-    };
-
-    const params = {
-      code: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class DeleteFlightCondition extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      code: Joi.number().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class AddFlightCondition extends BaseValidator {
-  constructor() {
-    const body = {
-      origin: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      destination: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      airline: Joi.object().keys({
-        items: Joi.array().items(Joi.string()).required(),
-        exclude: Joi.bool().default(false),
-      }).default({ items: [], exclude: false }),
-      providerNames: Joi.array().items(Joi.string()).default([]),
-      isRestricted: Joi.boolean().default(false),
-    };
-
-    super(body);
-  }
-};
-
-module.exports = {
-  getFlightConditions: new GetFlightConditions(),
-  getFlightCondition: new GetFlightCondition(),
-  editFlightCondition: new EditFlightCondition(),
-  addFlightCondition: new AddFlightCondition(),
-  deleteFlightCondition: new DeleteFlightCondition(),
-};
+module.exports.addFlightCondition = baseValidator({
+  body: {
+    origin: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    destination: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    airline: Joi.object().keys({
+      items: Joi.array().items(Joi.string()).required(),
+      exclude: Joi.bool().default(false),
+    }).default({items: [], exclude: false}),
+    providerNames: Joi.array().items(Joi.string()).default([]),
+    isRestricted: Joi.boolean().default(false),
+  },
+});

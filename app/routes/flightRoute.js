@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { flightController } = require("../controllers");
-const { flightValidator } = require("../validations");
+const {flightController} = require("../controllers");
+const {flightValidator} = require("../validations");
 
 // NOTE: Get popular flights
 router
@@ -10,7 +10,7 @@ router
       console.log("Get popular flights", req.params, req.body, req.query);
       next();
     },
-    flightValidator.getPopularFlights.check(),
+    flightValidator.getPopularFlights.check,
     flightController.getPopularFlights);
 
 // NOTE: Search flight origin/destination
@@ -20,7 +20,7 @@ router
       console.log("Search flight", req.params, req.body, req.query);
       next();
     },
-    flightValidator.searchFlights.check(true),
+    flightValidator.searchFlights.check,
     flightController.searchFlights);
 
 // NOTE: Get flight price
@@ -30,7 +30,7 @@ router
       console.log("Filter flights", req.params, req.body, req.query);
       next();
     },
-    flightValidator.getFlightPrice.check(),
+    flightValidator.getFlightPrice.check,
     flightController.getFlightPrice);
 
 // NOTE: Get flight details
@@ -40,7 +40,7 @@ router
       console.log("Filter flights", req.params, req.body, req.query);
       next();
     },
-    flightValidator.getFlight.check(true),
+    flightValidator.getFlight.check,
     flightController.getFlight);
 
 // NOTE: Get filter limits
@@ -50,7 +50,7 @@ router
       console.log("Get filter limits", req.params, req.body, req.query);
       next();
     },
-    flightValidator.getFilterLimit.check(),
+    flightValidator.getFilterLimit.check,
     flightController.getFilterLimit);
 
 // NOTE: Filter searched flight
@@ -60,7 +60,7 @@ router
       console.log("Filter flights", req.params, req.body, req.query);
       next();
     },
-    flightValidator.filterFlights.check(),
+    flightValidator.filterFlights.check,
     flightController.filterFlights);
 
 module.exports = router;

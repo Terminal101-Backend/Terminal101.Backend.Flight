@@ -1,11 +1,18 @@
-const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
+const {EProvider, EFlightWaypoint, ETravelClass, EFeeType} = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository, bookedFlightRepository } = require("../repositories");
+const {getIpInfo} = require("../services/ip");
+const {
+  providerRepository,
+  countryRepository,
+  airlineRepository,
+  flightInfoRepository,
+  flightConditionRepository,
+  bookedFlightRepository
+} = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const {amadeus} = require("../services");
+const {flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper} = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -22,7 +29,7 @@ module.exports.searchOriginDestination = async (req, res) => {
 
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
-        console.log({ ip, ipInfo });
+        console.log({ip, ipInfo});
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
         }
@@ -84,7 +91,7 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
   await flightInfo.save();
 
-  if (page === -1) {
+  if (page == -1) {
     page = 0;
     pageSize = flights.length;
   }
@@ -102,7 +109,11 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
       description: flightInfo.destination.description,
     },
     time: flightInfo.time,
-    flights: arrayHelper.pagination(flights.sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
+    flights: arrayHelper.pagination(flights.map(flight => {
+      const {providerData, ...fInfo} = flight;
+
+      return fInfo;
+    }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
     // AMADEUS_RESULT: result,
   };
 };
@@ -121,7 +132,8 @@ module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, act
         return false;
       } else {
         return false
-      };
+      }
+      ;
     });
 
     return !providerIsRestricted;
@@ -175,9 +187,6 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
 
 module.exports.searchFlights = async (req, res) => {
   try {
-    // response.error(res, "use_socket", 503);
-    // return;
-
     const activeProviders = await providerRepository.getActiveProviders();
 
     // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
@@ -190,6 +199,11 @@ module.exports.searchFlights = async (req, res) => {
     let providerNumber = 0;
     let searchCode;
     let result;
+
+    if (activeProviderCount === 0) {
+      response.error(res, "provider_not_found", 404);
+      return;
+    }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
 
@@ -206,6 +220,9 @@ module.exports.searchFlights = async (req, res) => {
         hasResult = true;
 
         if (++providerNumber === activeProviderCount) {
+          if (req.method === "SOCKET") {
+            result.completed = true;
+          }
           response.success(res, result);
         }
       }).catch(e => {
@@ -482,11 +499,14 @@ module.exports.getFlight = async (req, res) => {
       response.error(res, "flight_not_found", 404);
       return;
     }
-    const isBookedFlight = await bookedFlightRepository.findOne({ searchedFlightCode: req.params.searchId, flightDetailsCode: req.params.flightCode });
+    const isBookedFlight = await bookedFlightRepository.findOne({
+      searchedFlightCode: req.params.searchId,
+      flightDetailsCode: req.params.flightCode
+    });
     if (!isBookedFlight) {
       const providerName = flightInfo.flights.provider.toLowerCase();
       const providerHelper = eval(providerName + "Helper");
-      const newPrice = await providerHelper.airReValidate(flightInfo);
+      const newPrice = await providerHelper.airRevalidate(flightInfo);
 
       // if(!newPrice){
       //   console.log('err :', newPrice)
@@ -646,7 +666,11 @@ module.exports.getPopularFlights = async (req, res) => {
 module.exports.getCountries = async (req, res) => {
   try {
     const countries = await countryRepository.findMany({}, "name");
-    response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
+    response.success(res, countries.map(country => ({
+      code: country.code,
+      name: country.name,
+      dialingCode: country.dialingCode
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -655,8 +679,8 @@ module.exports.getCountries = async (req, res) => {
 // NOTE: Get cities of country
 module.exports.getCities = async (req, res) => {
   try {
-    const country = await countryRepository.findOne({ code: req.params.code });
-    response.success(res, country.cities.map(city => ({ code: city.code, name: city.name })));
+    const country = await countryRepository.findOne({code: req.params.code});
+    response.success(res, country.cities.map(city => ({code: city.code, name: city.name})));
   } catch (e) {
     response.exception(res, e);
   }
@@ -667,7 +691,7 @@ module.exports.getAirports = async (req, res) => {
   try {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
-    response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
+    response.success(res, country.cities.airports.map(airport => ({code: airport.code, name: airport.name})));
   } catch (e) {
     response.exception(res, e);
   }
@@ -678,7 +702,11 @@ module.exports.getAirlines = async (req, res) => {
   try {
     const airline = await airlineRepository.findMany();
 
-    response.success(res, airline.map(airline => ({ code: airline.code, name: airline.name, description: airline.description })));
+    response.success(res, airline.map(airline => ({
+      code: airline.code,
+      name: airline.name,
+      description: airline.description
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -718,22 +746,25 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         ip = ip.includes(':') ? ip.split(':')[0] : ip;
 
         ipInfo = await getIpInfo(ip);
-
+        // ipInfo = await getIpInfo("5.239.149.82");
         // ipInfo = await getIpInfo("161.185.160.93");
-        console.log({ ip, ipInfo });
+        console.log({ip, ipInfo});
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.countryCode;
         // }
-        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
-        const { data: resultTransformed } = transformDataAmadeus(result);
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.city;
+        // }
+        const {data: result} = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const {data: resultTransformed} = transformDataAmadeus(result);
         response.success(res, resultTransformed);
       } else {
         response.error(res, "keyword_required", 400);
         return;
       }
     } else {
-      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-      const { data: resultTransformed } = transformDataAmadeus(result);
+      const {data: result} = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const {data: resultTransformed} = transformDataAmadeus(result);
       response.success(res, resultTransformed);
     }
   } catch (e) {

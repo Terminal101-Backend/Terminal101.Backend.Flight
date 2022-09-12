@@ -1,61 +1,31 @@
-const { Joi } = require("celebrate");
+const Joi = require("joi");
+const {baseValidator} = require("../core");
 
-const { BaseValidator } = require("../core");
+module.exports.getProviders = baseValidator({
+  body: {},
+});
 
-class GetProviders extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.editProvider = baseValidator({
+  body: {
+    title: Joi.string(),
+    isActive: Joi.boolean(),
+  },
+  params: {
+    name: Joi.string().required(),
+  },
+});
 
-    super(body);
-  }
-};
+module.exports.deleteProvider = baseValidator({
+  body: {},
+  params: {
+    name: Joi.string().required(),
+  },
+});
 
-class EditProvider extends BaseValidator {
-  constructor() {
-    const body = {
-      title: Joi.string(),
-      isActive: Joi.boolean(),
-    };
-
-    const params = {
-      name: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class DeleteProvider extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      name: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class AddProvider extends BaseValidator {
-  constructor() {
-    const body = {
-      name: Joi.string().required(),
-      title: Joi.string().required(),
-      isActive: Joi.boolean().default(true),
-    };
-
-    super(body);
-  }
-};
-
-module.exports = {
-  getProviders: new GetProviders(),
-  editProvider: new EditProvider(),
-  addProvider: new AddProvider(),
-  deleteProvider: new DeleteProvider(),
-};
+module.exports.addProvider = baseValidator({
+  body: {
+    name: Joi.string().required(),
+    title: Joi.string().required(),
+    isActive: Joi.boolean().default(true),
+  },
+});

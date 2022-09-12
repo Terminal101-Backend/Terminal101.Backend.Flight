@@ -1,8 +1,8 @@
 const BaseRepository = require("../core/baseRepository");
-const { BookedFlight } = require("../models/documents");
-const { EBookedFlightStatus } = require("../constants");
-const { generateRandomString } = require("../helpers/stringHelper");
-const { paginationHelper } = require("../helpers");
+const {BookedFlight} = require("../models/documents");
+const {EBookedFlightStatus} = require("../constants");
+const {generateRandomString} = require("../helpers/stringHelper");
+const {paginationHelper, filterHelper} = require("../helpers");
 
 /**
  * @typedef {Object} PassengerInfo
@@ -16,29 +16,42 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} bookedBy 
-   * @param {String} searchedFlightCode 
+   *
+   * @param {String} bookedBy
+   * @param {String} searchedFlightCode
    * @param {Number} flightDetailsCode
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
    */
   async createBookedFlight(bookedBy, providerName, searchedFlightCode, flightDetailsCode, providerPnr, transactionId, contact, passengers, flightSegments, travelClass, status) {
-    let bookedFlight = !!transactionId ? await this.findOne({ transactionId }) : undefined;
+    let bookedFlight = !!transactionId ? await this.findOne({transactionId}) : undefined;
 
     if (!bookedFlight) {
       let code;
       while (!code) {
         code = generateRandomString(15, 20, true, true, false);
 
-        bookedFlight = await this.findOne({ code });
+        bookedFlight = await this.findOne({code});
 
         if (!!bookedFlight) {
           code = undefined;
         }
       }
 
-      bookedFlight = new BookedFlight({ code, bookedBy, providerName, searchedFlightCode, flightDetailsCode, providerPnr, transactionId, contact, passengers, statuses: { status, changedBy: bookedBy }, flightSegments, travelClass });
+      bookedFlight = new BookedFlight({
+        code,
+        bookedBy,
+        providerName,
+        searchedFlightCode,
+        flightDetailsCode,
+        providerPnr,
+        transactionId,
+        contact,
+        passengers,
+        statuses: {status, changedBy: bookedBy},
+        flightSegments,
+        travelClass
+      });
       await bookedFlight.save();
     }
 
@@ -46,30 +59,30 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
-   * @param {String} changedBy 
-   * @param {String} description 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
+   * @param {String} changedBy
+   * @param {String} description
    * @returns {Promise<Status[]>}
    */
   async changeStatus(code, status, changedBy, description) {
-    const bookedFlight = await this.findOne({ code });
+    const bookedFlight = await this.findOne({code});
 
     if (!bookedFlight) {
       throw "flight_not_found";
     }
 
-    bookedFlight.status.push({ status, changedBy, description });
+    bookedFlight.status.push({status, changedBy, description});
     await bookedFlight.save();
 
     return bookedFlight.status;
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
    * @returns {Promise<Status[]>}
    */
   async getStatuses(code, status) {
@@ -103,23 +116,27 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
    * @returns {Promise<Boolean>}
    */
   async hasStatus(code, status) {
-    const bookedFlight = await this.findOne({ code, "statuses.status": status });
+    const bookedFlight = await this.findOne({code, "statuses.status": status});
 
     return !!bookedFlight;
   }
 
   /**
-   * 
-   * @param {String} bookedBy 
+   *
+   * @param {String} bookedBy
+   * @param {Number} page
+   * @param {Number} pageSize
+   * @param {{field: value}[]} filters
+   * @param {String} sort
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlights(bookedBy, page, pageSize) {
+  async getBookedFlights(bookedBy, page, pageSize, filters, sort) {
     const agrBookedFlight = BookedFlight.aggregate();
     if (!!bookedBy) {
       agrBookedFlight.append({
@@ -136,8 +153,8 @@ class BookedFlightRepository extends BaseRepository {
         as: 'flightInfo'
       }
     });
-    agrBookedFlight.append({ $unwind: "$flightInfo" });
-    agrBookedFlight.append({ $unwind: "$flightInfo.flights" });
+    agrBookedFlight.append({$unwind: "$flightInfo"});
+    agrBookedFlight.append({$unwind: "$flightInfo.flights"});
     agrBookedFlight.append({
       $match: {
         $expr: {
@@ -147,7 +164,7 @@ class BookedFlightRepository extends BaseRepository {
     });
     agrBookedFlight.append({
       $addFields: {
-        lastStatus: { $last: "$statuses" }
+        lastStatus: {$last: "$statuses"}
       }
     });
     agrBookedFlight.append({
@@ -156,14 +173,15 @@ class BookedFlightRepository extends BaseRepository {
       }
     });
 
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
     return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
 
     // return await agrBookedFlight.exec();
   }
 
   /**
-   * 
-   * @param {String} code 
+   *
+   * @param {String} code
    * @returns {Promise<BookedFlight>}
    */
   async getBookedFlight(userCode, code) {
@@ -182,9 +200,9 @@ class BookedFlightRepository extends BaseRepository {
         as: 'flightInfo'
       }
     });
-    agrBookedFlight.append({ $unwind: "$flightInfo" });
+    agrBookedFlight.append({$unwind: "$flightInfo"});
     // agrBookedFlight.append({ $unwind: "$flightInfo.searches" });
-    agrBookedFlight.append({ $unwind: "$flightInfo.flights" });
+    agrBookedFlight.append({$unwind: "$flightInfo.flights"});
     agrBookedFlight.append({
       $match: {
         $expr: {
@@ -201,7 +219,7 @@ class BookedFlightRepository extends BaseRepository {
     });
     agrBookedFlight.append({
       $addFields: {
-        lastStatus: { $last: "$statuses" }
+        lastStatus: {$last: "$statuses"}
       }
     });
     agrBookedFlight.append({
@@ -215,19 +233,19 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {*} itineraries 
-   * @returns 
+   *
+   * @param {*} itineraries
+   * @returns
    */
   generateBookedFlightSegments(itineraries) {
     return;
   }
 
   /**
-   * 
-   * @param {PassengerInfo[]} passengers 
-   * @param {FlightSegmentInfo[]} flightSegments 
-   * @param {String} travelClass 
+   *
+   * @param {PassengerInfo[]} passengers
+   * @param {FlightSegmentInfo[]} flightSegments
+   * @param {String} travelClass
    * @returns {Promise}
    */
   async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {
