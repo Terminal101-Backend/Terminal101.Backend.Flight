@@ -12,103 +12,46 @@ let path = require("path");
 
 
 // NOTE: Flight tickets
-module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
-  // const decodedToken = token.decodeToken(req.header("Authorization"));
-  // const bookedFlight = await bookedFlightRepository.getBookedFlight(req.params.bookedFlightCode);
-  // if (!bookedFlight) {
-  //   throw "flight_not_found";
-  // }
-  // if (bookedFlight.bookedBy !== decodedToken.user) {
-  //   throw "user_invalid";
-  // }
+module.exports.generatePdfTicket = async (userToken, bookedFlightCode) => {
 
-  // const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
-  // const passengers = bookedFlight.passengers.map(passenger => {
-  //   if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
-  //     return {
-  //       firstName: user.info.firstName,
-  //       middleName: user.info.middleName,
-  //       nickName: user.info.nickName,
-  //       lastName: user.info.lastName,
-  //       birthDate: user.info.birthDate,
-  //       gender: user.info.gender,
-  //     }
-  //   } else {
-  //     const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
-  //     return {
-  //       firstName: userPerson.firstName,
-  //       middleName: userPerson.middleName,
-  //       nickName: userPerson.nickName,
-  //       lastName: userPerson.lastName,
-  //       birthDate: userPerson.birthDate,
-  //       gender: userPerson.gender,
-  //     }
-  //   }
-  // });
+  var today = new Date();
+  var dd = String(today.getDate()).padStart(2, '0');
+  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+  var yyyy = today.getFullYear();
+  today = mm + '-' + dd + '-' + yyyy;
+  const filePath = path.join(path.resolve(`app/static/tickets/${today}`), bookedFlightCode + ".pdf");
 
-  const filePath = path.join(path.resolve("app/static/tickets"), bookedFlightCode + ".pdf");
+  const decodedToken = token.decodeToken(userToken);
+  const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, bookedFlightCode);
+  if (!bookedFlight) {
+    throw "flight_not_found";
+  }
+  else if (bookedFlight.bookedBy !== decodedToken.user) {
+    throw "user_invalid";
+  }
+  else if (EBookedFlightStatus.check(["ERROR", "PAYING", "INPROGRESS", "REMOVE", "REJECTED",], bookedFlight.status)) {
+    throw "You can't download this ticket";
+  }
+
+
+  if (!fs.existsSync(`app/static/tickets/${today}`)) {
+    fs.mkdirSync(`app/static/tickets/${today}`, { recursive: true });
+  }
+  else if (fs.existsSync(filePath)) {
+    return filePath;
+  }
 
   if (true || !fs.existsSync(filePath)) {
     if (fs.existsSync(filePath)) {
       fs.rmSync(filePath);
     }
 
-    // const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
-    // const template = fs.readFileSync(templatePath, "utf8");
-
-    // const template = await ejs.renderFile(
-    //   templatePath,
-    //   {
-    //     contact: bookedFlight.contact,
-    //     passengers,
-    //   },
-    //   {
-    //     beautify: true,
-    //     async: true
-    //   }
-    // );
-
-    // res.pdfFromHTML({
-    //   filename: filePath,
-    //   htmlContent: template,
-    //   options: {
-    //     format: 'A5',
-    //     // httpHeaders: { 'content-type': 'application/pdf' },
-    //     // quality: '100',
-    //     orientation: 'landscape',
-    //     // type: 'pdf'
-    //   }
-    // });
-
-    // htmlPdf
-    //   .create(template, {
-    //     format: 'A2',
-    //     httpHeaders: { 'content-type': 'application/pdf' },
-    //     quality: '100',
-    //     orientation: 'landscape',
-    //     type: 'pdf'
-    //   })
-    //   .toFile(filePath, (e, response) => {
-    //     if (!!e) {
-    //       throw e;
-    //     } else {
-    //       res.sendFile(filePath);
-    //       console.log(response);
-    //     }
-    //   });
-
-    // let options = { format: 'A4' };
-    // let file = { content: template };
-    // htmlPdfNode.generatePdf(file, options).then(pdfBuffer => {
-    //   console.log("PDF Buffer:-", pdfBuffer);
-    //   res.sendFile(pdfBuffer);
-    // });
 
     const browser = await puppeteer.connect({
-      browserWSEndpoint: 'wss://chrome.browserless.io/'
+      browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
     });
     const page = await browser.newPage();
-    await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${token}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
+    await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${userToken}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
     const pdf = await page.pdf({
       format: 'A4', margin: {
         top: "3px",
@@ -121,39 +64,6 @@ module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
     fs.writeSync(fd, pdf);
 
     await browser.close();
-    // res.sendFile(filePath);
-
-    // let options = {
-    //   phantomPath: "./node_modules/phantomjs-prebuilt/bin/phantomjs",
-    //   format: "A4",
-    //   orientation: "landscape",
-    //   border: "10mm",
-    //   // header: {
-    //   //   height: "45mm",
-    //   //   contents: '<div style="text-align: center;">Test</div>'
-    //   // },
-    //   footer: {
-    //     height: "28mm",
-    //     contents: {
-    //       // first: 'Cover page',
-    //       // 2: 'Second page',
-    //       default: '<span style="color: #444;">{{page}}</span>/<span>{{pages}}</span>',
-    //       // last: 'Last Page'
-    //     }
-    //   }
-    // };
-
-    // let document = {
-    //   html: template,
-    //   data: {
-    //     passengers: bookedFlight.passengers
-    //   },
-    //   path: filePath,
-    //   type: "",
-    // };
-
-    // await pdf.create(document, options);
-    // res.send(template)
   }
 
   return filePath;
@@ -162,6 +72,7 @@ module.exports.generatePdfTicket = async (token, bookedFlightCode) => {
 // NOTE: Get flight tickets
 module.exports.getFlightTickets = async (req, res) => {
   try {
+    console.log(req.header("Authorization"))
     const filePath = await this.generatePdfTicket(req.header("Authorization"), req.params.bookedFlightCode);
     res.sendFile(filePath);
   } catch (e) {
