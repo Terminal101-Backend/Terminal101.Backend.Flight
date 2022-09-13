@@ -1,6 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
-const xmljsonParser = require("xml2json");
+const xmljsonParser = require("xml-js");
 const {dateTimeHelper, flightHelper, stringHelper} = require("../helpers");
 
 // Request interceptor for API calls
@@ -173,9 +173,10 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   } = await axiosApiInstance.post("/availability/lowfaresearch", query, {testMode});
 
   const option = {
-    object: true
+    // object: true,
+    compact: true,
   };
-  const responseJson = xmljsonParser.toJson(response, option);
+  const responseJson = xmljsonParser.xml2json(response, option);
 
   const result = {
     success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
@@ -284,9 +285,10 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
   } = await axiosApiInstance.post("/booking/create", query, {testMode});
 
   const option = {
-    object: true
+    // object: true,
+    compact: true,
   };
-  const responseJson = xmljsonParser.toJson(response, option);
+  const responseJson = xmljsonParser.xml2json(response, option);
 
   const result = {
     success: !!responseJson?.OTA_AirBookRS?.Success,
@@ -318,9 +320,10 @@ module.exports.getBooked = async (id, testMode = false) => {
   } = await axiosApiInstance.post("/booking/read", query, {testMode});
 
   const option = {
-    object: true
+    // object: true,
+    compact: true,
   };
-  const responseJson = xmljsonParser.toJson(response, option);
+  const responseJson = xmljsonParser.xml2json(response, option);
 
   const result = {
     success: !!responseJson?.OTA_AirBookRS?.Success,
