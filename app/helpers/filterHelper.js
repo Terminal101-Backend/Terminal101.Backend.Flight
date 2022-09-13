@@ -1,3 +1,59 @@
+const mapFilterCondition = (key, condition = "=") => value => {
+  if (/^".*"$/.test(value)) {
+    value = value.replace(/^"(.*)"$/, "$1");
+  } else if ((value == false) || (value == true)) {
+    value = (value == true);
+  } else {
+    value = parseFloat(value);
+  }
+
+  switch (condition) {
+    case "=":
+      return {[key]: value};
+      break;
+
+    case "!":
+      return {
+        $expr: {
+          $ne: ["$" + key, value]
+        }
+      };
+      break;
+
+    case "<":
+      return {
+        $expr: {
+          $lt: ["$" + key, value]
+        }
+      };
+      break;
+
+    case ">":
+      return {
+        $expr: {
+          $gt: ["$" + key, value]
+        }
+      };
+      break;
+
+    case "<=":
+      return {
+        $expr: {
+          $le: ["$" + key, value]
+        }
+      };
+      break;
+
+    case ">=":
+      return {
+        $expr: {
+          $ge: ["$" + key, value]
+        }
+      };
+      break;
+  }
+};
+
 /**
  *
  * @param {Aggregate} aggregate
@@ -6,7 +62,7 @@
  * @returns {Aggregate}
  */
 module.exports.filterAndSort = async (aggregate, filters, sort) => {
-  let objFilters = {};
+  const andFilters = [];
 
   if (!!sort) {
     if (sort[0] === "-") {
@@ -20,56 +76,37 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
     const keys = key.split("|");
     const values = value.split("|");
 
-    objFilters = {
-      ...objFilters,
+    andFilters.push({
       $or: [...keys.reduce((res, cur) => {
+        let condition = "=";
         if (cur.endsWith("!")) {
           cur = cur.substring(0, cur.length - 1);
-
+          condition = "!";
         } else if (cur.endsWith("<")) {
           cur = cur.substring(0, cur.length - 1);
-
+          condition = "<";
         } else if (cur.endsWith("<=")) {
           cur = cur.substring(0, cur.length - 2);
-
+          condition = "<=";
         } else if (cur.endsWith(">")) {
           cur = cur.substring(0, cur.length - 1);
-
+          condition = ">";
         } else if (cur.endsWith(">=")) {
           cur = cur.substring(0, cur.length - 2);
-
-        } else {
-
+          condition = ">=";
         }
-        switch (cur.substring(cur.length - 1)) {
-          case "!":
-            break;
 
-          case "<":
-            cur = cur.substring(0, cur.length - 1);
-            break;
-
-          case "<=":
-            cur = cur.substring(0, cur.length - 2);
-            break;
-
-          case ">":
-            cur = cur.substring(0, cur.length - 1);
-            break;
-
-          case ">=":
-            cur = cur.substring(0, cur.length - 2);
-            break;
-
-          default:
-        }
-      }, [])],
-    }
+        return [
+          ...res,
+          ...values.map(mapFilterCondition(cur, condition)),
+        ]
+      }, [])]
+    });
   });
 
   aggregate.append({
     $match: {
-      ...objFilters
+      $and: andFilters
     }
   });
   if (!!sort) {
