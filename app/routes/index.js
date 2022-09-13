@@ -13,7 +13,7 @@ module.exports = (app) => {
   app.use("/api(/test)?/:providerTitle", require("./thirdPartyRoute"));
 
 
-  app.use("/temp", require("./tempRoute"));
+  // app.use("/temp", require("./tempRoute"));
 
 
   app.use((req, res, next) => {

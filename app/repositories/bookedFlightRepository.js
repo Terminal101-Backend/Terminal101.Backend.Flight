@@ -2,7 +2,8 @@ const BaseRepository = require("../core/baseRepository");
 const {BookedFlight} = require("../models/documents");
 const {EBookedFlightStatus} = require("../constants");
 const {generateRandomString} = require("../helpers/stringHelper");
-const {paginationHelper, filterHelper} = require("../helpers");
+const paginationHelper = require("../helpers/paginationHelper");
+const filterHelper = require("../helpers/filterHelper");
 
 /**
  * @typedef {Object} PassengerInfo

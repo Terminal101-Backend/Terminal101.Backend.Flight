@@ -12,3 +12,4 @@ module.exports.socketHelper = require("./socketHelper");
 module.exports.emailHelper = require("./emailHelper");
 module.exports.stringHelper = require("./stringHelper");
 module.exports.filterHelper = require("./filterHelper");
+module.exports.parserHelper = require("./parserHelper");

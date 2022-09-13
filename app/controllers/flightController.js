@@ -13,6 +13,7 @@ const {
 // const { FlightInfo } = require("../models/documents");
 const {amadeus} = require("../services");
 const {flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper} = require("../helpers");
+const {flightController} = require("./index");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -63,9 +64,35 @@ module.exports.getPopularWaypoints = async (req, res) => {
     response.exception(res, e);
   }
 };
+const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, additionalFields = {}) => {
+  if (page == -1) {
+    page = 0;
+    pageSize = flights.length;
+  }
 
-// NOTE: Search flights
-module.exports.appendProviderResult = async (origin, destination, time, flights, searchCode, page = 0, pageSize) => {
+  return {
+    code: flightInfo.code,
+    ...additionalFields,
+    origin: {
+      code: flightInfo.origin.code,
+      name: flightInfo.origin.name,
+      description: flightInfo.origin.description,
+    },
+    destination: {
+      code: flightInfo.destination.code,
+      name: flightInfo.destination.name,
+      description: flightInfo.destination.description,
+    },
+    time: flightInfo.time,
+    flights: arrayHelper.pagination(flights.map(flight => {
+      const {providerData, ...fInfo} = flight;
+
+      return fInfo;
+    }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
+  };
+};
+
+const appendProviderResult = async (origin, destination, time, flights, searchCode) => {
   let flightInfo = await flightInfoRepository.createFlightInfo(
     origin,
     destination,
@@ -91,34 +118,10 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
   await flightInfo.save();
 
-  if (page == -1) {
-    page = 0;
-    pageSize = flights.length;
-  }
-
-  return {
-    code: flightInfo.code,
-    origin: {
-      code: flightInfo.origin.code,
-      name: flightInfo.origin.name,
-      description: flightInfo.origin.description,
-    },
-    destination: {
-      code: flightInfo.destination.code,
-      name: flightInfo.destination.name,
-      description: flightInfo.destination.description,
-    },
-    time: flightInfo.time,
-    flights: arrayHelper.pagination(flights.map(flight => {
-      const {providerData, ...fInfo} = flight;
-
-      return fInfo;
-    }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
-    // AMADEUS_RESULT: result,
-  };
+  return flightInfo;
 };
 
-module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
+const checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
   return activeProviders.filter(provider => {
     const providerIsRestricted = flightConditions.some(flightCondition => {
       const anyAirlines = !!flightCondition.airline.exclude && (!flightCondition.airline.items || (flightCondition.airline.items.length === 0));
@@ -185,8 +188,12 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
   return result;
 };
 
+// NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
+    /**
+     * @type {Promise<Array>}
+     */
     const activeProviders = await providerRepository.getActiveProviders();
 
     // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
@@ -197,8 +204,12 @@ module.exports.searchFlights = async (req, res) => {
     const lastSearch = [];
     let hasResult = false;
     let providerNumber = 0;
-    let searchCode;
-    let result;
+    const {
+      origin,
+      destination
+    } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
+    const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
+    const searchCode = flightInfo.code;
 
     if (activeProviderCount === 0) {
       response.error(res, "provider_not_found", 404);
@@ -206,32 +217,44 @@ module.exports.searchFlights = async (req, res) => {
     }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    const providersResultCompleted = notRestrictedProviders.reduce((res, cur) => ({
+      ...res,
+      [cur.title]: false,
+    }), {});
 
     notRestrictedProviders.forEach(provider => {
-      providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
+      const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
 
         lastSearch.push(...flightDetails);
-        result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+        appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
+          console.trace(e);
+        });
 
-        searchCode = result.code;
         hasResult = true;
 
-        if (++providerNumber === activeProviderCount) {
-          if (req.method === "SOCKET") {
-            result.completed = true;
-          }
-          response.success(res, result);
+        if ((req.method === "SOCKET") && (req.header("Page") === -1)) {
+          const timer = setInterval(() => {
+            providersResultCompleted[provider.title] = true;
+            if (!!providersResultCompleted[provider.title]) {
+              clearInterval(timer);
+            }
+            const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
+            response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), {completed}));
+          }, 250);
+        } else if (++providerNumber === activeProviderCount) {
+          response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
         }
       }).catch(e => {
         console.error(`Provider (${provider.title}) returns error: `, e);
+        providersResultCompleted[provider.title] = true;
         if (++providerNumber === activeProviderCount) {
           if (!hasResult) {
             response.exception(res, e);
           } else {
-            response.success(res, result);
+            response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
           }
         }
       });
@@ -542,6 +565,7 @@ module.exports.getFlight = async (req, res) => {
         code: flightInfo.flights.code,
         availableSeats: flightInfo.flights.availableSeats,
         currencyCode: flightInfo.flights.currencyCode,
+        fare: flightInfo.flights.providerData.fare,
         // price: flightInfo.flights.price,
         price: {
           total: flightInfo.flights.price.total,
