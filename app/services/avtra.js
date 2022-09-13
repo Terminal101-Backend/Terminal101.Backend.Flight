@@ -80,7 +80,7 @@ module.exports.ping = async (message, testMode = false) => {
     data: response
   } = await axiosApiInstance.post("/services/ping", `
   <OTA_PingRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-  OTA_AirLowFareSearchRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+  OTA_AirLowFareSearchRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
 <POS>
 <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
 <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}"/>
@@ -147,7 +147,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const query = `
   <OTA_AirLowFareSearchRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-  OTA_AirLowFareSearchRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+  OTA_AirLowFareSearchRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
   <POS>
     <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
       <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
@@ -239,7 +239,7 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
 
   const query = `
   <OTA_AirBookRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-  OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+  OTA_AirBookRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
   <POS>
     <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="${price.currency}">
       <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
@@ -307,7 +307,7 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
 module.exports.getBooked = async (id, testMode = false) => {
   const query = `
     <OTA_ReadRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-    OTA_ReadRQ.xsd" EchoToken="50987" TimeStamp="2019-08-22T05:44:10+05:30" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+    OTA_ReadRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
       <POS>
         <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="USD">
           <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
@@ -327,6 +327,72 @@ module.exports.getBooked = async (id, testMode = false) => {
     spaces: 4
   };
   const responseJson = parserHelper.rmAttrTagsGetBook(xmljsonParser.xml2js(response, option));
+
+  const result = {
+    success: !!responseJson?.OTA_AirBookRS?.Success,
+    data: responseJson?.OTA_AirBookRS?.AirReservation,
+    error: {
+      code: responseJson?.OTA_AirBookRS?.Errors?.Error?.Code,
+      message: responseJson?.OTA_AirBookRS?.Errors?.Error?.ShortText,
+    }
+  };
+
+  return result;
+};
+
+module.exports.getAvailableSeats = async (segments, price, adults = 1, children = 0, infants = 0, testMode = false) => {
+  const originDestinations = [];
+  segments.forEach(segment => {
+    originDestinations.push(`
+      <OriginDestinationOption>
+        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${new Date(segment.date).toISOString().replace(/(\.\d{3})?Z$/, "+00:00")}">
+          <DepartureAirport LocationCode="${segment.originCode}" />
+          <ArrivalAirport LocationCode="${segment.destinationCode}" />
+          <OperatingAirline Code="${segment.airlineCode}"/>
+        </FlightSegment>
+      </OriginDestinationOption>
+      `);
+  });
+
+  const query = `
+  <OTA_AirSeatMapV2RQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
+  OTA_AirSeatMapV2RQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
+  <POS>
+    <Source AirlineVendorID="IF" ISOCountry="IQ" ISOCurrency="${price.currency}">
+      <RequestorID Type="5" ID="${process.env.AVTRA_OFFICE_ID}" />
+    </Source>
+  </POS>
+			<AirItinerary>
+				<OriginDestinationOptions>
+          ${originDestinations.join("\n")}
+				</OriginDestinationOptions>
+			</AirItinerary>
+			<PriceInfo>
+				<ItinTotalFare>
+					<BaseFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
+					<TotalFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
+				</ItinTotalFare>
+			</PriceInfo>
+      <TravelerInfoSummary>
+        <AirTravelerAvail>
+          <PassengerTypeQuantity Code="ADT" Quantity="${adults ?? 1}" />
+          <PassengerTypeQuantity Code="CHD" Quantity="${children ?? 0}" />
+          <PassengerTypeQuantity Code="INF" Quantity="${infants ?? 0}" />
+        </AirTravelerAvail>
+      </TravelerInfoSummary>
+    </OTA_AirSeatMapV2RQ>
+  `;
+
+  const {
+    data: response
+  } = await axiosApiInstance.post("/booking/create", query, {testMode});
+
+  const option = {
+    // object: true
+    compact: true,
+    spaces: 4
+  };
+  const responseJson = parserHelper.rmAttrTagsBook(xmljsonParser.xml2js(response, option));
 
   const result = {
     success: !!responseJson?.OTA_AirBookRS?.Success,
