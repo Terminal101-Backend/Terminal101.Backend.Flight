@@ -1,5 +1,5 @@
 swagger: "2.0"
-info: 
+info:
   version: v1.0.0
   title: "Terminal 101: Flight"
   description: Terminal 101 - Flight service
@@ -7,7 +7,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test.flight.terminal101.co
+host:
 # host: localhost:8005
 basePath: /
 
@@ -956,7 +956,7 @@ paths:
             description: Flight condition info
 
 
-  /api/low-fare-search/test/{providerTitle}:
+  /api/test/low-fare-search:
     # NOTE: Search low fare flights
     get:
       tags:
@@ -973,11 +973,11 @@ paths:
           type: string
           value: 124dgwug4dd2gufg2ufg
           required: true
-        - name: providerTitle
-          in: path
-          type: string
-          value: Avtra
-          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
         - name: originLocationCode
           in: query
           type: string
@@ -990,12 +990,12 @@ paths:
           required: true
         - name: departureDate
           in: query
-          type: date
+          type: string
           value: 2022-09-10
           required: true
         - name: returnDate
           in: query
-          type: date
+          type: string
           value: 2022-09-20
           required: false
         - name: adults
@@ -1030,7 +1030,7 @@ paths:
             $ref: "#/definitions/ThirdPartyResult"
             description: Low fare search result
 
-  /api/book/test/{providerTitle}:
+  /api/test/book:
     # NOTE: Book flight
     post:
       tags:
@@ -1047,11 +1047,11 @@ paths:
           type: string
           value: 124dgwug4dd2gufg2ufg
           required: true
-        - name: providerTitle
-          in: path
-          type: string
-          value: Avtra
-          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
         - name: Book Flight
           in: body
           required: true
@@ -1065,7 +1065,7 @@ paths:
             $ref: "#/definitions/ThirdPartyResult"
             description: Low fare search result
 
-  /api/book/test/{providerTitle}/{bookedId}:
+  /api/test/book/{bookedId}:
     # NOTE: Get booked flight info
     get:
       tags:
@@ -1082,11 +1082,11 @@ paths:
           type: string
           value: 124dgwug4dd2gufg2ufg
           required: true
-        - name: providerTitle
-          in: path
-          type: string
-          value: Avtra
-          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
         - name: bookedId
           in: path
           required: true
@@ -1220,6 +1220,20 @@ definitions:
       address:
         $ref: "#/definitions/Address"
 
+  Airline:
+    required:
+      - code
+      - name
+    properties:
+      code:
+        type: string
+        example: MUC
+      name:
+        type: string
+        example: Munchen
+      description:
+        type: string
+        example: Munchen
 
   Airport:
     required:
@@ -1613,10 +1627,17 @@ definitions:
               properties:
                 issuedAt:
                   type: string
-                expireDate:
+                expirationDate:
                   type: string
                 code:
                   type: string
+      contact:
+        type: object
+        properties:
+          email:
+            type: string
+          mobileNumber:
+            type: string
       price:
         type: object
         properties:
@@ -1624,12 +1645,12 @@ definitions:
             type: number
           total:
             type: number
-          currencyCode:
+          currency:
             type: string
 
 schemes:
-  # - http
   - https
+  - http
 consumes:
   - application/json
 produces:
