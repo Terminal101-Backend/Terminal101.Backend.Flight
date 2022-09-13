@@ -5,7 +5,7 @@ const {ETravelClass} = require("../constants");
 module.exports.lowFareSearch = baseValidator({
   body: {},
   params: {
-    providerTitle: Joi.string().required(),
+    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
   query: {
@@ -66,7 +66,7 @@ module.exports.bookFlight = baseValidator({
     }).required(),
   },
   params: {
-    providerTitle: Joi.string().required(),
+    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
 });
@@ -74,7 +74,7 @@ module.exports.bookFlight = baseValidator({
 module.exports.getBookedFlight = baseValidator({
   body: {},
   params: {
-    providerTitle: Joi.string().required(),
+    // providerTitle: Joi.string().required(),
     bookedId: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },

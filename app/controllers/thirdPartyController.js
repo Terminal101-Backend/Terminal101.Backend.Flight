@@ -2,18 +2,16 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const {providerRepository} = require("../repositories");
 const {EProvider} = require("../constants");
-const {amadeus, parto, avtra} = require("../services");
+const {amadeus, parto, avtra, accountManagement} = require("../services");
+const {tokenHelper} = require("../helpers");
 
 // NOTE: Search flights by provider
 module.exports.lowFareSearch = async (req, res) => {
   try {
+    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({title: req.params.providerTitle});
-    if (!provider?.isActive) {
-      response.error(res, "provider_not_found", 404);
-      return;
-    }
+    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     const result = await avtra.lowFareSearch(
       req.query.originLocationCode,
@@ -44,13 +42,10 @@ module.exports.lowFareSearch = async (req, res) => {
 // NOTE: Book flight by provider
 module.exports.bookFlight = async (req, res) => {
   try {
+    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({title: req.params.providerTitle});
-    if (!provider?.isActive) {
-      response.error(res, "provider_not_found", 404);
-      return;
-    }
+    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     const result = await avtra.book(
       req.body.segments,
@@ -72,13 +67,10 @@ module.exports.bookFlight = async (req, res) => {
 // NOTE: Get booked flight by provider
 module.exports.getBookedFlight = async (req, res) => {
   try {
+    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const provider = await providerRepository.findOne({title: req.params.providerTitle});
-    if (!provider?.isActive) {
-      response.error(res, "provider_not_found", 404);
-      return;
-    }
+    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     const result = await avtra.getBooked(
       req.params.bookedId,

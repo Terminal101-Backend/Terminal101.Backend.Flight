@@ -69,6 +69,12 @@ const getUsersInfo = async userCodes => {
   return response;
 };
 
+const getThirdPartyUserAvailableProviders = async (userCode, businessCode) => {
+  const {data: response} = await axiosApiInstance.get(`/business/provider/${userCode}/${businessCode}`);
+
+  return response;
+};
+
 const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
   const params = new URLSearchParams();
   params.append("userType", userType);
@@ -86,4 +92,5 @@ module.exports = {
   getUserInfo,
   getUsersInfo,
   checkUserAccess,
+  getThirdPartyUserAvailableProviders,
 };
