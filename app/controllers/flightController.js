@@ -240,14 +240,9 @@ module.exports.searchFlights = async (req, res) => {
         hasResult = true;
 
         if ((req.method === "SOCKET") && (req.header("Page") === -1)) {
-          const timer = setInterval(() => {
-            providersResultCompleted[provider.title] = true;
-            if (!!providersResultCompleted[provider.title]) {
-              clearInterval(timer);
-            }
-            const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
-            response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), {completed}));
-          }, 250);
+          providersResultCompleted[provider.title] = true;
+          const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
+          response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), {completed}));
         } else if (++providerNumber === activeProviderCount) {
           response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
         }
