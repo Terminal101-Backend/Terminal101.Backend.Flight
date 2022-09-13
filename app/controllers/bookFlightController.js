@@ -63,11 +63,12 @@ const pay = async (bookedFlight) => {
 
       (async () => {
         // TODO: Send notification to user
-        const userToken = token.newToken({user: bookedFlight.bookedBy});
-        await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+        // const userToken = token.newToken({ user: bookedFlight.bookedBy });
+
+        // await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
         // TODO: Send SMS
         // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
-        await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+        // await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
         // TODO: If user wallet's credit is less than flight price do... what???!!!
       })();
     } else {
@@ -426,6 +427,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
+
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const {data: user} = await accountManagement.getUserInfo(req.params.userCode);
     const bookedFlight = await bookedFlightRepository.findOne({code: req.params.bookedFlightCode});
@@ -466,8 +468,10 @@ module.exports.editUserBookedFlight = async (req, res) => {
     });
 
     providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
+
     switch (status) {
       case "BOOK":
+        console.log(status);
         try {
           await providerHelper.issueBookedFlight(bookedFlight);
           bookedFlight.statuses.push({
