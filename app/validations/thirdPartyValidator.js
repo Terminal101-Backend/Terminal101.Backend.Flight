@@ -30,7 +30,7 @@ module.exports.lowFareSearch = baseValidator({
       Joi.string(),
     ],
     nonStop: Joi.boolean().default(false),
-    currencyCode: Joi.string().default("USD"),
+    currency: Joi.string().default("USD"),
   },
 });
 
@@ -43,23 +43,26 @@ module.exports.bookFlight = baseValidator({
       destinationCode: Joi.string().required().length(3),
       date: Joi.date().required(),
     })).min(1),
+    contact: Joi.object().keys({
+      email: Joi.string().email(),
+      mobileNumber: Joi.string(),
+    }),
     travelers: Joi.array().items(Joi.object().keys({
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
       birthDate: Joi.date().required(),
-      nationality: Joi.string().required().length(2),
       type: Joi.string().required().regex(/ADT|CHD|INF/),
       genderCode: Joi.string().required().regex(/M|F/),
       document: Joi.object().keys({
         issuedAt: Joi.string().required().length(2),
-        expireDate: Joi.date().required(),
+        expirationDate: Joi.date().required(),
         code: Joi.string().required(),
       }),
     })).min(1),
     price: Joi.object().keys({
       base: Joi.number().required(),
       total: Joi.number().required(),
-      currencyCode: Joi.string().required().length(3)
+      currency: Joi.string().required().length(3)
     }).required(),
   },
   params: {
