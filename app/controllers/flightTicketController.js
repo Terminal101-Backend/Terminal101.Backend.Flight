@@ -14,12 +14,7 @@ let path = require("path");
 // NOTE: Flight tickets
 module.exports.generatePdfTicket = async (userToken, bookedFlightCode) => {
 
-  var today = new Date();
-  var dd = String(today.getDate()).padStart(2, '0');
-  var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-  var yyyy = today.getFullYear();
-  today = mm + '-' + dd + '-' + yyyy;
-  const filePath = path.join(path.resolve(`app/static/tickets/${today}`), bookedFlightCode + ".pdf");
+  const filePath = path.join(path.resolve(`app/static/tickets`), bookedFlightCode + ".pdf");
 
   const decodedToken = token.decodeToken(userToken);
   const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, bookedFlightCode);
@@ -32,12 +27,7 @@ module.exports.generatePdfTicket = async (userToken, bookedFlightCode) => {
   else if (EBookedFlightStatus.check(["ERROR", "PAYING", "INPROGRESS", "REMOVE", "REJECTED",], bookedFlight.status)) {
     throw "You can't download this ticket";
   }
-
-
-  if (!fs.existsSync(`app/static/tickets/${today}`)) {
-    fs.mkdirSync(`app/static/tickets/${today}`, { recursive: true });
-  }
-  else if (fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath)) {
     return filePath;
   }
 
