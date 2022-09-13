@@ -1,8 +1,10 @@
 const mapFilterCondition = (key, condition = "=") => value => {
   if (/^".*"$/.test(value)) {
     value = value.replace(/^"(.*)"$/, "$1");
-  } else if ((value == false) || (value == true)) {
-    value = (value == true);
+  } else if ((value == "false") || (value == "true")) {
+    value = (value == "true");
+  } else if (value === "undefined") {
+    value = undefined;
   } else {
     value = parseFloat(value);
   }
