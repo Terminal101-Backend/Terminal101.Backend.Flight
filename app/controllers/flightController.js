@@ -211,6 +211,10 @@ module.exports.searchFlights = async (req, res) => {
     const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
     const searchCode = flightInfo.code;
 
+    if (req.method === "SOCKET") {
+      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize")));
+    }
+
     if (activeProviderCount === 0) {
       response.error(res, "provider_not_found", 404);
       return;
