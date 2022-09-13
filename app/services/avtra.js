@@ -340,7 +340,7 @@ module.exports.getBooked = async (id, testMode = false) => {
   return result;
 };
 
-module.exports.getAvailableSeats = async (segments, price, adults = 1, children = 0, infants = 0, testMode = false) => {
+module.exports.getAvailableSeats = async (segments, testMode = false) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`
@@ -367,18 +367,7 @@ module.exports.getAvailableSeats = async (segments, price, adults = 1, children 
           ${originDestinations.join("\n")}
 				</OriginDestinationOptions>
 			</AirItinerary>
-			<PriceInfo>
-				<ItinTotalFare>
-					<BaseFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.base)}"/>
-					<TotalFare CurrencyCode="${price.currency}" DecimalPlaces="2" Amount="${stringHelper.padNumbers(price.total)}"/>
-				</ItinTotalFare>
-			</PriceInfo>
       <TravelerInfoSummary>
-        <AirTravelerAvail>
-          <PassengerTypeQuantity Code="ADT" Quantity="${adults ?? 1}" />
-          <PassengerTypeQuantity Code="CHD" Quantity="${children ?? 0}" />
-          <PassengerTypeQuantity Code="INF" Quantity="${infants ?? 0}" />
-        </AirTravelerAvail>
       </TravelerInfoSummary>
     </OTA_AirSeatMapV2RQ>
   `;
