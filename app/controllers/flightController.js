@@ -249,6 +249,7 @@ module.exports.searchFlights = async (req, res) => {
         }
       }).catch(e => {
         console.error(`Provider (${provider.title}) returns error: `, e);
+        providersResultCompleted[provider.title] = true;
         if (++providerNumber === activeProviderCount) {
           if (!hasResult) {
             response.exception(res, e);
