@@ -43,6 +43,10 @@ module.exports.bookFlight = baseValidator({
       destinationCode: Joi.string().required().length(3),
       date: Joi.date().required(),
     })).min(1),
+    contact: Joi.object().keys({
+      email: Joi.string().email(),
+      mobileNumber: Joi.string(),
+    }),
     travelers: Joi.array().items(Joi.object().keys({
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
@@ -52,7 +56,7 @@ module.exports.bookFlight = baseValidator({
       genderCode: Joi.string().required().regex(/M|F/),
       document: Joi.object().keys({
         issuedAt: Joi.string().required().length(2),
-        expireDate: Joi.date().required(),
+        expirationDate: Joi.date().required(),
         code: Joi.string().required(),
       }),
     })).min(1),
