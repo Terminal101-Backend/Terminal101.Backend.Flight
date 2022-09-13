@@ -98,17 +98,22 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
 
         return [
           ...res,
-          ...values.map(mapFilterCondition(cur, condition)),
+          ...((condition === "!") ?
+            [{$and: values.map(mapFilterCondition(cur, condition))}]
+            :
+            values.map(mapFilterCondition(cur, condition))),
         ]
       }, [])]
     });
   });
 
-  aggregate.append({
-    $match: {
-      $and: andFilters
-    }
-  });
+  if (andFilters.length > 0) {
+    aggregate.append({
+      $match: {
+        $and: andFilters
+      }
+    });
+  }
   if (!!sort) {
     aggregate.append({
       $sort: sort
