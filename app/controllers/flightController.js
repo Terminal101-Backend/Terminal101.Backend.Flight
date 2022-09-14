@@ -212,7 +212,7 @@ module.exports.searchFlights = async (req, res) => {
     const searchCode = flightInfo.code;
 
     if (req.method === "SOCKET") {
-      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize")));
+      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), {completed: false}));
     }
 
     if (activeProviderCount === 0) {
