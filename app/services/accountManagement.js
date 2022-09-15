@@ -24,7 +24,7 @@ axiosApiInstance.interceptors.response.use((response) => {
 }, async function (error) {
   const originalRequest = error.config;
 
-  if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
+  if (!!error.response && [401, 403, 500].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
     await loginAsService();
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
