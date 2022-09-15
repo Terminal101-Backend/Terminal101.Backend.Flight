@@ -85,6 +85,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
         },
         at: segment.ArrivalDateTime,
       },
+      baggage: segment.Baggage
     };
 
     return result;
@@ -318,7 +319,7 @@ module.exports.airReValidate = async flightInfo => {
   try {
     const fareSourceCode = flightInfo.flights.providerData.fareSourceCode;
     const airReValidate = await parto.airReValidate(fareSourceCode);
-    if (!airReValidate.PricedItinerary) return {error: 'ReValidation failed', message: airReValidate}
+    if (!airReValidate.PricedItinerary) return { error: 'ReValidation failed', message: airReValidate }
     return makePriceObject(airReValidate.PricedItinerary.AirItineraryPricingInfo.ItinTotalFare, airReValidate.PricedItinerary.AirItineraryPricingInfo.PtcFareBreakdown);
 
   } catch (e) {
