@@ -24,7 +24,7 @@ axiosApiInstance.interceptors.response.use((response) => {
 }, async function (error) {
   const originalRequest = error.config;
 
-  if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
+  if (!!error.response && [401, 403, 500].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
     await loginAsService();
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
@@ -45,7 +45,7 @@ const loginAsService = async () => {
   };
   delete axios.defaults.headers.common['Authorization'];
 
-  const { data: response } = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE_URL + "/user/login/email", params, {
+  const {data: response} = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE_URL + "/user/login/email", params, {
     headers: {
       "Service-Name": "wallet",
       "User-Type": "SERVICE",
@@ -58,13 +58,13 @@ const loginAsService = async () => {
 };
 
 const getUserInfo = async userCode => {
-  const { data: response } = await axiosApiInstance.get(`/user/${userCode}`);
+  const {data: response} = await axiosApiInstance.get(`/user/${userCode}`);
 
   return response;
 };
 
 const getUsersInfo = async userCodes => {
-  const { data: response } = await axiosApiInstance.put(`/user`, { userCodes });
+  const {data: response} = await axiosApiInstance.put(`/user`, {userCodes});
 
   return response;
 };
@@ -76,7 +76,7 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   params.append("path", path);
   params.append("serviceName", serviceName);
 
-  const { data: response } = await axiosApiInstance.get(`/user/${userCode}`, params);
+  const {data: response} = await axiosApiInstance.get(`/user/${userCode}`, params);
 
   return response;
 };
