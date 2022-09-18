@@ -62,14 +62,22 @@ const pay = async (bookedFlight) => {
       await bookedFlight.save();
 
       (async () => {
-        // TODO: Send notification to user
-        const userToken = token.newToken({user: bookedFlight.bookedBy});
-        const path = await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
-        // TODO: Send SMS
-        // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
-        // await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
-        // should send path URL of Ticket
-        await common.sendTicketFlightPDF(bookedFlight.contact.email, path);
+        try {
+          // TODO: Send notification to user
+          const userToken = token.newToken({user: bookedFlight.bookedBy, type: "CLIENT"});
+          const path = await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+          // TODO: Send SMS
+          // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
+          // await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
+          // should send path URL of Ticket
+          await common.sendTicketFlightPDF(bookedFlight.contact.email, path).then(() => {
+            console.log("Ticket sent");
+          }).catch(err => {
+            console.error(err);
+          });
+        } catch (err) {
+          console.error(err);
+        }
       })();
     } else {
       console.log('Your credit is not enough');

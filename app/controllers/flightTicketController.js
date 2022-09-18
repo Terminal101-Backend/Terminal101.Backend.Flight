@@ -1,9 +1,9 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const token = require("../helpers/tokenHelper");
-const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
-const { wallet, accountManagement, amadeus, common } = require("../services");
-const { EBookedFlightStatus } = require("../constants");
+const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
+const {wallet, accountManagement, amadeus, common} = require("../services");
+const {EBookedFlightStatus} = require("../constants");
 // let htmlPdfNode = require("html-pdf-node");
 let puppeteer = require("puppeteer");
 let ejs = require("ejs");
@@ -13,18 +13,15 @@ let path = require("path");
 
 // NOTE: Flight tickets
 module.exports.generatePdfTicket = async (userToken, bookedFlightCode) => {
-
   const filePath = path.join(path.resolve(`app/static/tickets`), bookedFlightCode + ".pdf");
 
   const decodedToken = token.decodeToken(userToken);
   const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, bookedFlightCode);
   if (!bookedFlight) {
     throw "flight_not_found";
-  }
-  else if (bookedFlight.bookedBy !== decodedToken.user) {
+  } else if (bookedFlight.bookedBy !== decodedToken.user) {
     throw "user_invalid";
-  }
-  else if (EBookedFlightStatus.check(["ERROR", "PAYING", "INPROGRESS", "REMOVE", "REJECTED",], bookedFlight.status)) {
+  } else if (EBookedFlightStatus.check(["ERROR", "PAYING", "REMOVE", "REJECTED",], bookedFlight.status)) {
     throw "You can't download this ticket";
   }
   if (fs.existsSync(filePath)) {
@@ -37,11 +34,11 @@ module.exports.generatePdfTicket = async (userToken, bookedFlightCode) => {
     }
 
 
-    const browser = await puppeteer.connect({
-      browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
+    const browser = await puppeteer.launch({
+      // browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
     });
     const page = await browser.newPage();
-    await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${userToken}/${bookedFlightCode}`, { waitUntil: 'networkidle0' });
+    await page.goto(`${process.env.LOCAL_SERVICE_URL}/flight/ticket/view/${userToken}/${bookedFlightCode}`, {waitUntil: 'networkidle0'});
     const pdf = await page.pdf({
       format: 'A4', margin: {
         top: "3px",
@@ -81,7 +78,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
       throw "user_invalid";
     }
 
-    const { data: user } = await accountManagement.getUserInfo(bookedFlight.bookedBy);
+    const {data: user} = await accountManagement.getUserInfo(bookedFlight.bookedBy);
     const passengers = bookedFlight.passengers.map(passenger => {
       if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
         return {
@@ -111,7 +108,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
         }
       }
     });
-    const { value: agencyPhoneNumber } = await common.getSetting('AGENCY_PHONE_NUMBER');
+    const {value: agencyPhoneNumber} = await common.getSetting('AGENCY_PHONE_NUMBER');
 
     const templatePath = path.join(process.env.TEMPLATE_TICKET_VERIFICATION_FILE);
     // const template = fs.readFileSync(templatePath, "utf8");
@@ -145,7 +142,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
 // NOTE: Get other user's flight tickets
 module.exports.getUserFlightTickets = async (req, res) => {
   try {
-    const userToken = token.newToken({ user: req.params.userCode });
+    const userToken = token.newToken({user: req.params.userCode});
     const filePath = await this.generatePdfTicket(userToken, req.params.bookedFlightCode);
     res.sendFile(filePath);
   } catch (e) {
