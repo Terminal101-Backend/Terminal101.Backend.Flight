@@ -14,7 +14,7 @@ const socket = require("./helpers/socketHelper");
 require("dotenv").config();
 global.config = require("./config");
 
-twilio.initialize();
+// twilio.initialize();
 
 const apiRouter = require("./routes");
 const socketMessages = require("./messages");

@@ -72,3 +72,17 @@ module.exports.addSocketEvent = async eventName => {
 
   return response;
 };
+
+module.exports.sendTicketFlightPDF = async (to, path) => {
+  const user = await accountManagement.loginAsService();
+
+  const config = {
+    headers: {
+      Authorization: "Bearer " + user.data.token,
+    },
+  };
+
+  const {data: response} = await axiosApiInstance.post(`/email/ticket-flight`, {to, path}, config);
+
+  return response.data;
+};

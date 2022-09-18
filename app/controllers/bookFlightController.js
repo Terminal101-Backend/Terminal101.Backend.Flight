@@ -1,11 +1,11 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {partoHelper, amadeusHelper, avtraHelper, emailHelper} = require("../helpers");
+const {partoHelper, amadeusHelper, stringHelper} = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const {flightInfoRepository, bookedFlightRepository} = require("../repositories");
 const {accountManagement, wallet, amadeus} = require("../services");
 const {EBookedFlightStatus, EProvider, EUserType} = require("../constants");
-const {twilio} = require("../services");
+const {common} = require("../services");
 const flightTicketController = require("./flightTicketController");
 
 // NOTE: Book Flight
@@ -63,13 +63,13 @@ const pay = async (bookedFlight) => {
 
       (async () => {
         // TODO: Send notification to user
-        // const userToken = token.newToken({ user: bookedFlight.bookedBy });
-
-        // await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
+        const userToken = token.newToken({user: bookedFlight.bookedBy});
+        const path = await flightTicketController.generatePdfTicket(userToken, bookedFlight.code);
         // TODO: Send SMS
         // await twilio.sendTicket(bookedFlight.contact.mobileNumber);
         // await emailHelper.sendTicket(bookedFlight.contact.email, bookedFlight.code);
-        // TODO: If user wallet's credit is less than flight price do... what???!!!
+        // should send path URL of Ticket
+        await common.sendTicketFlightPDF(bookedFlight.contact.email, path);
       })();
     } else {
       console.log('Your credit is not enough');
@@ -79,6 +79,7 @@ const pay = async (bookedFlight) => {
         changedBy: "SERVICE",
       });
       //TODO: send email or SMS to user message -> (Your credit is not enough, please resharge your wallet and book again)
+
       await bookedFlight.save();
     }
 
@@ -247,17 +248,17 @@ module.exports.bookFlight = async (req, res) => {
     }
 
     const newPrice = await providerHelper.airRevalidate(flightDetails);
+    const oldPrice = flightDetails.flights.price.total;
+
     if (!!newPrice.error) {
       response.exception(res, newPrice);
       return;
     }
 
-    let oldPrice = flightDetails.flights.price.total;
-
-    let priceChanged = (oldPrice - newPrice.total !== 0) ? true : false;
+    let priceChanged = (oldPrice - newPrice.total !== 0);
     if (!!priceChanged) {
       await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
-      flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+      // flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
 
       response.success(res, {
         priceChanged,
