@@ -5,13 +5,15 @@ const mapFilterCondition = (key, condition = "=") => value => {
     value = (value == "true");
   } else if (value === "undefined") {
     value = undefined;
+  } else if (/\d+\-\d+\-\d+/.test(value)) {
+    value = new Date(value);
   } else {
     value = parseFloat(value);
   }
 
   switch (condition) {
     case "=":
-      return {[key]: value};
+      return { [key]: value };
       break;
 
     case "!":
@@ -68,9 +70,9 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
 
   if (!!sort) {
     if (sort[0] === "-") {
-      sort = {[sort.substring(1)]: -1};
+      sort = { [sort.substring(1)]: -1 };
     } else {
-      sort = {sort: 1};
+      sort = { sort: 1 };
     }
   }
 
@@ -101,7 +103,7 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
         return [
           ...res,
           ...((condition === "!") ?
-            [{$and: values.map(mapFilterCondition(cur, condition))}]
+            [{ $and: values.map(mapFilterCondition(cur, condition)) }]
             :
             values.map(mapFilterCondition(cur, condition))),
         ]
