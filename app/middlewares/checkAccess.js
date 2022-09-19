@@ -20,7 +20,7 @@ exports.isLogin = async (req, res, next) => {
  * @param {EUserType} userType 
  * @returns 
  */
-exports.checkUserType = (userType = "CLIENT") => async (req, res, next) => {
+exports.checkUserType = (...userType) => async (req, res, next) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.headers.authorization);
     if (!!decodedToken && EUserType.check(userType, decodedToken.type)) {

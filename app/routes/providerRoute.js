@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const {providerController} = require("../controllers");
-const {providerValidator} = require("../validations");
-const {checkAccess} = require("../middlewares");
+const { providerController } = require("../controllers");
+const { providerValidator } = require("../validations");
+const { checkAccess } = require("../middlewares");
 
 // NOTE: Get all providers
 router
@@ -11,7 +11,7 @@ router
       console.log("Get all providers", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     providerValidator.getProviders.check,
     providerController.getProviders);
 
@@ -22,7 +22,7 @@ router
       console.log("Edit provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     providerValidator.editProvider.check,
     providerController.editProvider);
 
@@ -33,7 +33,7 @@ router
       console.log("Add provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     providerValidator.addProvider.check,
     providerController.addProvider);
 
@@ -44,7 +44,7 @@ router
       console.log("Delete provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     providerValidator.deleteProvider.check,
     providerController.deleteProvider);
 

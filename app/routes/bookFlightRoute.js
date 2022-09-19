@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const {bookFlightController} = require("../controllers");
-const {bookFlightValidator} = require("../validations");
-const {checkAccess} = require("../middlewares");
+const { bookFlightController } = require("../controllers");
+const { bookFlightValidator } = require("../validations");
+const { checkAccess } = require("../middlewares");
 
 // NOTE: Success payment callback
 router
@@ -11,7 +11,7 @@ router
       console.log("Success payment callback", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE"]),
+    checkAccess.checkUserType("SERVICE"),
     bookFlightValidator.payForFlight.check,
     bookFlightController.payForFlight);
 
@@ -22,7 +22,7 @@ router
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT", "BUSINESS"),
     bookFlightValidator.getBookedFlights.check,
     bookFlightController.getBookedFlights);
 
@@ -33,7 +33,7 @@ router
       console.log("Get booked flight's statuses", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     bookFlightValidator.getBookedFlightStatuses.check,
     bookFlightController.getBookedFlightStatuses);
 
@@ -44,7 +44,7 @@ router
       console.log("Get user's booked flight's statuses", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     bookFlightValidator.getUserBookedFlightStatuses.check,
     bookFlightController.getUserBookedFlightStatuses);
 
@@ -55,7 +55,7 @@ router
       console.log("Change booked flight's status", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     bookFlightValidator.cancelBookedFlight.check,
     bookFlightController.cancelBookedFlight);
 
@@ -66,7 +66,7 @@ router
       console.log("Generate new payment information", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     bookFlightValidator.generateNewPaymentInfo.check,
     bookFlightController.generateNewPaymentInfo);
 
@@ -77,7 +77,7 @@ router
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     bookFlightValidator.getBookedFlight.check,
     bookFlightController.getBookedFlight);
 
@@ -88,7 +88,7 @@ router
       console.log("Get specific user's booked flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     bookFlightValidator.getUserBookedFlights.check,
     bookFlightController.getUserBookedFlights);
 
@@ -99,7 +99,7 @@ router
       console.log("Edit specific user's booked flight", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     bookFlightValidator.editUserBookedFlight.check,
     bookFlightController.editUserBookedFlight);
 
@@ -110,7 +110,7 @@ router
       console.log("Get specific user's booked flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     bookFlightValidator.getUserBookedFlight.check,
     bookFlightController.getUserBookedFlight);
 
@@ -121,7 +121,7 @@ router
       console.log("Book a flight by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     bookFlightValidator.bookFlight.check,
     bookFlightController.bookFlight);
 

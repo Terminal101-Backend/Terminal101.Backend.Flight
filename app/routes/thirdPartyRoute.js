@@ -1,8 +1,8 @@
 const express = require("express");
-const router = express.Router({mergeParams: true});
-const {thirdPartyController} = require("../controllers");
-const {thirdPartyValidator} = require("../validations");
-const {checkAccess} = require("../middlewares");
+const router = express.Router({ mergeParams: true });
+const { thirdPartyController } = require("../controllers");
+const { thirdPartyValidator } = require("../validations");
+const { checkAccess } = require("../middlewares");
 
 // NOTE: Search flights
 router
@@ -11,7 +11,7 @@ router
       console.log("Search flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["THIRD_PARTY"]),
+    checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
     thirdPartyValidator.lowFareSearch.check,
     thirdPartyController.lowFareSearch);
@@ -23,7 +23,7 @@ router
       console.log("Book flight", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["THIRD_PARTY"]),
+    checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
     thirdPartyValidator.bookFlight.check,
     thirdPartyController.bookFlight);
@@ -35,7 +35,7 @@ router
       console.log("Get booked flight", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["THIRD_PARTY"]),
+    checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
     thirdPartyValidator.getBookedFlight.check,
     thirdPartyController.getBookedFlight);

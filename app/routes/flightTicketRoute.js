@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const {flightTicketController} = require("../controllers");
-const {flightTicketValidator} = require("../validations");
-const {checkAccess} = require("../middlewares");
+const { flightTicketController } = require("../controllers");
+const { flightTicketValidator } = require("../validations");
+const { checkAccess } = require("../middlewares");
 
 // NOTE: Get flight tickets
 router
@@ -11,7 +11,7 @@ router
       console.log("Get flight tickets", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("CLIENT"),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
     flightTicketValidator.getFlightTickets.check,
     flightTicketController.getFlightTickets);
 
@@ -32,7 +32,7 @@ router
       console.log("Get other user's flight tickets", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
+    // checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightTicketValidator.getUserFlightTickets.check,
     flightTicketController.getUserFlightTickets);
 
