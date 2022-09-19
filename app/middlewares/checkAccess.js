@@ -11,7 +11,7 @@ exports.isLogin = async (req, res, next) => {
     }
     return response.error(res, "access_denied", 403);
   } catch (e) {
-    return response.exception(res, e);
+    return response.error(res, "access_denied", 403);
   }
 }
 
@@ -29,7 +29,7 @@ exports.checkUserType = (userType = "CLIENT") => async (req, res, next) => {
       return response.error(res, "access_denied", 403);
     }
   } catch (e) {
-    return response.exception(res, e);
+    return response.error(res, "access_denied", 403);
   }
 }
 
@@ -44,6 +44,6 @@ exports.checkUserAccess = async (req, res, next) => {
       return response.error(res, "access_denied", 403);
     }
   } catch (e) {
-    return response.exception(res, e);
+    return response.error(res, "access_denied", 403);
   }
 }
