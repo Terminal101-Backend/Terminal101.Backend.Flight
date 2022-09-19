@@ -1,7 +1,7 @@
-const {EProvider, EFlightWaypoint, ETravelClass, EFeeType} = require("../constants");
+const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {getIpInfo} = require("../services/ip");
+const { getIpInfo } = require("../services/ip");
 const {
   providerRepository,
   countryRepository,
@@ -11,9 +11,8 @@ const {
   bookedFlightRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const {amadeus} = require("../services");
-const {flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper} = require("../helpers");
-const {flightController} = require("./index");
+const { amadeus } = require("../services");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -30,7 +29,7 @@ module.exports.searchOriginDestination = async (req, res) => {
 
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
-        console.log({ip, ipInfo});
+        console.log({ ip, ipInfo });
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
         }
@@ -85,7 +84,7 @@ const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, add
     },
     time: flightInfo.time,
     flights: arrayHelper.pagination(flights.map(flight => {
-      const {providerData, ...fInfo} = flight;
+      const { providerData, ...fInfo } = flight;
 
       return fInfo;
     }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
@@ -212,7 +211,7 @@ module.exports.searchFlights = async (req, res) => {
     const searchCode = flightInfo.code;
 
     if (req.method === "SOCKET") {
-      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), {completed: false}));
+      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), { completed: false }));
     }
 
     if (activeProviderCount === 0) {
@@ -242,7 +241,7 @@ module.exports.searchFlights = async (req, res) => {
         if ((req.method === "SOCKET") && (req.header("Page") === -1)) {
           providersResultCompleted[provider.title] = true;
           const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
-          response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), {completed}));
+          response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), { completed }));
         } else if (++providerNumber === activeProviderCount) {
           response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
         }
@@ -701,8 +700,8 @@ module.exports.getCountries = async (req, res) => {
 // NOTE: Get cities of country
 module.exports.getCities = async (req, res) => {
   try {
-    const country = await countryRepository.findOne({code: req.params.code});
-    response.success(res, country.cities.map(city => ({code: city.code, name: city.name})));
+    const country = await countryRepository.findOne({ code: req.params.code });
+    response.success(res, country.cities.map(city => ({ code: city.code, name: city.name })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -713,7 +712,7 @@ module.exports.getAirports = async (req, res) => {
   try {
     const country = await countryRepository.getAirports(req.params.countryCode, req.params.cityCode);
 
-    response.success(res, country.cities.airports.map(airport => ({code: airport.code, name: airport.name})));
+    response.success(res, country.cities.airports.map(airport => ({ code: airport.code, name: airport.name })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -770,23 +769,23 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         ipInfo = await getIpInfo(ip);
         // ipInfo = await getIpInfo("5.239.149.82");
         // ipInfo = await getIpInfo("161.185.160.93");
-        console.log({ip, ipInfo});
+        console.log({ ip, ipInfo });
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.countryCode;
         // }
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.city;
         // }
-        const {data: result} = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
-        const {data: resultTransformed} = transformDataAmadeus(result);
+        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const { data: resultTransformed } = transformDataAmadeus(result);
         response.success(res, resultTransformed);
       } else {
         response.error(res, "keyword_required", 400);
         return;
       }
     } else {
-      const {data: result} = await amadeus.searchAirportAndCityWithAccessToken(keyword);
-      const {data: resultTransformed} = transformDataAmadeus(result);
+      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const { data: resultTransformed } = transformDataAmadeus(result);
       response.success(res, resultTransformed);
     }
   } catch (e) {
