@@ -74,7 +74,7 @@ const bookedFlight = new Schema({
 bookedFlight.pre("validate", async function (next) {
   const date = new Date();
   while (!this.code) {
-    const code = "T101" + date.getMonth().toString().padStart(2, "0") + date.getDate().toString().padStart(2, "0") + generateRandomString(7, 7, true, false, true);
+    const code = "T" + date.getMonth().toString().padStart(2, "0") + date.getDate().toString().padStart(2, "0") + generateRandomString(5, 5, true, false, true);
     const user = await module.exports.findOne({ code });
 
     if (!user) {
