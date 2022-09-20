@@ -596,7 +596,7 @@ module.exports.getBookedFlights = async (req, res) => {
       items: bookedFlights.map(bookedFlight => {
         let timeout = (new Date().getTime() > bookedFlight.timoutProvider.getTime())
         const user = users.find(u => u.code === bookedFlight.bookedBy);
-        if (!!timeout) {
+        if (!!timeout && bookedFlight.status !== "REJECTED") {
           //send SMS or Email to passenger
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get("REJECTED"),
