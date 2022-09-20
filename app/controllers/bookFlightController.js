@@ -98,6 +98,7 @@ module.exports.payForFlight = async (req, res) => {
     if (!!req.body.confirmed && !timeout)
       await pay(bookedFlight);
     else if (!!timeout) {
+      //send SMS or Email to passenger
       bookedFlight.statuses.push({
         status: EBookedFlightStatus.get("REJECTED"),
         description: 'Your reservation has been canceled by the provider, Please try again',
@@ -105,6 +106,7 @@ module.exports.payForFlight = async (req, res) => {
       });
     }
     else {
+      //send SMS or Email to passenger
       bookedFlight.statuses.push({
         status: EBookedFlightStatus.get("PAYING"),
         description: 'Your last payment failed, Please try again',
@@ -592,8 +594,18 @@ module.exports.getBookedFlights = async (req, res) => {
     response.success(res, {
       ...result,
       items: bookedFlights.map(bookedFlight => {
+        let timeout = (new Date().getTime() > bookedFlight.timoutProvider.getTime())
         const user = users.find(u => u.code === bookedFlight.bookedBy);
-
+        if (!!timeout) {
+          //send SMS or Email to passenger
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("REJECTED"),
+            description: 'Your reservation has been canceled by the provider, Please try again',
+            changedBy: "SERVICE",
+          });
+          bookedFlight.status = bookedFlight.statuses[bookedFlight.statuses.length - 1].status;
+          bookedFlight.save();
+        }
         return {
           bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
           provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
@@ -670,7 +682,7 @@ module.exports.getBookedFlight = async (req, res) => {
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
     const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
-
+    //.filter((status => status.status !== 'ERROR'))
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
       bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
