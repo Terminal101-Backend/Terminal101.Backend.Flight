@@ -1,6 +1,6 @@
 const Joi = require("joi");
-const {baseValidator} = require("../core");
-const {EBookedFlightStatus} = require("../constants");
+const { baseValidator } = require("../core");
+const { EBookedFlightStatus } = require("../constants");
 
 module.exports.bookFlight = baseValidator({
   body: {
@@ -43,7 +43,7 @@ module.exports.editUserBookedFlight = baseValidator({
     //   documentCode: Joi.string().required(),
     //   documentIssuedAt: Joi.string().required(),
     // })),
-    status: EBookedFlightStatus.validator({required: true}),
+    status: EBookedFlightStatus.validator({ required: true }),
     description: Joi.string().default(""),
   },
 
@@ -63,7 +63,7 @@ module.exports.getUserBookedFlights = baseValidator({
   params: {
     userCode: Joi.string().required(),
   },
-});
+}, true);
 
 module.exports.cancelBookedFlight = baseValidator({
   body: {

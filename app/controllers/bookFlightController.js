@@ -627,7 +627,7 @@ module.exports.getBookedFlights = async (req, res) => {
 // NOTE: Get specific user's booked flights list
 module.exports.getUserBookedFlights = async (req, res) => {
   try {
-    const bookedFlights = await bookedFlightRepository.getBookedFlights(req.params.userCode);
+    const bookedFlights = await bookedFlightRepository.getBookedFlights(req.params.userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
     if (!bookedFlights) {
       throw "not_found";
     }
@@ -752,10 +752,16 @@ module.exports.getUserBookedFlightStatuses = async (req, res) => {
     if (!bookedFlight) {
       throw "not_found";
     }
+    const filteredResult = arrayHelper.filterAndSort(bookedFlight.statuses, req.query.filter, req.query.sort);
+    const {
+      items: paginatedResult,
+      ...result
+    } = arrayHelper.pagination(filteredResult, req.header("Page"), req.header("PageSize"));
 
     response.success(res, {
       code: bookedFlight.code,
-      status: bookedFlight.statuses.map(status => ({
+      ...result,
+      items: paginatedResult.map(status => ({
         status: EBookedFlightStatus.find(status.status) ?? status.status,
         time: status.time,
         changedBy: status.changedBy,
