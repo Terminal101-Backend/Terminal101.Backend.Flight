@@ -249,10 +249,10 @@ module.exports.searchFlights = async (req, res) => {
         console.error(`Provider (${provider.title}) returns error: `, e);
         providersResultCompleted[provider.title] = true;
         if (++providerNumber === activeProviderCount) {
-          if (!hasResult) {
+          if (!hasResult && (req.method === "SOCKET")) {
             response.exception(res, e);
           } else {
-            response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
+            response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"), { completed }));
           }
         }
       });
