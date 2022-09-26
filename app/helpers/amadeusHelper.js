@@ -1,8 +1,8 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const {accountManagement, amadeus, amadeusSoap} = require("../services");
-const {countryRepository, flightInfoRepository, airlineRepository} = require("../repositories");
-const {EProvider} = require("../constants");
+const { accountManagement, amadeus, amadeusSoap } = require("../services");
+const { countryRepository, flightInfoRepository, airlineRepository } = require("../repositories");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -239,9 +239,9 @@ module.exports.searchFlights = async params => {
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
-  let {result: amadeusSearchResult} = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
-  if (!amadeusSearchResult) {
+  if (!amadeusSearchResult?.flights) {
     return {
       flightDetails: [],
     };
@@ -312,7 +312,7 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const {data: user} = await accountManagement.getUserInfo(params.userCode);
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -378,7 +378,7 @@ module.exports.bookFlight = async params => {
   // flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
   // await flightInfo.save();
 
-  return {...bookedFlight.result, bookedId: bookedFlight.result.pnr};
+  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
 };
 
 /**
@@ -556,7 +556,7 @@ module.exports.issueBookedFlight = async bookedFlight => {
 module.exports.airRevalidate = async flightInfo => {
   try {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
-    let {result: airRevalidate} = await amadeusSoap.airRevalidate(flightInfoAmadeusObject);
+    let { result: airRevalidate } = await amadeusSoap.airRevalidate(flightInfoAmadeusObject);
     if (!airRevalidate) {
       return {
         error: 'Revalidation failed',
