@@ -23,6 +23,7 @@
     "express": "^4.17.1",
     "express-pdf": "^1.2.2",
     "express-validator": "^6.10.0",
+    "fast-xml-parser": "^4.0.10",
     "googleapis": "^104.0.0",
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
