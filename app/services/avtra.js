@@ -232,8 +232,6 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
     data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
   };
 
-  console.log("Parse with new parser", success);
-
   return result;
 };
 
