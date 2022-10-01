@@ -3,6 +3,33 @@ const axiosApiInstance = axios.create();
 const xmljsonParser = require("fast-xml-parser");
 const { dateTimeHelper, flightHelper, stringHelper, parserHelper } = require("../helpers");
 
+const reformatToArray = path => {
+  const root = path.split(".")[0];
+
+  const lowFareSearchArrays = [
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown.PassengerFare.Taxes.Tax",
+    "OTA_AirLowFareSearchRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.FareInfos.FareInfo",
+  ];
+
+
+
+  switch (root) {
+    case "OTA_AirLowFareSearchRS":
+      if (lowFareSearchArrays.indexOf(path) !== -1) return true;
+      break;
+
+    case "":
+      break;
+
+    default:
+  }
+};
+
 const option = {
   ignoreDeclaration: true,
   ignoreAttributes: false,
@@ -23,10 +50,9 @@ const option = {
   //   if (isLeafNode) return tagValue;
   //   return "";
   // },
-  isArray: (name, jpath, isLeafNode, isAttribute) => {
-    if ([].indexOf(jpath) !== -1) return true;
-  }
+  isArray: (name, jpath, isLeafNode, isAttribute) => reformatToArray(jpath)
 };
+
 const xmlParser = new xmljsonParser.XMLParser(option);
 
 
@@ -203,8 +229,10 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
 
   const result = {
     success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-    data: reformatSearchResponse(responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary),
+    data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
   };
+
+  console.log("Parse with new parser", success);
 
   return result;
 };
