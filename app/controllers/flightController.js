@@ -13,6 +13,7 @@ const {
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const socketClients = {};
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -212,6 +213,10 @@ module.exports.searchFlights = async (req, res) => {
 
     if (req.method === "SOCKET") {
       response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), { completed: false }));
+      if (!socketClients[res.clientId]) {
+        socketClients[res.clientId] = {};
+      }
+      socketClients[res.clientId].lastSearchFlight = flightInfo.code;
     }
 
     if (activeProviderCount === 0) {
@@ -229,6 +234,10 @@ module.exports.searchFlights = async (req, res) => {
       const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
+        if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
+          return;
+        }
+
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
 
         lastSearch.push(...flightDetails);

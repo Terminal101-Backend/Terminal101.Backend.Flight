@@ -13,13 +13,13 @@ const mapFilterCondition = (key, condition = "=") => value => {
 
   switch (condition) {
     case "=":
-      return { [key]: value };
+      return { [key]: { $regex: ".*" + value + ".*" } };
       break;
 
     case "!":
       return {
         $expr: {
-          $ne: ["$" + key, value]
+          $ne: ["$" + key, { $regex: ".*" + value + ".*" }]
         }
       };
       break;
@@ -72,7 +72,7 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
     if (sort[0] === "-") {
       sort = { [sort.substring(1)]: -1 };
     } else {
-      sort = { sort: 1 };
+      sort = { [sort]: 1 };
     }
   }
 
@@ -103,7 +103,7 @@ module.exports.filterAndSort = async (aggregate, filters, sort) => {
         return [
           ...res,
           ...((condition === "!") ?
-            [{ $and: values.map(mapFilterCondition(cur, condition)) }]
+            { $and: values.map(mapFilterCondition(cur, condition)) }
             :
             values.map(mapFilterCondition(cur, condition))),
         ]

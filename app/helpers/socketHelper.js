@@ -1,5 +1,5 @@
-const {decodeToken} = require("../helpers/tokenHelper");
-const {EUserType} = require("../constants");
+const { decodeToken } = require("../helpers/tokenHelper");
+const { EUserType } = require("../constants");
 const responseHelper = require("./responseHelper");
 const common = require("../services/common");
 
@@ -34,6 +34,10 @@ class Response {
       data: data.data,
     });
   }
+
+  get clientId() {
+    return this.#clientId;
+  }
 }
 
 class Router {
@@ -61,7 +65,7 @@ class Router {
       if (route === "") {
         this.#middlewares[route] = [router, ...middlewares];
       } else {
-        this.#middlewares[route] = {"": [router, ...middlewares]};
+        this.#middlewares[route] = { "": [router, ...middlewares] };
       }
     }
   }
