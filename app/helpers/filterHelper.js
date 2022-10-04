@@ -1,6 +1,7 @@
 const mapFilterCondition = (key, condition = "=") => value => {
   if (/^".*"$/.test(value)) {
     value = value.replace(/^"(.*)"$/, "$1");
+    value = { $regex: ".*" + value + ".*" };
   } else if ((value == "false") || (value == "true")) {
     value = (value == "true");
   } else if (value === "undefined") {
@@ -13,13 +14,13 @@ const mapFilterCondition = (key, condition = "=") => value => {
 
   switch (condition) {
     case "=":
-      return { [key]: { $regex: ".*" + value + ".*" } };
+      return { [key]: value };
       break;
 
     case "!":
       return {
         $expr: {
-          $ne: ["$" + key, { $regex: ".*" + value + ".*" }]
+          $ne: ["$" + key, value]
         }
       };
       break;
