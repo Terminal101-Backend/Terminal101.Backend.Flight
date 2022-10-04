@@ -1,6 +1,7 @@
 const BaseRepository = require("../core/baseRepository");
 const { FlightCondition, Country } = require("../models/documents");
 const pagination = require("../helpers/paginationHelper");
+const filterHelper = require("../helpers/filterHelper");
 
 /**
  * @typedef TCondition
@@ -424,9 +425,11 @@ class FlightConditionRepository extends BaseRepository {
    * 
    * @param {Number} page 
    * @param {Number} pageSize 
+   * @param {{field: value}[]} filters
+   * @param {String} sort
    * @returns {Promise<FlightCondition[]>}
    */
-  async getFlightConditions(page, pageSize) {
+  async getFlightConditions(page, pageSize, filters, sort) {
     const agrFlightCondition = FlightCondition.aggregate();
     agrFlightCondition.append(this.#getConditionCountryPipeline(true));
     agrFlightCondition.append(this.#getConditionCityPipeline(true));
@@ -440,6 +443,7 @@ class FlightConditionRepository extends BaseRepository {
 
     agrFlightCondition.append(this.#getConditionFinalProjection());
 
+    filterHelper.filterAndSort(agrFlightCondition, filters, sort);
     const flightConditions = await pagination.rootPagination(agrFlightCondition, page, pageSize);
     return flightConditions;
   }

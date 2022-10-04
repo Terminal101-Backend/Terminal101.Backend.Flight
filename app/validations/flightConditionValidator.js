@@ -1,9 +1,9 @@
 const Joi = require("joi");
-const {baseValidator} = require("../core");
+const { baseValidator } = require("../core");
 
 module.exports.getFlightConditions = baseValidator({
   body: {},
-}, true);
+}, true, true);
 
 module.exports.getFlightCondition = baseValidator({
   body: {},
@@ -17,15 +17,15 @@ module.exports.editFlightCondition = baseValidator({
     origin: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     destination: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     airline: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     providerNames: Joi.array().items(Joi.string()),
     isRestricted: Joi.boolean(),
     isActive: Joi.boolean(),
@@ -47,15 +47,15 @@ module.exports.addFlightCondition = baseValidator({
     origin: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     destination: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     airline: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
-    }).default({items: [], exclude: false}),
+    }).default({ items: [], exclude: false }),
     providerNames: Joi.array().items(Joi.string()).default([]),
     isRestricted: Joi.boolean().default(false),
   },
