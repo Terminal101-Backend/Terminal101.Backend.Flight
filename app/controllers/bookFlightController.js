@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, avtraHelper, stringHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, avtraHelper, stringHelper, arrayHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
