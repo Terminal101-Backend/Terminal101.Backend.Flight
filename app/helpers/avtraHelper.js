@@ -1,9 +1,9 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
 const avtra = require("../services/avtra");
-const {flightInfoRepository, countryRepository, airlineRepository} = require("../repositories");
-const {accountManagement} = require("../services");
-const {EProvider} = require("../constants");
+const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
+const { accountManagement } = require("../services");
+const { EProvider } = require("../constants");
 
 const regenerateBookSegment = segments => {
   return segments.map(segment => ({
@@ -184,7 +184,7 @@ module.exports.searchFlights = async params => {
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
-  let {data: avtraSearchResult} = await avtra.lowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+  let { data: avtraSearchResult } = await avtra.lowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
   if (!avtraSearchResult) {
     return {
@@ -241,7 +241,7 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const {data: user} = await accountManagement.getUserInfo(params.userCode);
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -283,7 +283,7 @@ module.exports.bookFlight = async params => {
     }
   });
 
-  const flightInfo = await flightInfoRepository.findOne({code: params.flightDetails.code});
+  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
   const segments = params.flightDetails.flights.itineraries.map(itinerary => {
@@ -304,11 +304,11 @@ module.exports.bookFlight = async params => {
     currency: params.flightDetails.flights.currencyCode,
   };
 
-  const {data: bookedFlight} = await avtra.book(segments, price, params.contact, travelers);
+  const { data: bookedFlight } = await avtra.book(segments, price, params.contact, travelers);
   flightInfo.flights[flightIndex].providerData.bookedData = bookedFlight;
   await flightInfo.save();
 
-  return {...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID};
+  return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {
@@ -321,4 +321,8 @@ module.exports.issueBookedFlight = async bookedFlight => {
 
 module.exports.airRevalidate = async flightInfo => {
   return flightInfo.flights.price;
+};
+
+module.exports.seatAvailable = async seats => {
+  return seats.map(seat => seat);
 };
