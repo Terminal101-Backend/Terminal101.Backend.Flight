@@ -126,7 +126,7 @@ class BookedFlightRepository extends BaseRepository {
    * @returns {Promise<BookedFlight>}
    */
   async getBookedFlights(bookedBy, page, pageSize, filters, sort) {
-    const agrBookedFlight = BookedFlight.aggregate();
+    const agrBookedFlight = BookedFlight.aggregate().allowDiskUse(true);
     if (!!bookedBy) {
       agrBookedFlight.append({
         $match: {
@@ -159,6 +159,26 @@ class BookedFlightRepository extends BaseRepository {
     agrBookedFlight.append({
       $addFields: {
         status: "$lastStatus.status"
+      }
+    });
+    agrBookedFlight.append({
+      $project: {
+        "bookedBy": 1,
+        "providerName": 1,
+        "providerPnr": 1,
+        "code": 1,
+        "searchedFlightCode": 1,
+        "flightDetailsCode": 1,
+        "statuses": 1,
+        "status": 1,
+        "time": 1,
+        "passengers": 1,
+        "contact": 1,
+        "flightInfo.origin": 1,
+        "flightInfo.destination": 1,
+        "flightInfo.travelClass": 1,
+        "flightInfo.flights.price.total": 1,
+        "flightInfo.flights.currencyCode": 1,
       }
     });
 
