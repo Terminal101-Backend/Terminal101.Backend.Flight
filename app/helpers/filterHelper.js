@@ -44,7 +44,7 @@ const mapFilterCondition = (key, condition = "=") => value => {
     case "<=":
       return {
         $expr: {
-          $le: ["$" + key, value]
+          $lte: ["$" + key, value]
         }
       };
       break;
@@ -52,7 +52,7 @@ const mapFilterCondition = (key, condition = "=") => value => {
     case ">=":
       return {
         $expr: {
-          $ge: ["$" + key, value]
+          $gte: ["$" + key, value]
         }
       };
       break;
