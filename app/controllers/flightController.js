@@ -5,7 +5,7 @@ const { getIpInfo } = require("../services/ip");
 const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository, bookedFlightRepository } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, worldticketHelper, dateTimeHelper, arrayHelper } = require("../helpers");
 
 // NOTE: Flight
 // NOTE: Search origin or destination

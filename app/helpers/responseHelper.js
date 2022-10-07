@@ -35,7 +35,7 @@ exports.exception = (res, error) => {
     }
     if (message === `Passenger's passport number is not valid.`) {
         console.error(`Code: 400, Message: ${message}`);
-        return res.status(404).send({
+        return res.status(400).send({
             status: false,
             message: 'passport_not_valid',
             data,

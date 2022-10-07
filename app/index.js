@@ -13,7 +13,7 @@ const { twilio } = require("./services");
 require("dotenv").config();
 global.config = require("./config");
 
-twilio.initialize();
+// twilio.initialize();
 
 const apiRouter = require("./routes");
 const BaseValidator = require("./core/baseValidator");

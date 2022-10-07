@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, emailHelper, stringHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, emailHelper, stringHelper, worldticketHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
@@ -259,7 +259,12 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
 
-    const providerBookResult = await providerHelper.bookFlight({ flightDetails, userCode: decodedToken.user, contact: req.body.contact, passengers: req.body.passengers });
+    const providerBookResult = await providerHelper.bookFlight({ 
+      flightDetails, 
+      userCode: decodedToken.user, 
+      contact: req.body.contact, 
+      passengers: req.body.passengers 
+    });
     const userWallet = await wallet.getUserWallet(decodedToken.user);
 
     if (!!req.body.useWallet) {
