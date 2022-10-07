@@ -165,7 +165,7 @@ class BookedFlightRepository extends BaseRepository {
       $project: {
         "bookedBy": 1,
         "providerName": 1,
-        "pnr": "$providerPnr",
+        "providerPnr": 1,
         "code": 1,
         "searchedFlightCode": 1,
         "flightDetailsCode": 1,
