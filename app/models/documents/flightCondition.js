@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const Commission = require("../subdocuments/commission");
 const Condition = require("../subdocuments/condition");
 
 const flightCondition = new Schema({
@@ -24,6 +25,10 @@ const flightCondition = new Schema({
   },
   providerNames: {
     type: [String],
+    default: [],
+  },
+  commisions: {
+    type: [Commission],
     default: [],
   },
   isRestricted: {

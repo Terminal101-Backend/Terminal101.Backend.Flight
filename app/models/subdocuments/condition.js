@@ -1,8 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const Location = require("./location");
-
 const condition = new Schema({
   exclude: {
     type: Boolean,
