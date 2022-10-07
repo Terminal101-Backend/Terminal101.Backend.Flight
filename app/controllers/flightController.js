@@ -2,10 +2,18 @@ const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../const
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { getIpInfo } = require("../services/ip");
-const { providerRepository, countryRepository, airlineRepository, flightInfoRepository, flightConditionRepository, bookedFlightRepository } = require("../repositories");
+const {
+  providerRepository,
+  countryRepository,
+  airlineRepository,
+  flightInfoRepository,
+  flightConditionRepository,
+  bookedFlightRepository
+} = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, avtraHelper, worldticketHelper, dateTimeHelper, arrayHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper } = require("../helpers");
+const socketClients = {};
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -56,9 +64,35 @@ module.exports.getPopularWaypoints = async (req, res) => {
     response.exception(res, e);
   }
 };
+const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, additionalFields = {}) => {
+  if (page == -1) {
+    page = 0;
+    pageSize = flights.length;
+  }
 
-// NOTE: Search flights
-module.exports.appendProviderResult = async (origin, destination, time, flights, searchCode, page = 0, pageSize) => {
+  return {
+    code: flightInfo.code,
+    ...additionalFields,
+    origin: {
+      code: flightInfo.origin.code,
+      name: flightInfo.origin.name,
+      description: flightInfo.origin.description,
+    },
+    destination: {
+      code: flightInfo.destination.code,
+      name: flightInfo.destination.name,
+      description: flightInfo.destination.description,
+    },
+    time: flightInfo.time,
+    flights: arrayHelper.pagination(flights.map(flight => {
+      const { providerData, ...fInfo } = flight;
+
+      return fInfo;
+    }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
+  };
+};
+
+const appendProviderResult = async (origin, destination, time, flights, searchCode) => {
   let flightInfo = await flightInfoRepository.createFlightInfo(
     origin,
     destination,
@@ -84,30 +118,10 @@ module.exports.appendProviderResult = async (origin, destination, time, flights,
 
   await flightInfo.save();
 
-  if (page === -1) {
-    page = 0;
-    pageSize = flights.length;
-  }
-
-  return {
-    code: flightInfo.code,
-    origin: {
-      code: flightInfo.origin.code,
-      name: flightInfo.origin.name,
-      description: flightInfo.origin.description,
-    },
-    destination: {
-      code: flightInfo.destination.code,
-      name: flightInfo.destination.name,
-      description: flightInfo.destination.description,
-    },
-    time: flightInfo.time,
-    flights: arrayHelper.pagination(flights.sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
-    // AMADEUS_RESULT: result,
-  };
+  return flightInfo;
 };
 
-module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
+const checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
   return activeProviders.filter(provider => {
     const providerIsRestricted = flightConditions.some(flightCondition => {
       const anyAirlines = !!flightCondition.airline.exclude && (!flightCondition.airline.items || (flightCondition.airline.items.length === 0));
@@ -121,7 +135,8 @@ module.exports.checkIfProviderNotRestrictedForThisRoute = (flightConditions, act
         return false;
       } else {
         return false
-      };
+      }
+      ;
     });
 
     return !providerIsRestricted;
@@ -173,11 +188,12 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
   return result;
 };
 
+// NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
-    // response.error(res, "use_socket", 503);
-    // return;
-
+    /**
+     * @type {Promise<Array>}
+     */
     const activeProviders = await providerRepository.getActiveProviders();
 
     // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
@@ -188,33 +204,64 @@ module.exports.searchFlights = async (req, res) => {
     const lastSearch = [];
     let hasResult = false;
     let providerNumber = 0;
-    let searchCode;
-    let result;
+    const {
+      origin,
+      destination
+    } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
+    const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
+    const searchCode = flightInfo.code;
+
+    if (req.method === "SOCKET") {
+      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), { completed: false }));
+      if (!socketClients[res.clientId]) {
+        socketClients[res.clientId] = {};
+      }
+      socketClients[res.clientId].lastSearchFlight = flightInfo.code;
+    }
+
+    if (activeProviderCount === 0) {
+      response.error(res, "provider_not_found", 404);
+      return;
+    }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    const providersResultCompleted = notRestrictedProviders.reduce((res, cur) => ({
+      ...res,
+      [cur.title]: false,
+    }), {});
 
     notRestrictedProviders.forEach(provider => {
-      providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
+      const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
+        if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
+          return;
+        }
+
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
 
         lastSearch.push(...flightDetails);
-        result = await this.appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+        appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
+          console.trace(e);
+        });
 
-        searchCode = result.code;
         hasResult = true;
 
-        if (++providerNumber === activeProviderCount) {
-          response.success(res, result);
+        if ((req.method === "SOCKET") && (req.header("Page") === -1)) {
+          providersResultCompleted[provider.title] = true;
+          const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
+          response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), { completed }));
+        } else if (++providerNumber === activeProviderCount) {
+          response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
         }
       }).catch(e => {
         console.error(`Provider (${provider.title}) returns error: `, e);
+        providersResultCompleted[provider.title] = true;
         if (++providerNumber === activeProviderCount) {
-          if (!hasResult) {
+          if (!hasResult && (req.method === "SOCKET")) {
             response.exception(res, e);
           } else {
-            response.success(res, result);
+            response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"), { completed }));
           }
         }
       });
@@ -482,11 +529,14 @@ module.exports.getFlight = async (req, res) => {
       response.error(res, "flight_not_found", 404);
       return;
     }
-    const isBookedFlight = await bookedFlightRepository.findOne({ searchedFlightCode: req.params.searchId, flightDetailsCode: req.params.flightCode });
+    const isBookedFlight = await bookedFlightRepository.findOne({
+      searchedFlightCode: req.params.searchId,
+      flightDetailsCode: req.params.flightCode
+    });
     if (!isBookedFlight) {
       const providerName = flightInfo.flights.provider.toLowerCase();
       const providerHelper = eval(providerName + "Helper");
-      const newPrice = await providerHelper.airReValidate(flightInfo);
+      const newPrice = await providerHelper.airRevalidate(flightInfo);
 
       // if(!newPrice){
       //   console.log('err :', newPrice)
@@ -522,6 +572,7 @@ module.exports.getFlight = async (req, res) => {
         code: flightInfo.flights.code,
         availableSeats: flightInfo.flights.availableSeats,
         currencyCode: flightInfo.flights.currencyCode,
+        fare: flightInfo.flights.providerData.fare,
         // price: flightInfo.flights.price,
         price: {
           total: flightInfo.flights.price.total,
@@ -645,7 +696,11 @@ module.exports.getPopularFlights = async (req, res) => {
 module.exports.getCountries = async (req, res) => {
   try {
     const countries = await countryRepository.findMany({}, "name");
-    response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
+    response.success(res, countries.map(country => ({
+      code: country.code,
+      name: country.name,
+      dialingCode: country.dialingCode
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -677,7 +732,11 @@ module.exports.getAirlines = async (req, res) => {
   try {
     const airline = await airlineRepository.findMany();
 
-    response.success(res, airline.map(airline => ({ code: airline.code, name: airline.name, description: airline.description })));
+    response.success(res, airline.map(airline => ({
+      code: airline.code,
+      name: airline.name,
+      description: airline.description
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -717,11 +776,14 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         ip = ip.includes(':') ? ip.split(':')[0] : ip;
 
         ipInfo = await getIpInfo(ip);
-
+        // ipInfo = await getIpInfo("5.239.149.82");
         // ipInfo = await getIpInfo("161.185.160.93");
         console.log({ ip, ipInfo });
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.countryCode;
+        // }
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.city;
         // }
         const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
         const { data: resultTransformed } = transformDataAmadeus(result);

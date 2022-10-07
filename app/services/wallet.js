@@ -1,6 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
-const { loginAsService } = require("./accountManagement");
+const {loginAsService} = require("./accountManagement");
 let token = "";
 
 // Request interceptor for API calls
@@ -14,7 +14,7 @@ axiosApiInstance.interceptors.request.use(
       'Content-Type': 'application/json',
     };
     config.paramsSerializer = params => {
-      return JSON.stringify(params, { arrayFormat: 'brackets' })
+      return JSON.stringify(params, {arrayFormat: 'brackets'})
     };
     return config;
   },
@@ -30,17 +30,17 @@ axiosApiInstance.interceptors.response.use((response) => {
 
   if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
-    const { data: response } = await loginAsService();
+    const {data: response} = await loginAsService();
     token = response.token;
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     return axiosApiInstance(originalRequest);
   }
-  return Promise.reject(error);
+  return Promise.reject(error?.response?.data ?? error?.response ?? error);
 });
 
 const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySource, currencyTarget) => {
   try {
-    const { data: response } = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
+    const {data: response} = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
       paymentMethodName,
       currencySource,
       currencyTarget,
@@ -64,47 +64,47 @@ const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySou
 // };
 
 /**
- * 
- * @param {String} userCode 
+ *
+ * @param {String} userCode
  * @returns {Promise}
  */
 const getPaymentMethod = async userCode => {
-  const { data: response } = await axiosApiInstance.get(`/payment/method/${userCode}`);
+  const {data: response} = await axiosApiInstance.get(`/payment/method/${userCode}`);
 
   return response.data;
 };
 
 /**
- * 
- * @param {String} userCode 
+ *
+ * @param {String} userCode
  * @returns {Promise}
  */
 const getUserWallet = async userCode => {
-  const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}`);
+  const {data: response} = await axiosApiInstance.get(`/wallet/${userCode}`);
 
   return response.data;
 };
 
 /**
- * 
- * @param {String} userCode 
+ *
+ * @param {String} userCode
  * @param {String} externalTransactionId
  * @returns {Promise}
  */
 const getUserTransaction = async (userCode, externalTransactionId) => {
-  const { data: response } = await axiosApiInstance.get(`/wallet/${userCode}/transaction/${externalTransactionId}`);
+  const {data: response} = await axiosApiInstance.get(`/wallet/${userCode}/transaction/${externalTransactionId}`);
 
   return response.data;
 };
 
 /**
- * 
- * @param {String} userCode 
+ *
+ * @param {String} userCode
  * @param {String} amount
  * @returns {Promise}
  */
 const addAndConfirmUserTransaction = async (userCode, amount, description) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
+  const {data: response} = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
     amount,
     description,
     serviceName: "FLIGHT",

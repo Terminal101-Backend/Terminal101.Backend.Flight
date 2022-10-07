@@ -1,66 +1,175 @@
-const { ValidationException } = require("./validationExceptionHelper");
-const { common } = require("../services");
+const { decodeToken } = require("../helpers/tokenHelper");
+const { EUserType } = require("../constants");
+const responseHelper = require("./responseHelper");
+const common = require("../services/common");
 
-//making response for successfully situation
-exports.success = async (data, language, message = "") => {
-  try {
-    return await common.translate({
-      status: true,
-      message,
-      data,
-    }, language);
-  } catch (e) {
-    return {
-      status: true,
-      message,
-      data,
-    };
+let io;
+
+class Response {
+  #statusCode = 200;
+  #event = "";
+  #serviceId;
+  #clientId;
+
+  constructor(serviceId, clientId, event) {
+    this.#serviceId = serviceId;
+    this.#clientId = clientId;
+    this.#event = event;
   }
+
+  status(statusCode) {
+    this.#statusCode = statusCode;
+    return this;
+  }
+
+  send(data) {
+    const messageName = (this.#statusCode === 200) ? "success" : "failed";
+
+    io.to(this.#serviceId).emit(messageName, {
+      statusCode: this.#statusCode,
+      message: data.message,
+      status: data.status,
+      event: this.#event,
+      clientId: this.#clientId,
+      data: data.data,
+    });
+  }
+
+  get clientId() {
+    return this.#clientId;
+  }
+}
+
+class Router {
+  #middlewares = {};
+
+  get middlewares() {
+    return this.#middlewares;
+  }
+
+  #getRouteMiddlewares(route, middlewares) {
+    const [base, ...path] = route.split("/");
+    middlewares = middlewares[base];
+    if (path.length > 0) {
+      middlewares = this.#getRouteMiddlewares(path.join("/"), middlewares);
+    }
+
+    return middlewares;
+  }
+
+  use(route, router, ...middlewares) {
+    route = route.replace(/^\/*/, "").replace(/\/*$/, "");
+    if (router instanceof Router) {
+      this.#middlewares[route] = router.middlewares;
+    } else {
+      if (route === "") {
+        this.#middlewares[route] = [router, ...middlewares];
+      } else {
+        this.#middlewares[route] = { "": [router, ...middlewares] };
+      }
+    }
+  }
+
+  route(route) {
+    route = route.replace(/\/+/, "/");
+    route = route.replace(/^\//, "");
+    if (!route.endsWith("/")) {
+      route += "/";
+    }
+
+    return this.#getRouteMiddlewares(route, this.middlewares);
+  }
+}
+
+/**
+ * @param {Array} middlewares
+ * @param {String} base
+ * @returns {String[]}
+ */
+const getAllRoutes = (middlewares, base = "") => {
+  let result = [];
+  Object.entries(middlewares).forEach(([path, middleware]) => {
+    const route = (base + "/" + path).replace(/^\/*/, "").replace(/\/*$/, "");
+    if (Array.isArray(middleware)) {
+      result.push(route);
+    } else {
+      result = [...result, ...getAllRoutes(middleware, route)];
+    }
+  });
+
+  return result;
 };
 
-//making response for error by status code (default is 404)
-exports.error = async (message, language, data = {}) => {
-  try {
-    return await common.translate({
-      status: false,
-      message: `{{${message}}}`,
-      data,
-    }, language);
-  } catch (e) {
-    return {
-      status: false,
-      message,
-      data,
-    };
-  }
+let messages = new Router();
+
+const addMessageToCommon = route => {
+  common.addSocketEvent(route).then(() => {
+    console.log(`Message ${route} added for socket`);
+  }).catch(e => {
+    console.error("Common microservice is not available\nThis method will send request automatically again");
+    setTimeout(() => addMessageToCommon(route), 500);
+  });
 };
 
-// convert Exception error to user error response
-exports.exception = async (error, language, extraData) => {
-  let data = [];
-  let message = error.message ?? error;
-  if (error instanceof ValidationException) {
-    data = error.data
-    message = error.message
-  }
+module.exports.Response = Response;
 
-  try {
-    return await common.translate({
-      status: false,
-      message: `{{${message}}}`,
-      data: {
-        ...data,
-        ...extraData,
-      },
-    }, language);
-  } catch (e) {
-    return {
-      status: false,
-      message,
-      data: {
-        ...data,
-        ...extraData,
-      },
-    };
+Object.defineProperty(module.exports, "router", {
+  get: () => new Router(),
+});
+
+module.exports.use = router => {
+  if (router instanceof Router) {
+    messages = router;
+    getAllRoutes(messages.middlewares).forEach(route => {
+      addMessageToCommon(route);
+    });
+  } else {
+    throw "router_type_error";
   }
-};
+}
+
+module.exports.initialize = server => {
+  io = require('socket.io')(server);
+  io.on('connection', socket => {
+    console.log(`socket.io connected: ${socket.id}`);
+
+    getAllRoutes(messages.middlewares).forEach(route => {
+      addMessageToCommon(route);
+    });
+
+    socket.on("request", msg => {
+      const decodedToken = decodeToken(msg.token);
+
+      const response = {
+        event: msg.event,
+        clientId: msg.clientId,
+      };
+      const res = new Response(socket.id, msg.clientId, msg.event);
+
+      try {
+        const req = {
+          ...msg.req,
+          method: "SOCKET",
+          header: key => Object.entries(msg?.req?.headers ?? {}).find(([k, v]) => k.toLowerCase() === key.toLowerCase())?.[1],
+        }
+
+        if (EUserType.check(["SERVICE"], decodedToken.type)) {
+          const middlewares = messages.route(msg.event);
+          const nextGenerator = i => {
+            if (!!middlewares[++i]) {
+              return () => middlewares[i](req, res, nextGenerator(i));
+            } else {
+              return () => {
+              };
+            }
+          }
+          middlewares[0](req, res, nextGenerator(0));
+        } else {
+          responseHelper.error(res, "access_denied", 403, response);
+        }
+      } catch (e) {
+        responseHelper.error(res, e, 500, response);
+      }
+    })
+  });
+}

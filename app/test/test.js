@@ -112,23 +112,23 @@ describe("Service", () => {
     vars.amadeus = {};
 
     it("Get access token", done => {
-      check(done, serviceTests.getAccessToken);
+      check(done, serviceTests.amadeus.getAccessToken);
     });
 
     it("Airline code lookup", done => {
-      check(done, serviceTests.airlineCodeLookup);
+      check(done, serviceTests.amadeus.airlineCodeLookup);
     });
 
     it("Search airport and city", done => {
-      check(done, serviceTests.searchAirportAndCity);
+      check(done, serviceTests.amadeus.searchAirportAndCity);
     });
 
     it("Search flight", done => {
-      check(done, serviceTests.flightOffersSearch);
+      check(done, serviceTests.amadeus.flightOffersSearch);
     });
 
     it("Covid 19", done => {
-      check(done, serviceTests.covid19AreaReport);
+      check(done, serviceTests.amadeus.covid19AreaReport);
     });
   });
 
@@ -136,35 +136,47 @@ describe("Service", () => {
     vars.parto = {};
 
     it("Create session", done => {
-      check(done, serviceTests.createSession);
+      check(done, serviceTests.parto.createSession);
     });
 
     it("Search flight", done => {
       check(done, {
         params: [vars.parto],
-        test: serviceTests.airLowFareSearch
+        test: serviceTests.parto.airLowFareSearch
       });
     });
 
     it("Book flight", done => {
       check(done, {
         params: [vars.parto],
-        test: serviceTests.airBook
+        test: serviceTests.parto.airBook
       });
     });
 
     it("Book data", done => {
       check(done, {
         params: [vars.parto],
-        test: serviceTests.airBookData
+        test: serviceTests.parto.airBookData
       });
     });
 
     it("Book cancel", done => {
       check(done, {
         params: [vars.parto],
-        test: serviceTests.airBookCancel
+        test: serviceTests.parto.airBookCancel
       });
+    });
+  });
+
+  describe("Avtra", () => {
+    vars.avtra = {};
+
+    it("Ping", done => {
+      check(done, serviceTests.avtra.ping);
+    });
+
+    it("Low fare search", done => {
+      check(done, serviceTests.avtra.lowFareSearch);
     });
   });
 
@@ -172,7 +184,7 @@ describe("Service", () => {
     vars.ip = {};
 
     it("Get IP info", done => {
-      check(done, serviceTests.getIpInfo);
+      check(done, serviceTests.ip.getIpInfo);
     });
   });
 });

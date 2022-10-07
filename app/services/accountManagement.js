@@ -24,13 +24,13 @@ axiosApiInstance.interceptors.response.use((response) => {
 }, async function (error) {
   const originalRequest = error.config;
 
-  if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
+  if (!!error.response && [401, 403, 500].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
     await loginAsService();
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     return axiosApiInstance(originalRequest);
   }
-  return Promise.reject(error);
+  return Promise.reject(error?.response?.data ?? error?.response ?? error);
 });
 
 const loginAsService = async () => {
@@ -69,6 +69,12 @@ const getUsersInfo = async userCodes => {
   return response;
 };
 
+const getThirdPartyUserAvailableProviders = async (userCode, businessCode) => {
+  const { data: response } = await axiosApiInstance.get(`/business/provider/${userCode}/${businessCode}`);
+
+  return response;
+};
+
 const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
   const params = new URLSearchParams();
   params.append("userType", userType);
@@ -76,9 +82,9 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   params.append("path", path);
   params.append("serviceName", serviceName);
 
-  const { data: response } = await axiosApiInstance.get(`/user/${userCode}`, params);
+  const { data: response } = await axiosApiInstance.get(`/user/${userCode}/access`, { params });
 
-  return response;
+  return response.data;
 };
 
 module.exports = {
@@ -86,4 +92,5 @@ module.exports = {
   getUserInfo,
   getUsersInfo,
   checkUserAccess,
+  getThirdPartyUserAvailableProviders,
 };

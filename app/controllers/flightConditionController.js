@@ -8,7 +8,7 @@ const { EProvider } = require("../constants");
 module.exports.getFlightConditions = async (req, res) => {
   try {
     const providers = await providerRepository.findMany();
-    const { items: flightConditions, ...result } = await flightConditionRepository.getFlightConditions(req.header("Page"), req.header("PageSize"));
+    const { items: flightConditions, ...result } = await flightConditionRepository.getFlightConditions(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     response.success(res, {
       ...result,

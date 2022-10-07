@@ -1,7 +1,7 @@
-const { EProvider } = require("../constants");
-const { providerRepository, flightConditionRepository } = require("../repositories");
-const { flightHelper, socketHelper, arrayHelper, amadeusHelper, partoHelper } = require("../helpers");
-const { flightController } = require("../controllers");
+const {EProvider} = require("../constants");
+const {providerRepository, flightConditionRepository} = require("../repositories");
+const {flightHelper, socketHelper, arrayHelper, amadeusHelper, partoHelper} = require("../helpers");
+const {flightController} = require("../controllers");
 
 module.exports = (io, socket) => {
   const canceledSearchFlightCodes = [];
@@ -12,11 +12,11 @@ module.exports = (io, socket) => {
     canceledSearchFlightCodes.push(searchCode);
 
     setTimeout(() => {
-      canceledSearchFlightCodes.splice(0, 1);
-    },
+        canceledSearchFlightCodes.splice(0, 1);
+      },
       10 * 60 * 1000
-    )
-    socket.emit("searchFlightCanceled", await socketHelper.success({ searchFlightCode: searchCode }));
+    );
+    socket.emit("searchFlightCanceled", await socketHelper.success({searchFlightCode: searchCode}));
   };
 
   const header = (req, name) => {
@@ -59,7 +59,7 @@ module.exports = (io, socket) => {
 
     try {
       const activeProviders = await providerRepository.getActiveProviders();
-      providerResultCompleted = activeProviders.reduce((res, cur) => ({ ...res, [cur.title]: false }), {});
+      providerResultCompleted = activeProviders.reduce((res, cur) => ({...res, [cur.title]: false}), {});
 
       // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.body.origin, req.body.destination);
       // const notRestrictedProviders = flightController.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
@@ -70,7 +70,10 @@ module.exports = (io, socket) => {
       const departureDate = new Date(req.body?.departureDate);
 
       await (async () => {
-        const { origin, destination } = await flightHelper.getOriginDestinationCity(req.body.origin, req.body.destination);
+        const {
+          origin,
+          destination
+        } = await flightHelper.getOriginDestinationCity(req.body.origin, req.body.destination);
         result = await flightController.appendProviderResult(origin, destination, departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
         searchCode = result.code;
 

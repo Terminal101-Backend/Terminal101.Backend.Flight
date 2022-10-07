@@ -1,214 +1,128 @@
-const { Joi } = require("celebrate");
+const Joi = require("joi");
+const { baseValidator } = require("../core");
+const { EBookedFlightStatus } = require("../constants");
 
-const { BaseValidator } = require("../core");
+module.exports.bookFlight = baseValidator({
+  body: {
+    searchedFlightCode: Joi.string().required(),
+    flightDetailsCode: Joi.string().required(),
+    paymentMethodName: Joi.string().required(),
+    currencySource: Joi.string(),
+    currencyTarget: Joi.string(),
+    // payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+    useWallet: Joi.boolean().default(false),
+    contact: Joi.object({
+      email: Joi.string().required(),
+      mobileNumber: Joi.string().required(),
+    }).required(),
+    passengers: Joi.array().items(Joi.object({
+      documentCode: Joi.string().required(),
+      documentIssuedAt: Joi.string().required(),
+    })).min(1).required(),
+  },
+});
 
-class BookFlight extends BaseValidator {
-  constructor() {
-    const body = {
-      searchedFlightCode: Joi.string().required(),
-      flightDetailsCode: Joi.string().required(),
-      paymentMethodName: Joi.string().required(),
-      currencySource: Joi.string(),
-      currencyTarget: Joi.string(),
-      // payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
-      useWallet: Joi.boolean().default(false),
-      contact: Joi.object({
-        email: Joi.string().required(),
-        mobileNumber: Joi.string().required(),
-      }).required(),
-      passengers: Joi.array().items(Joi.object({
-        documentCode: Joi.string().required(),
-        documentIssuedAt: Joi.string().required(),
-      })).min(1).required(),
-    };
+module.exports.bookFlightForUser = baseValidator({
+  body: {},
+  params: {
+    userCode: Joi.string().required(),
+  },
+});
 
-    super(body);
-  }
-};
+module.exports.editUserBookedFlight = baseValidator({
+  body: {
+    contact: Joi.object({
+      email: Joi.string(),
+      mobileNumber: Joi.string(),
+    }),
+    passengers: Joi.array().items(Joi.object({
+      documentCode: Joi.string().required(),
+      documentIssuedAt: Joi.string().required(),
+    })).min(1).required(),
+    // removePassengers: Joi.array().items(Joi.object({
+    //   documentCode: Joi.string().required(),
+    //   documentIssuedAt: Joi.string().required(),
+    // })),
+    status: EBookedFlightStatus.validator({ required: true }),
+    description: Joi.string().default(""),
+  },
 
-class BookFlightForUser extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+  params: {
+    userCode: Joi.string().required(),
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-    const params = {
-      userCode: Joi.string().required(),
-    };
+module.exports.getBookedFlights = baseValidator({
+  body: {},
+}, true);
 
-    super(body);
-    this.params(params);
-  }
-};
+module.exports.getUserBookedFlights = baseValidator({
+  body: {},
 
-class EditUserBookedFlight extends BaseValidator {
-  constructor() {
-    const body = {
-      contact: Joi.object({
-        email: Joi.string(),
-        mobileNumber: Joi.string(),
-      }),
-      passengers: Joi.array().items(Joi.object({
-        documentCode: Joi.string().required(),
-        documentIssuedAt: Joi.string().required(),
-      })).min(1).required(),
-      // removePassengers: Joi.array().items(Joi.object({
-      //   documentCode: Joi.string().required(),
-      //   documentIssuedAt: Joi.string().required(),
-      // })),
-      status: Joi.string().regex(/PAYING|INPROGRESS|REFUND|REFUND_ACCEPTED|REFUND_CANCEL|REFUND_REJECTED|CANCEL|REMOVE|BOOK|REJECT/),
-      description: Joi.string().default(""),
-    };
+  params: {
+    userCode: Joi.string().required(),
+  },
+}, true);
 
-    const params = {
-      userCode: Joi.string().required(),
-      bookedFlightCode: Joi.string().required(),
-    };
+module.exports.cancelBookedFlight = baseValidator({
+  body: {
+    description: Joi.string().required(),
+    refundTo: Joi.string().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/).default("WALLET"),
+    refundInfo: Joi.string(),
+  },
+  params: {
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-    super(body);
-    this.params(params);
-  }
-};
+module.exports.generateNewPaymentInfo = baseValidator({
+  body: {
+    paymentMethodName: Joi.string().required(),
+    // payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
+    useWallet: Joi.boolean().default(false),
+    currencySource: Joi.string(),
+    currencyTarget: Joi.string(),
+  },
+  params: {
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-class GetBookedFlights extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getBookedFlightStatuses = baseValidator({
+  body: {},
+  params: {
+    bookedFlightCode: Joi.string().required(),
+  },
+}, true);
 
-    super(body);
-  }
-};
+module.exports.getUserBookedFlightStatuses = baseValidator({
+  body: {},
+  params: {
+    userCode: Joi.string().required(),
+    bookedFlightCode: Joi.string().required(),
+  },
+}, true);
 
-class GetUserBookedFlights extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getBookedFlight = baseValidator({
+  body: {},
+  params: {
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-    const params = {
-      userCode: Joi.string().required(),
-    };
+module.exports.getUserBookedFlight = baseValidator({
+  body: {},
+  params: {
+    userCode: Joi.string().required(),
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-    super(body);
-    this.params(params);
-  }
-};
-
-class CancelBookedFlight extends BaseValidator {
-  constructor() {
-    const body = {
-      description: Joi.string().required(),
-      refundTo: Joi.string().regex(/WALLET|CREDIT_CARD|CRYPTO_CURRENCY/).default("WALLET"),
-      refundInfo: Joi.string(),
-    };
-
-    const params = {
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GenerateNewPaymentInfo extends BaseValidator {
-  constructor() {
-    const body = {
-      paymentMethodName: Joi.string().required(),
-      // payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
-      useWallet: Joi.boolean().default(false),
-      currencySource: Joi.string(),
-      currencyTarget: Joi.string(),
-    };
-
-    const params = {
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetBookedFlightStatus extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetUserBookedFlightStatus extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      userCode: Joi.string().required(),
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetBookedFlight extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetUserBookedFlight extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      userCode: Joi.string().required(),
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class PayForFlight extends BaseValidator {
-  constructor() {
-    const body = {
-      userCode: Joi.string().required(),
-      externalTransactionId: Joi.string().required(),
-      confirmed: Joi.boolean().required(),
-    };
-
-    super(body);
-  }
-};
-
-module.exports = {
-  bookFlight: new BookFlight(),
-  bookFlightForUser: new BookFlightForUser(),
-  editUserBookedFlight: new EditUserBookedFlight(),
-  cancelBookedFlight: new CancelBookedFlight(),
-  getBookedFlights: new GetBookedFlights(),
-  getUserBookedFlights: new GetUserBookedFlights(),
-  getBookedFlight: new GetBookedFlight(),
-  getUserBookedFlightStatus: new GetUserBookedFlightStatus(),
-  getBookedFlightStatus: new GetBookedFlightStatus(),
-  generateNewPaymentInfo: new GenerateNewPaymentInfo(),
-  getUserBookedFlight: new GetUserBookedFlight(),
-  payForFlight: new PayForFlight(),
-};
+module.exports.payForFlight = baseValidator({
+  body: {
+    userCode: Joi.string().required(),
+    externalTransactionId: Joi.string().required(),
+    confirmed: Joi.boolean().required(),
+  },
+});

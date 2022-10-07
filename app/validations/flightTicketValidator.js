@@ -1,53 +1,25 @@
-const { Joi } = require("celebrate");
+const Joi = require("joi");
+const {baseValidator} = require("../core");
 
-const { BaseValidator } = require("../core");
+module.exports.getFlightTickets = baseValidator({
+  body: {},
+  params: {
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-class GetFlightTickets extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getFlightTicketsView = baseValidator({
+  body: {},
+  params: {
+    token: Joi.string().required(),
+    bookedFlightCode: Joi.string().required(),
+  },
+});
 
-    const params = {
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetFlightTicketsView extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      token: Joi.string().required(),
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetUserFlightTickets extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      userCode: Joi.string().required(),
-      bookedFlightCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-module.exports = {
-  getFlightTickets: new GetFlightTickets(),
-  getFlightTicketsView: new GetFlightTicketsView(),
-  getUserFlightTickets: new GetUserFlightTickets(),
-};
+module.exports.getUserFlightTickets = baseValidator({
+  body: {},
+  params: {
+    userCode: Joi.string().required(),
+    bookedFlightCode: Joi.string().required(),
+  },
+});

@@ -11,8 +11,8 @@ router
       console.log("Get flight tickets", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("CLIENT"),
-    flightTicketValidator.getFlightTickets.check(),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    flightTicketValidator.getFlightTickets.check,
     flightTicketController.getFlightTickets);
 
 // NOTE: Get flight tickets pdf
@@ -22,7 +22,7 @@ router
       console.log("Get flight tickets", req.params, req.body, req.query);
       next();
     },
-    flightTicketValidator.getFlightTicketsView.check(),
+    flightTicketValidator.getFlightTicketsView.check,
     flightTicketController.getFlightTicketsView);
 
 // NOTE: Get other user's flight tickets
@@ -32,8 +32,8 @@ router
       console.log("Get other user's flight tickets", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightTicketValidator.getUserFlightTickets.check(),
+    // checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightTicketValidator.getUserFlightTickets.check,
     flightTicketController.getUserFlightTickets);
 
 module.exports = router;
