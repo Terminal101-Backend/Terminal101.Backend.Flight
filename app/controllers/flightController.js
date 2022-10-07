@@ -234,8 +234,10 @@ module.exports.searchFlights = async (req, res) => {
       const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query).then(async flight => {
-        if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
-          return;
+        if (req.method === "SOCKET") {
+          if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
+            return;
+          }
         }
 
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
@@ -256,6 +258,7 @@ module.exports.searchFlights = async (req, res) => {
         }
       }).catch(e => {
         console.error(`Provider (${provider.title}) returns error: `, e);
+        const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
         providersResultCompleted[provider.title] = true;
         if (++providerNumber === activeProviderCount) {
           if (!hasResult && (req.method === "SOCKET")) {
