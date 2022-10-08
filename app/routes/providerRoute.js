@@ -11,8 +11,8 @@ router
       console.log("Get all providers", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.getProviders.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    providerValidator.getProviders.check,
     providerController.getProviders);
 
 // NOTE: Edit provider
@@ -22,8 +22,8 @@ router
       console.log("Edit provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.editProvider.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    providerValidator.editProvider.check,
     providerController.editProvider);
 
 // NOTE: Add provider
@@ -33,8 +33,8 @@ router
       console.log("Add provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.addProvider.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    providerValidator.addProvider.check,
     providerController.addProvider);
 
 // NOTE: Delete provider
@@ -44,8 +44,8 @@ router
       console.log("Delete provider", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    providerValidator.deleteProvider.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    providerValidator.deleteProvider.check,
     providerController.deleteProvider);
 
 module.exports = router;

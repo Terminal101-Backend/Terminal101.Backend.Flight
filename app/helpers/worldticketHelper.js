@@ -197,7 +197,7 @@ module.exports.searchFlights = async params => {
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
   let { data: worldticketSearchResult } = await worldticket.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
 
-  if (!worldticketSearchResult) {
+  if (!worldticketSearchResult || !!worldticketSearchResult.error) {
     return {
       flightDetails: [],
     };
@@ -314,10 +314,12 @@ module.exports.bookFlight = async params => {
 
   const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers);
   console.log(bookedFlight)
-  flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight;
-  await flightInfo.save();
+  if (!bookedFlight.error) {
+    flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight;
+    await flightInfo.save();
 
-  return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
+    return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
+  }
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {

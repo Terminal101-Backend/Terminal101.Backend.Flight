@@ -170,19 +170,19 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     //segments = flightHelper.makeSegmentsArray(segments);
     segments = segments ?? [];
     if (!Array.isArray(segments)) {
-      try {
-        segments = segments.split(",");
-      } catch (e) {
-        segments = [segments];
-      }
+        try {
+            segments = segments.split(",");
+        } catch (e) {
+            segments = [segments];
+        }
     };
     segments = segments.map(segment => {
-      const segment_date = segment.trim().split(":");
-      return {
-        originCode: segment_date[0],
-        destinationCode: segment_date[1],
-        date: segment_date[2],
-      };
+        const segment_date = segment.trim().split(":");
+        return {
+            originCode: segment_date[0],
+            destinationCode: segment_date[1],
+            date: segment_date[2],
+        };
     });
     const originDestinations = [];
     originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(departureDate).toISOString().split('T')[0]}</DepartureDateTime>
@@ -250,11 +250,19 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-        data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
-    };
-    return result;
+    console.log('responseJson ==> ', JSON.stringify(responseJson))
+    if (!!responseJson?.OTA_AirLowFareSearchRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
+            data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
+        };
+    }
+    else {
+        return {
+            success: !responseJson?.OTA_AirLowFareSearchRS?.Success,
+            data: { error: responseJson?.OTA_AirLowFareSearchRS?.Errors?.Error.$t },
+        }
+    }
 };
 
 const availableRoutes = async () => {
@@ -455,7 +463,7 @@ const book = async (segments, price, contact, passengers) => {
             </PersonName>
             <Telephone CountryAccessCode="66" PhoneNumber="${contact.mobileNumber}" PhoneTechType="5"/>
             <Email EmailType="1">${contact.email}</Email>
-            <TravelerRefNumber RPH="${index + 1 }"/>
+            <TravelerRefNumber RPH="${index + 1}"/>
         </AirTraveler>`);
     }
 
@@ -486,11 +494,18 @@ const book = async (segments, price, contact, passengers) => {
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirBookRS?.Success,
-        data: responseJson?.OTA_AirBookRS?.AirReservation,
-    };
-    return result;
+    if (!!responseJson?.OTA_AirBookRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirBookRS?.Success,
+            data: responseJson?.OTA_AirBookRS?.AirReservation,
+        };
+    }
+    else {
+        return {
+            success: !responseJson?.OTA_AirBookRS?.Success,
+            data: { error: responseJson?.OTA_AirBookRS?.Errors?.Error.$t },
+        }
+    }
 };
 
 const ticketDemand = async (bookedFlight, passengers) => {

@@ -2,7 +2,8 @@ const BaseRepository = require("../core/baseRepository");
 const { BookedFlight } = require("../models/documents");
 const { EBookedFlightStatus } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
-const { paginationHelper } = require("../helpers");
+const paginationHelper = require("../helpers/paginationHelper");
+const filterHelper = require("../helpers/filterHelper");
 
 /**
  * @typedef {Object} PassengerInfo
@@ -16,9 +17,9 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} bookedBy 
-   * @param {String} searchedFlightCode 
+   *
+   * @param {String} bookedBy
+   * @param {String} searchedFlightCode
    * @param {Number} flightDetailsCode
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
@@ -27,18 +28,19 @@ class BookedFlightRepository extends BaseRepository {
     let bookedFlight = !!transactionId ? await this.findOne({ transactionId }) : undefined;
 
     if (!bookedFlight) {
-      let code;
-      while (!code) {
-        code = generateRandomString(15, 20, true, true, false);
-
-        bookedFlight = await this.findOne({ code });
-
-        if (!!bookedFlight) {
-          code = undefined;
-        }
-      }
-
-      bookedFlight = new BookedFlight({ code, bookedBy, providerName, searchedFlightCode, flightDetailsCode, providerPnr, transactionId, contact, passengers, statuses: { status, changedBy: bookedBy }, flightSegments, travelClass });
+      bookedFlight = new BookedFlight({
+        bookedBy,
+        providerName,
+        searchedFlightCode,
+        flightDetailsCode,
+        providerPnr,
+        transactionId,
+        contact,
+        passengers,
+        statuses: { status, changedBy: bookedBy },
+        flightSegments,
+        travelClass
+      });
       await bookedFlight.save();
     }
 
@@ -46,11 +48,11 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
-   * @param {String} changedBy 
-   * @param {String} description 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
+   * @param {String} changedBy
+   * @param {String} description
    * @returns {Promise<Status[]>}
    */
   async changeStatus(code, status, changedBy, description) {
@@ -67,9 +69,9 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
    * @returns {Promise<Status[]>}
    */
   async getStatuses(code, status) {
@@ -103,9 +105,9 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} code 
-   * @param {EBookedFlightStatus} status 
+   *
+   * @param {String} code
+   * @param {EBookedFlightStatus} status
    * @returns {Promise<Boolean>}
    */
   async hasStatus(code, status) {
@@ -115,12 +117,16 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {String} bookedBy 
+   *
+   * @param {String} bookedBy
+   * @param {Number} page
+   * @param {Number} pageSize
+   * @param {{field: value}[]} filters
+   * @param {String} sort
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlights(bookedBy, page, pageSize) {
-    const agrBookedFlight = BookedFlight.aggregate();
+  async getBookedFlights(bookedBy, page, pageSize, filters, sort) {
+    const agrBookedFlight = BookedFlight.aggregate().allowDiskUse(true);
     if (!!bookedBy) {
       agrBookedFlight.append({
         $match: {
@@ -155,15 +161,36 @@ class BookedFlightRepository extends BaseRepository {
         status: "$lastStatus.status"
       }
     });
+    agrBookedFlight.append({
+      $project: {
+        "bookedBy": 1,
+        "providerName": 1,
+        "providerPnr": 1,
+        "code": 1,
+        "searchedFlightCode": 1,
+        "flightDetailsCode": 1,
+        "statuses": 1,
+        "status": 1,
+        "time": 1,
+        "passengers": 1,
+        "contact": 1,
+        "flightInfo.origin": 1,
+        "flightInfo.destination": 1,
+        "flightInfo.travelClass": 1,
+        "flightInfo.flights.price.total": 1,
+        "flightInfo.flights.currencyCode": 1,
+      }
+    });
 
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
     return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
 
     // return await agrBookedFlight.exec();
   }
 
   /**
-   * 
-   * @param {String} code 
+   *
+   * @param {String} code
    * @returns {Promise<BookedFlight>}
    */
   async getBookedFlight(userCode, code) {
@@ -215,19 +242,19 @@ class BookedFlightRepository extends BaseRepository {
   }
 
   /**
-   * 
-   * @param {*} itineraries 
-   * @returns 
+   *
+   * @param {*} itineraries
+   * @returns
    */
   generateBookedFlightSegments(itineraries) {
     return;
   }
 
   /**
-   * 
-   * @param {PassengerInfo[]} passengers 
-   * @param {FlightSegmentInfo[]} flightSegments 
-   * @param {String} travelClass 
+   *
+   * @param {PassengerInfo[]} passengers
+   * @param {FlightSegmentInfo[]} flightSegments
+   * @param {String} travelClass
    * @returns {Promise}
    */
   async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {

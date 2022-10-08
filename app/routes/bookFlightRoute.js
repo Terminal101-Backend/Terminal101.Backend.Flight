@@ -11,8 +11,8 @@ router
       console.log("Success payment callback", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE"]),
-    bookFlightValidator.payForFlight.check(),
+    checkAccess.checkUserType("SERVICE"),
+    bookFlightValidator.payForFlight.check,
     bookFlightController.payForFlight);
 
 // NOTE: Get all booked flights list by user
@@ -22,8 +22,8 @@ router
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT"]),
-    bookFlightValidator.getBookedFlights.check(true),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN", "CLIENT", "BUSINESS"),
+    bookFlightValidator.getBookedFlights.check,
     bookFlightController.getBookedFlights);
 
 // NOTE: Get booked flight's statuses
@@ -33,9 +33,9 @@ router
       console.log("Get booked flight's statuses", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.getBookedFlightStatus.check(true),
-    bookFlightController.getBookedFlightStatus);
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    bookFlightValidator.getBookedFlightStatuses.check,
+    bookFlightController.getBookedFlightStatuses);
 
 // NOTE: Get user's booked flight's statuses
 router
@@ -44,9 +44,9 @@ router
       console.log("Get user's booked flight's statuses", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlightStatus.check(true),
-    bookFlightController.getUserBookedFlightStatus);
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    bookFlightValidator.getUserBookedFlightStatuses.check,
+    bookFlightController.getUserBookedFlightStatuses);
 
 // NOTE: Change booked flight's status
 router
@@ -55,20 +55,9 @@ router
       console.log("Change booked flight's status", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.cancelBookedFlight.check(),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    bookFlightValidator.cancelBookedFlight.check,
     bookFlightController.cancelBookedFlight);
-
-// NOTE: Get specific user's booked flights list
-// router
-//   .get("/:userCode",
-//     (req, res, next) => {
-//       console.log("Get specific user's booked flights", req.params, req.body, req.query);
-//       next();
-//     },
-//     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-//     bookFlightValidator.getUserBookedFlights.check(),
-//     bookFlightController.getUserBookedFlights);
 
 // NOTE: Generate new payment information
 router
@@ -77,8 +66,8 @@ router
       console.log("Generate new payment information", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.generateNewPaymentInfo.check(),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    bookFlightValidator.generateNewPaymentInfo.check,
     bookFlightController.generateNewPaymentInfo);
 
 // NOTE: Get specific booked flight's details by user
@@ -88,8 +77,8 @@ router
       console.log("Get all booked flights by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.getBookedFlight.check(),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    bookFlightValidator.getBookedFlight.check,
     bookFlightController.getBookedFlight);
 
 // NOTE: Get specific user's booked flights
@@ -99,8 +88,8 @@ router
       console.log("Get specific user's booked flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlights.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    bookFlightValidator.getUserBookedFlights.check,
     bookFlightController.getUserBookedFlights);
 
 // NOTE: Edit specific user's booked flight
@@ -110,8 +99,8 @@ router
       console.log("Edit specific user's booked flight", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.editUserBookedFlight.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    bookFlightValidator.editUserBookedFlight.check,
     bookFlightController.editUserBookedFlight);
 
 // NOTE: Get specific user's booked flight's details
@@ -121,8 +110,8 @@ router
       console.log("Get specific user's booked flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    bookFlightValidator.getUserBookedFlight.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    bookFlightValidator.getUserBookedFlight.check,
     bookFlightController.getUserBookedFlight);
 
 // NOTE: Book a flight by user
@@ -132,41 +121,8 @@ router
       console.log("Book a flight by user", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["CLIENT"]),
-    bookFlightValidator.bookFlight.check(),
+    checkAccess.checkUserType("CLIENT", "BUSINESS"),
+    bookFlightValidator.bookFlight.check,
     bookFlightController.bookFlight);
-
-// NOTE: Book a flight for a user
-// router
-//   .post("/:userCode",
-//     (req, res, next) => {
-//       console.log("Book a flight by user", req.params, req.body, req.query);
-//       next();
-//     },
-//     checkAccess.checkUserType(["CLIENT"]),
-//     bookFlightValidator.bookFlightForUser.check(),
-//     bookFlightController.bookFlightForUser);
-
-// NOTE: Cancel booked flight by user
-// router
-//   .patch("/cancel/:searchedFlightCode/:flightDetailsCode",
-//     (req, res, next) => {
-//       console.log("Cancel booked flight by user", req.params, req.body, req.query);
-//       next();
-//     },
-//     checkAccess.checkUserType(["CLIENT"]),
-//     bookFlightValidator.editBookedFlight.check(),
-//     bookFlightController.editBookedFlight);
-
-// NOTE: Book flight for user
-// router
-//   .patch("/cancel/:userCode/:searchedFlightCode/:flightDetailsCode",
-//     (req, res, next) => {
-//       console.log("Cancel booked flight for user", req.params, req.body, req.query);
-//       next();
-//     },
-//     checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-//     bookFlightValidator.editBookedFlightForUser.check(),
-//     bookFlightController.editBookedFlightForUser);
 
 module.exports = router;

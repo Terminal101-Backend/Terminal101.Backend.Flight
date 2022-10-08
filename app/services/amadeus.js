@@ -246,7 +246,7 @@ const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) =
     params: {
       latitude,
       longitude,
-      sort: distance
+      sort: "distance"
 
     },
   });

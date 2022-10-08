@@ -11,8 +11,8 @@ router
       console.log("Get all flight conditions", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.getFlightConditions.check(true),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightConditionValidator.getFlightConditions.check,
     flightConditionController.getFlightConditions);
 
 // NOTE: Get one flight condition
@@ -22,8 +22,8 @@ router
       console.log("Get one flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.getFlightCondition.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightConditionValidator.getFlightCondition.check,
     flightConditionController.getFlightCondition);
 
 // NOTE: Edit flight condition
@@ -33,8 +33,8 @@ router
       console.log("Edit flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.editFlightCondition.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightConditionValidator.editFlightCondition.check,
     flightConditionController.editFlightCondition);
 
 // NOTE: Add flight condition
@@ -44,8 +44,8 @@ router
       console.log("Add flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.addFlightCondition.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightConditionValidator.addFlightCondition.check,
     flightConditionController.addFlightCondition);
 
 // NOTE: Delete flight condition
@@ -55,8 +55,8 @@ router
       console.log("Delete flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType(["SERVICE", "SUPER_ADMIN", "ADMIN"]),
-    flightConditionValidator.deleteFlightCondition.check(),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    flightConditionValidator.deleteFlightCondition.check,
     flightConditionController.deleteFlightCondition);
 
 module.exports = router;

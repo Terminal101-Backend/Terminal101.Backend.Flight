@@ -7,7 +7,7 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test.flight.terminal101.co
+host:
 # host: localhost:8005
 basePath: /
 
@@ -29,9 +29,11 @@ tags:
   - name: Provider
     description: Provider routes
   - name: Restriction
-    description: Country/City Restriction Conditions
+    description: Country/City restriction conditions
   - name: Ticket
     description: Flight's tickets
+  - name: ThirdParty_Test
+    description: Third party apis
   - name: Waypoint
     description: Flight origin/destination points
 
@@ -129,7 +131,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ORIGIN, DESTINATION]
+          enums: [ ORIGIN, DESTINATION ]
           required: true
           value: ORIGIN
         - name: keyword
@@ -155,7 +157,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ORIGIN, DESTINATION]
+          enums: [ ORIGIN, DESTINATION ]
           required: true
           value: ORIGIN
       responses:
@@ -177,7 +179,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ORIGIN, DESTINATION]
+          enums: [ ORIGIN, DESTINATION ]
           required: true
           value: ORIGIN
         - name: keyword
@@ -245,7 +247,7 @@ paths:
         - name: travelClass
           in: query
           type: string
-          enum: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
+          enum: [ ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST ]
           required: false
           description: Default is ECONOMY class.
         - name: segments
@@ -503,6 +505,34 @@ paths:
           schema:
             $ref: "#/definitions/BookFlightResult"
 
+  /flight/book/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          required: true
+          type: string
+          example: 23rwf4rf4fr34
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
     # NOTE: Cancel/refund booked flight
     delete:
       tags:
@@ -531,7 +561,6 @@ paths:
           schema:
             $ref: "#/definitions/BookFlightResult"
 
-  /flight/book/{userCode}/{bookedFlightCode}:
     # NOTE: Edit user's booked flight
     patch:
       tags:
@@ -769,7 +798,7 @@ paths:
         - name: name
           in: path
           type: string
-          enum: [AMADEUS, PARTO]
+          enum: [ AMADEUS, PARTO ]
           value: AMADEUS
           required: true
         - name: providerInfo
@@ -796,7 +825,7 @@ paths:
         - name: name
           in: path
           type: string
-          enum: [AMADEUS, PARTO]
+          enum: [ AMADEUS, PARTO ]
           value: AMADEUS
           required: true
       responses:
@@ -874,7 +903,7 @@ paths:
           schema:
             $ref: "#/definitions/FlightConditionInfo"
             description: Flight condition info
-            
+
     # NOTE: Delete one flight condition
     delete:
       tags:
@@ -925,6 +954,149 @@ paths:
           schema:
             $ref: "#/definitions/FlightConditionInfo"
             description: Flight condition info
+
+
+  /api/test/low-fare-search:
+    # NOTE: Search low fare flights
+    get:
+      tags:
+        - ThirdParty_Test
+      description: Search low fare flights
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
+        - name: originLocationCode
+          in: query
+          type: string
+          value: BGW
+          required: true
+        - name: destinationLocationCode
+          in: query
+          type: string
+          value: SAW
+          required: true
+        - name: departureDate
+          in: query
+          type: string
+          value: 2022-09-10
+          required: true
+        - name: returnDate
+          in: query
+          type: string
+          value: 2022-09-20
+          required: false
+        - name: adults
+          in: query
+          type: number
+          value: 1
+          required: true
+          default: 1
+        - name: children
+          in: query
+          type: number
+          value: 0
+          required: false
+          default: 0
+        - name: infants
+          in: query
+          type: number
+          value: 0
+          required: false
+          default: 0
+        - name: travelClass
+          in: query
+          type: string
+          enums: [ ECONOMY,PREMIUM_ECONOMY,BUSINESS,FIRST ]
+          value: ECONOMY
+          required: false
+          default: ECONOMY
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
+
+  /api/test/book:
+    # NOTE: Book flight
+    post:
+      tags:
+        - ThirdParty_Test
+      description: Book flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
+        - name: Book Flight
+          in: body
+          required: true
+          type: object
+          schema:
+            $ref: "#/definitions/ThirdPartyBookFlightData"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
+
+  /api/test/book/{bookedId}:
+    # NOTE: Get booked flight info
+    get:
+      tags:
+        - ThirdParty_Test
+      description: Get booked flight info
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
+        - name: bookedId
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
 
 
 definitions:
@@ -1035,7 +1207,7 @@ definitions:
     properties:
       subType:
         type: string
-        enum: [CITY, AIRPORT]
+        enum: [ CITY, AIRPORT ]
         example: AIRPORT
       name:
         type: string
@@ -1048,6 +1220,20 @@ definitions:
       address:
         $ref: "#/definitions/Address"
 
+  Airline:
+    required:
+      - code
+      - name
+    properties:
+      code:
+        type: string
+        example: MUC
+      name:
+        type: string
+        example: Munchen
+      description:
+        type: string
+        example: Munchen
 
   Airport:
     required:
@@ -1107,7 +1293,7 @@ definitions:
         example: 231f234rfh34yhf32y
       status:
         type: string
-        enum: [PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED]
+        enum: [ PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED ]
         example: PAYING
       time:
         type: string
@@ -1122,7 +1308,7 @@ definitions:
         $ref: "#/definitions/Waypoint"
       travelClass:
         type: string
-        enum: [ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST]
+        enum: [ ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST ]
         example: ECONOMY
       price:
         type: number
@@ -1171,7 +1357,7 @@ definitions:
           $ref: "#/definitions/BookFlightPassenger"
       status:
         type: string
-        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
+        enum: [ PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL ]
 
   ContactInfo:
     required:
@@ -1192,7 +1378,7 @@ definitions:
         example: asdfhkadfhdksaa
       type:
         type: string
-        enum: [PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT]
+        enum: [ PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT ]
         example: DEPOSIT
       value:
         type: number
@@ -1223,7 +1409,7 @@ definitions:
         example: credit-card
       payWay:
         type: string
-        enum: [PAY, WALLET]
+        enum: [ PAY, WALLET ]
         example: WALLET
 
   BookFlightPassenger:
@@ -1245,7 +1431,7 @@ definitions:
     properties:
       name:
         type: string
-        enum: [AMADEUS, PARTO]
+        enum: [ AMADEUS, PARTO ]
         example: AMADEUS
       title:
         type: string
@@ -1374,16 +1560,16 @@ definitions:
         type: string
       refundTo:
         type: string
-        enum: [WALLET, CREDIT_CARD, CRYPTO_CURRENCY]
+        enum: [ WALLET, CREDIT_CARD, CRYPTO_CURRENCY ]
         example: WALLET
       refundInfo:
         type: string
         example: Credit card number
 
   BookFlightStatus:
-    properties: 
+    properties:
       status:
-        enum: [PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL]
+        enum: [ PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL ]
         type: string
         example: INPROGRESS
       description:
@@ -1396,9 +1582,75 @@ definitions:
         description: User's code
         example: 3rfyd83y42eey823
 
+  ThirdPartyResult:
+    properties:
+      data:
+        type: object
+        description: Low fare search result
+
+  ThirdPartyBookFlightData:
+    properties:
+      segments:
+        type: array
+        items:
+          type: object
+          properties:
+            flightNumber:
+              type: string
+            airlineCode:
+              type: string
+            originCode:
+              type: string
+            destinationCode:
+              type: string
+            date:
+              type: date
+      travelers:
+        type: array
+        items:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            birthDate:
+              type: date
+            type:
+              type: string
+              enums: [ ADT,CHD,INF ]
+            genderCode:
+              type: string
+              enums: [ M,F ]
+            document:
+              type: object
+              properties:
+                issuedAt:
+                  type: string
+                expirationDate:
+                  type: string
+                code:
+                  type: string
+      contact:
+        type: object
+        properties:
+          email:
+            type: string
+          mobileNumber:
+            type: string
+      price:
+        type: object
+        properties:
+          base:
+            type: number
+          total:
+            type: number
+          currency:
+            type: string
+
 schemes:
-  # - http
   - https
+  - http
 consumes:
   - application/json
 produces:

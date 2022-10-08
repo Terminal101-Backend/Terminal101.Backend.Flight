@@ -1,3 +1,11 @@
+module.exports.convertAvtraTimeToMinutes = time => {
+  let timeArray = time.split(":").map(t => parseInt(t));
+  while (timeArray.length < 3) {
+    timeArray = [0, ...timeArray];
+  }
+  return timeArray[0] * 60 + timeArray[1];
+};
+
 module.exports.convertAmadeusTime = time => {
   const reH = /^PT(?:(\d+)H)?/.exec(time);
   const reM = /(?:(\d+)M)?$/.exec(time);
