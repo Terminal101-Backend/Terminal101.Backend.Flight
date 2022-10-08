@@ -250,7 +250,6 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
-    console.log('responseJson ==> ', JSON.stringify(responseJson))
     if (!!responseJson?.OTA_AirLowFareSearchRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,

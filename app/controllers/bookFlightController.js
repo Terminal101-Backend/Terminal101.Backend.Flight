@@ -1,6 +1,6 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const { partoHelper, amadeusHelper, avtraHelper, stringHelper, worldticketHelper, arrayHelper } = require("../helpers");
+const { partoHelper, amadeusHelper, avtraHelper, stringHelper, arrayHelper, worldticketHelper } = require("../helpers");
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
@@ -248,6 +248,7 @@ module.exports.bookFlight = async (req, res) => {
 
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
+    console.log('providerHelper ==> ', providerHelper)
 
     const bookedFlightSegments = [flightDetails.flights?.itineraries?.[0].segments?.[0]];
     const lastIndex = (flightDetails.flights?.itineraries?.[0].segments?.length ?? 0) - 1;
@@ -592,7 +593,7 @@ module.exports.getBookedFlights = async (req, res) => {
         return {
           bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
           provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
-          pnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
+          providerPnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
           email: user?.email,
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,

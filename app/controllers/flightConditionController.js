@@ -37,6 +37,14 @@ module.exports.getFlightConditions = async (req, res) => {
             isActive: provider.isActive,
           }
         }).filter(provider => !!provider),
+        commissions: flightCondition.commissions.map(commission => ({
+          businesses: commission.busineeses.map(business => ({
+            items: business.items,
+            exclude: business.exclude,
+          })),
+          value: commission.value,
+          isActive: commission.isActive,
+        })),
         isActive: flightCondition.isActive,
         isRestricted: flightCondition.isRestricted,
       }))
@@ -81,6 +89,14 @@ module.exports.getFlightCondition = async (req, res) => {
           isActive: provider.isActive,
         }
       }).filter(provider => !!provider),
+      commissions: flightCondition.commissions.map(commission => ({
+        businesses: commission.busineeses.map(business => ({
+          items: business.items,
+          exclude: business.exclude,
+        })),
+        value: commission.value,
+        isActive: commission.isActive,
+      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
@@ -115,6 +131,11 @@ module.exports.editFlightCondition = async (req, res) => {
       modified = true;
     }
 
+    if (!!req.body.commisions && (JSON.stringify(flightCondition.commisions) !== JSON.stringify(req.body.commisions))) {
+      flightCondition.commisions = req.body.commisions;
+      modified = true;
+    }
+
     if ((req.body.isRestricted !== undefined) && (flightCondition.isRestricted !== req.body.isRestricted)) {
       flightCondition.isRestricted = req.body.isRestricted;
       modified = true;
@@ -144,6 +165,14 @@ module.exports.editFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
+      commissions: flightCondition.commissions.map(commission => ({
+        businesses: commission.busineeses.map(business => ({
+          items: business.items,
+          exclude: business.exclude,
+        })),
+        value: commission.value,
+        isActive: commission.isActive,
+      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
@@ -173,6 +202,14 @@ module.exports.deleteFlightCondition = async (req, res) => {
           exclude: flightCondition.airline.exclude,
         },
         providerNames: flightCondition.providerNames,
+        commissions: flightCondition.commissions.map(commission => ({
+          businesses: commission.busineeses.map(business => ({
+            items: business.items,
+            exclude: business.exclude,
+          })),
+          value: commission.value,
+          isActive: commission.isActive,
+        })),
         isActive: flightCondition.isActive,
         isRestricted: flightCondition.isRestricted,
       }) :
@@ -185,7 +222,7 @@ module.exports.deleteFlightCondition = async (req, res) => {
 // NOTE: Add flight dondition
 module.exports.addFlightCondition = async (req, res) => {
   try {
-    const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.isRestricted);
+    const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commisions, req.body.isRestricted);
 
     response.success(res, {
       code: flightCondition.code,
@@ -202,6 +239,14 @@ module.exports.addFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
+      commissions: flightCondition.commissions.map(commission => ({
+        businesses: commission.busineeses.map(business => ({
+          items: business.items,
+          exclude: business.exclude,
+        })),
+        value: commission.value,
+        isActive: commission.isActive,
+      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });

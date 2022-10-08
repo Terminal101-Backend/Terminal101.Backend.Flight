@@ -1,6 +1,6 @@
-const {Joi} = require("celebrate");
-const {baseValidator} = require("../core");
-const {ETravelClass} = require("../constants");
+const { Joi } = require("celebrate");
+const { baseValidator } = require("../core");
+const { ETravelClass } = require("../constants");
 
 module.exports.lowFareSearch = baseValidator({
   body: {},
@@ -9,28 +9,40 @@ module.exports.lowFareSearch = baseValidator({
     0: Joi.string().allow(null, ""),
   },
   query: {
-    originLocationCode: Joi.string().required(),
-    destinationLocationCode: Joi.string().required(),
+    origin: Joi.string().required(),
+    destination: Joi.string().required(),
     departureDate: Joi.date().required(),
     returnDate: Joi.date(),
-    segments: [
-      Joi.array().items(Joi.string()).default([]),
-      Joi.string(),
-    ],
     adults: Joi.number().default(1),
-    children: Joi.number().default(0),
-    infants: Joi.number().default(0),
-    travelClass: ETravelClass.validator({default: "ECONOMY"}),
-    includedAirlineCodes: [
-      Joi.array().items(Joi.string()).default([]),
+    children: Joi.number(),
+    infants: Joi.number(),
+    travelClass: ETravelClass.validator({ default: "ECONOMY" }),
+    segments: [
       Joi.string(),
+      Joi.array().items(Joi.string()),
     ],
-    excludedAirlineCodes: [
-      Joi.array().items(Joi.string()).default([]),
-      Joi.string(),
-    ],
-    nonStop: Joi.boolean().default(false),
-    currency: Joi.string().default("USD"),
+    // originLocationCode: Joi.string().required(),
+    // destinationLocationCode: Joi.string().required(),
+    // departureDate: Joi.date().required(),
+    // returnDate: Joi.date(),
+    // segments: [
+    //   Joi.array().items(Joi.string()).default([]),
+    //   Joi.string(),
+    // ],
+    // adults: Joi.number().default(1),
+    // children: Joi.number().default(0),
+    // infants: Joi.number().default(0),
+    // travelClass: ETravelClass.validator({default: "ECONOMY"}),
+    // includedAirlineCodes: [
+    //   Joi.array().items(Joi.string()).default([]),
+    //   Joi.string(),
+    // ],
+    // excludedAirlineCodes: [
+    //   Joi.array().items(Joi.string()).default([]),
+    //   Joi.string(),
+    // ],
+    // nonStop: Joi.boolean().default(false),
+    // currency: Joi.string().default("USD"),
   },
 });
 

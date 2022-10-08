@@ -410,7 +410,7 @@ class FlightConditionRepository extends BaseRepository {
    * @param Boolean} isRestricted
    * @returns {Promise<FlightCondition>}
    */
-  async createFlightCondition(origin, destination, airline, providerNames, isRestricted = false) {
+  async createFlightCondition(origin, destination, airline, providerNames, commissions, isRestricted = false) {
     const flightCondition = new FlightCondition({ origin, destination, airline, providerNames, isRestricted });
 
     const lastFlightCondition = await FlightCondition.find().sort({ code: -1 }).limit(1);
