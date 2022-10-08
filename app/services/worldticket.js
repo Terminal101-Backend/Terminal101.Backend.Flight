@@ -170,19 +170,19 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     //segments = flightHelper.makeSegmentsArray(segments);
     segments = segments ?? [];
     if (!Array.isArray(segments)) {
-        try {
-            segments = segments.split(",");
-        } catch (e) {
-            segments = [segments];
-        }
+          try {
+                segments = segments.split(",");
+          } catch (e) {
+                segments = [segments];
+          }
     };
     segments = segments.map(segment => {
-        const segment_date = segment.trim().split(":");
-        return {
-            originCode: segment_date[0],
-            destinationCode: segment_date[1],
-            date: segment_date[2],
-        };
+          const segment_date = segment.trim().split(":");
+          return {
+                originCode: segment_date[0],
+                destinationCode: segment_date[1],
+                date: segment_date[2],
+          };
     });
     const originDestinations = [];
     originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(departureDate).toISOString().split('T')[0]}</DepartureDateTime>
@@ -250,7 +250,6 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
-    console.log('responseJson ==> ', JSON.stringify(responseJson))
     if (!!responseJson?.OTA_AirLowFareSearchRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,

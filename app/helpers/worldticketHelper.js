@@ -315,7 +315,7 @@ module.exports.bookFlight = async params => {
   const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers);
   console.log(bookedFlight)
   if (!bookedFlight.error) {
-    flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight;
+    flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
     await flightInfo.save();
 
     return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
@@ -330,6 +330,6 @@ module.exports.issueBookedFlight = async bookedFlight => {
   throw "prvoider_unavailable";
 }
 
-module.exports.airReValidate = async flightInfo => {
+module.exports.airRevalidate = async flightInfo => {
   return flightInfo.flights.price;
 }
