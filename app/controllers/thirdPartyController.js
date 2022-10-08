@@ -1,9 +1,9 @@
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const {providerRepository} = require("../repositories");
-const {EProvider} = require("../constants");
-const {amadeus, parto, avtra, accountManagement} = require("../services");
-const {tokenHelper} = require("../helpers");
+const { providerRepository } = require("../repositories");
+const { EProvider } = require("../constants");
+const { amadeus, parto, avtra, accountManagement } = require("../services");
+const { tokenHelper } = require("../helpers");
 
 // NOTE: Search flights by provider
 module.exports.lowFareSearch = async (req, res) => {
@@ -11,7 +11,11 @@ module.exports.lowFareSearch = async (req, res) => {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+
+    availableProviders.forEach(provider => {
+      console.log(provider);
+    });
 
     const result = await avtra.lowFareSearch(
       req.query.originLocationCode,
@@ -45,7 +49,7 @@ module.exports.bookFlight = async (req, res) => {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     const result = await avtra.book(
       req.body.segments,
@@ -70,7 +74,7 @@ module.exports.getBookedFlight = async (req, res) => {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
 
-    const {data: availableProviders} = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     const result = await avtra.getBooked(
       req.params.bookedId,
