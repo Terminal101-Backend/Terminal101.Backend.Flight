@@ -592,7 +592,7 @@ module.exports.getBookedFlights = async (req, res) => {
         return {
           bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
           provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
-          pnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
+          providerPnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
           email: user?.email,
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,
