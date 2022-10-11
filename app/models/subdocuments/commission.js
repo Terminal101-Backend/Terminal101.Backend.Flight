@@ -3,7 +3,7 @@ const Schema = mongoose.Schema;
 
 const Condition = require("./condition");
 
-const flightCondition = new Schema({
+const commission = new Schema({
   businesses: {
     type: Condition,
     default: {},
@@ -20,4 +20,5 @@ const flightCondition = new Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model("flightCondition", flightCondition);
+module.exports = commission;
+// module.exports = mongoose.model("commision", commision);
