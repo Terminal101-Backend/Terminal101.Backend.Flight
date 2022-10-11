@@ -570,7 +570,7 @@ module.exports.getBookedFlights = async (req, res) => {
     const decodedToken = token.decodeToken(req.header("Authorization"));
     let userCode;
 
-    if (EUserType.check(["CLIENT"], decodedToken.type)) {
+    if (EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type)) {
       userCode = decodedToken.user;
     }
     console.time("Get booked flights: Get booked flight");
