@@ -3,6 +3,7 @@ const qs = require('qs');
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 let accessToken = "";
+let modeText = "_TEST";
 
 const reformatToArray = path => {
     const root = path.split(".")[0];
@@ -20,48 +21,35 @@ const reformatToArray = path => {
         "OTA_AirAvailRS.OriginDestinationInformation.OriginDestinationOptions.OriginDestinationOption"
     ];
     const airPriceArrays = [
-        "OTA_AirPriceRS.PricedItineraries.PricedItinerary",
-        "OTA_AirPriceRS.PricedItineraries.PricedItinerary.AirItinerary.OriginDestinationOptions.OriginDestinationOption",
-        "OTA_AirPriceRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdown",
-        "OTA_AirPriceRS.PricedItineraries.PricedItinerary.AirItineraryPricingInfo.PTC_FareBreakdown.FareBasisCodes.FareBasisCode"
+
     ];
     const bookArrays = [
-        "OTA_AirBookRS.AirReservation.AirItinerary.OriginDestinationOptions.OriginDestinationOption",
-        "OTA_AirBookRS.AirReservation.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.Operations.Operation",
-        "OTA_AirBookRS.AirReservation.PriceInfo.PTC_FareBreakdowns.PTC_FareBreakdown",
-        "OTA_AirBookRS.AirReservation.PriceInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode",
-        "OTA_AirBookRS.AirReservation.TravelerInfo.AirTraveler",
-        "OTA_AirBookRS.AirReservation.TravelerInfo.SpecialReqDetails.SpecialRemarks.SpecialRemark",
+
     ];
     const ticketDemandArrays = [
         "OTA_AirDemandTicketRS.TicketItemInfo"
     ];
     const airReadArrays = [
-        "OTA_AirBookRS.AirReservation.AirItinerary.OriginDestinationOptions.OriginDestinationOption",
-        "OTA_AirBookRS.AirReservation.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.Operations.Operation",
-        "OTA_AirBookRS.AirReservation.PriceInfo.PTC_FareBreakdowns.PTC_FareBreakdown",
-        "OTA_AirBookRS.AirReservation.PriceInfo.PTC_FareBreakdowns.PTC_FareBreakdown.FareBasisCodes.FareBasisCode",
-        "OTA_AirBookRS.AirReservation.TravelerInfo.AirTraveler",
-        "OTA_AirBookRS.AirReservation.TravelerInfo.SpecialReqDetails.SpecialRemarks.SpecialRemark",
+
     ];
 
     switch (root) {
-        case "OTA_AirLowFareSearchRQ":
+        case "OTA_AirLowFareSearchRS":
             if (lowFareSearchArrays.indexOf(path) !== -1) return true;
             break;
-        case "OTA_AirAvailRQ":
+        case "OTA_AirAvailRS":
             if (airAvailArrays.indexOf(path) !== -1) return true;
             break;
-        case "OTA_AirPriceRQ":
+        case "OTA_AirPriceRS":
             if (airPriceArrays.indexOf(path) !== -1) return true;
             break;
-        case "OTA_AirBookRQ":
+        case "OTA_AirBookRS":
             if (bookArrays.indexOf(path) !== -1) return true;
             break;
-        case "OTA_AirDemandTicketRQ":
+        case "OTA_AirDemandTicketRS":
             if (ticketDemandArrays.indexOf(path) !== -1) return true;
             break;
-        case "OTA_ReadRQ":
+        case "OTA_ReadRS":
             if (airReadArrays.indexOf(path) !== -1) return true;
             break;
         case "":
@@ -93,7 +81,7 @@ const xmlParser = new xmljsonParser.XMLParser(option);
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
     async config => {
-        config.baseURL = process.env.FLYERBIL_BASE_URL;
+        config.baseURL = process.env["FLYERBIL_BASE_URL" + modeText];
         config.headers = {
             'Authorization': `Bearer ${accessToken}`,
             'Accept': '*/*',
@@ -121,18 +109,18 @@ axiosApiInstance.interceptors.response.use((response) => {
 
 const getAccessToken = async () => {
     var data = {
-        "grant_type": process.env.FLYERBIL_GRANT_TYPE,
-        "client_id": process.env.FLYERBIL_CLIENT_ID,
-        "client_secret": process.env.FLYERBIL_CLIENT_SECRET,
-        "username": process.env.FLYERBIL_USERNAME,
-        "password": process.env.FLYERBIL_PASSWORD
+        "grant_type": process.env["FLYERBIL_GRANT_TYPE" + modeText],
+        "client_id": process.env["FLYERBIL_CLIENT_ID" + modeText],
+        "client_secret": process.env["FLYERBIL_CLIENT_SECRET" + modeText],
+        "username": process.env["FLYERBIL_USERNAME" + modeText],
+        "password": process.env["FLYERBIL_PASSWORD" + modeText]
     }
 
     delete axios.defaults.headers.common['Authorization'];
 
     const {
         data: response
-    } = await axios.post(process.env.FLYERBIL_BASE_AUTH_URL + `/auth/realms/${process.env.FLYERBIL_TENANT}/protocol/openid-connect/token`, qs.stringify(data), {
+    } = await axios.post(process.env["FLYERBIL_BASE_AUTH_URL" + modeText] + `/auth/realms/${process.env["FLYERBIL_TENANT" + modeText]}/protocol/openid-connect/token`, qs.stringify(data), {
         headers: {
             'content-type': 'application/x-www-form-urlencoded',
         },
@@ -145,7 +133,8 @@ const getAccessToken = async () => {
 
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
     segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes,
-    excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+    excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
     let travelClassCode;
     switch (travelClass) {
         case "FIRST":
@@ -170,40 +159,48 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     //segments = flightHelper.makeSegmentsArray(segments);
     segments = segments ?? [];
     if (!Array.isArray(segments)) {
-          try {
-                segments = segments.split(",");
-          } catch (e) {
-                segments = [segments];
-          }
+        try {
+            segments = segments.split(",");
+        } catch (e) {
+            segments = [segments];
+        }
     };
     segments = segments.map(segment => {
-          const segment_date = segment.trim().split(":");
-          return {
-                originCode: segment_date[0],
-                destinationCode: segment_date[1],
-                date: segment_date[2],
-          };
+        const segment_date = segment.trim().split(":");
+        return {
+            originCode: segment_date[0],
+            destinationCode: segment_date[1],
+            date: segment_date[2],
+        };
     });
     const originDestinations = [];
-    originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(departureDate).toISOString().split('T')[0]}</DepartureDateTime>
+    originDestinations.push(`<OriginDestinationInformation>
+    <DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(departureDate).toISOString().split('T')[0]}</DepartureDateTime>
   <OriginLocation LocationCode="${originLocationCode}" />
-  <DestinationLocation LocationCode="${destinationLocationCode}" />`);
+  <DestinationLocation LocationCode="${destinationLocationCode}" />
+  </OriginDestinationInformation>`);
 
     for (let index = 0; index < segments?.length ?? 0; index++) {
-        originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">"${new Date(segments[index].date).toISOString().split('T')[0]}"</DepartureDateTime>
+        originDestinations.push(`<OriginDestinationInformation>
+        <DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">"${new Date(segments[index].date).toISOString().split('T')[0]}"</DepartureDateTime>
     <OriginLocation LocationCode="${segments[index].originCode}" />
-    <DestinationLocation LocationCode="${segments[index].destinationCode}" />`);
+    <DestinationLocation LocationCode="${segments[index].destinationCode}" />
+    </OriginDestinationInformation>`);
     }
 
     if (!!returnDate) {
         if (!!segments && (segments?.length ?? 0 > 0)) {
-            originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(returnDate).toISOString().split('T')[0]}</DepartureDateTime>
+            originDestinations.push(`<OriginDestinationInformation>
+            <DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(returnDate).toISOString().split('T')[0]}</DepartureDateTime>
       <OriginLocation LocationCode="${segments[segments.length - 1].destinationCode}" />
-      <DestinationLocation LocationCode="${originLocationCode}" />`);
+      <DestinationLocation LocationCode="${originLocationCode}" />
+      </OriginDestinationInformation>`);
         } else {
-            originDestinations.push(`<DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(returnDate).toISOString().split('T')[0]}</DepartureDateTime>
+            originDestinations.push(`<OriginDestinationInformation>
+            <DepartureDateTime WindowAfter="P0D" WindowBefore="P0D">${new Date(returnDate).toISOString().split('T')[0]}</DepartureDateTime>
       <OriginLocation LocationCode="${destinationLocationCode}" />
-      <DestinationLocation LocationCode="${originLocationCode}" />`);
+      <DestinationLocation LocationCode="${originLocationCode}" />
+      </OriginDestinationInformation>`);
         }
     }
 
@@ -226,9 +223,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
         </POS>
         <ProcessingInfo DisplayOrder="ByPriceLowToHigh"
     AvailabilityIndicator="true"/>
-        <OriginDestinationInformation>
         ${originDestinations.join("\n")}
-        </OriginDestinationInformation>
         <SpecificFlightInfo>
             <BookingClassPref ResBookDesigCode="${travelClassCode}"/>
         </SpecificFlightInfo>
@@ -245,7 +240,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
         </TravelerInfoSummary>
     </OTA_AirLowFareSearchRQ>`;
 
-    const { data: response_ } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
+    const { data: response_ } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
 
@@ -264,15 +259,17 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     }
 };
 
-const availableRoutes = async () => {
+const availableRoutes = async (testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
     const {
         data: response
-    } = await axios.get(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/rest/route`);
+    } = await axios.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/route`);
 
     return response;
 };
 
-const calendarAvailability = async (departure, arrival, start_date, end_date) => {
+const calendarAvailability = async (departure, arrival, start_date, end_date, testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
     const data = {
         departure,
         arrival,
@@ -281,12 +278,14 @@ const calendarAvailability = async (departure, arrival, start_date, end_date) =>
     }
     const {
         data: response
-    } = await axiosApiInstance.get(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/rest/calendar/availability`, { params: data });
+    } = await axiosApiInstance.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/calendar/availability`, { params: data });
 
     return response;
 };
 
-const airAvailable = async (originLocationCode, destinationLocationCode, departureDate, travelClass) => {
+const airAvailable = async (originLocationCode, destinationLocationCode, departureDate, travelClass, testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
+    let tClass = travelClass.toLowerCase().charAt(0).toUpperCase() + travelClass.toLowerCase().slice(1);
     const query = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <OTA_AirAvailRQ xmlns="http://www.opentravel.org/OTA/2003/05" 
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -301,11 +300,12 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
           </Source>
       </POS>
       <OriginDestinationInformation>
-          <DepartureDateTime >${departureDate}</DepartureDateTime>
+      <DepartureDateTime WindowAfter="P0D">${departureDate}</DepartureDateTime>
           <OriginLocation LocationCode="${originLocationCode}"></OriginLocation>
           <DestinationLocation LocationCode="${destinationLocationCode}"></DestinationLocation>
       </OriginDestinationInformation>
       <TravelPreferences MaxStopsQuantity="1">
+      <CabinPref Cabin="${tClass}"/>
       </TravelPreferences>
       <TravelerInfoSummary>
           <AirTravelerAvail>
@@ -316,37 +316,37 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
-
-    const option = {
-        object: true
-    };
+    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
-    // const responseJson = parser.toJson(response, option);
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-        data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
-    };
 
-    return result;
+    if (!!responseJson?.OTA_AirAvailRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirAvailRS?.Success,
+            data: responseJson?.OTA_AirAvailRS?.OriginDestinationInformation,
+        }
+    } else {
+        return {
+            success: !responseJson?.OTA_AirAvailRS?.Success,
+            data: { error: responseJson?.OTA_AirAvailRS?.Errors?.Error.$t },
+        }
+    }
 };
 
-const airPrice = async (flight, adults = 1, children = 0, infants = 0) => {
+const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
     const segments = flight.itineraries[0].segments;
     const flightSegments = [];
     for (let index = 0; index < segments?.length ?? 0; index++) {
-        flightSegments.push(`
-    <FlightSegment DepartureDateTime="${segments[index].departure.at}" ArrivalDateTime="${segments[index].arrival.at}" FlightNumber="${segments[index].flightNumber}" RPH="${index + 1}" ResBookDesigCode="${flight.providerData.resBookCode}" Status="${flight.providerData.Status}">
+        flightSegments.push(`<FlightSegment DepartureDateTime="${new Date(segments[index].departure.at).toISOString().split('Z')[0]}" ArrivalDateTime="${new Date(segments[index].arrival.at).toISOString().split('Z')[0]}" FlightNumber="${segments[index].flightNumber}" RPH="${index + 1}" ResBookDesigCode="${flight.providerData.resBookCode}" Status="${flight.providerData.Status}">
         <DepartureAirport LocationCode="${segments[index].departure.airport.code}" />
         <ArrivalAirport LocationCode="${segments[index].arrival.airport.code}" />
         <MarketingAirline Code="${flight.providerData.codeAirline}"/>
         <TPA_Extensions>
             <FareBasis Code="${flight.providerData.FareBasis}"/>
         </TPA_Extensions>
-    </FlightSegment>
-    `);
+    </FlightSegment>`);
     }
     let traveler = `<AirTravelerAvail>
     <PassengerTypeQuantity Code="ADT" Quantity="${adults ?? 1}"/>
@@ -361,7 +361,7 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0) => {
 
     traveler += children ? `
     <AirTravelerAvail>
-    <PassengerTypeQuantity Code="CHD" Quantity="${children}"/>
+    <PassengerTypeQuantity Code="CHD" Quantity="${children ?? 0}"/>
     <AirTraveler PassengerTypeCode="CHD">
         <PersonName>
             <GivenName> </GivenName>
@@ -407,19 +407,26 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirPriceRS?.Success,
-        data: responseJson?.OTA_AirPriceRS?.PricedItineraries?.PricedItinerary,
-    };
-    return result;
+    if (!!responseJson?.OTA_AirPriceRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirPriceRS?.Success,
+            data: responseJson?.OTA_AirPriceRS?.PricedItineraries?.PricedItinerary,
+        }
+    } else {
+        return {
+            success: !responseJson?.OTA_AirPriceRS?.Success,
+            data: { error: responseJson?.OTA_AirPriceRS?.Errors?.Error.$t },
+        }
+    }
 };
 
-const book = async (segments, price, contact, passengers) => {
+const book = async (segments, price, contact, passengers, testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
     const originDestinations = [];
     for (let index = 0; index < segments?.length ?? 0; index++) {
         originDestinations.push(`<OriginDestinationOption>
@@ -488,7 +495,7 @@ const book = async (segments, price, contact, passengers) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
 
@@ -507,61 +514,35 @@ const book = async (segments, price, contact, passengers) => {
     }
 };
 
-const ticketDemand = async (bookedFlight, passengers) => {
-    const travelers = [];
-    for (let index = 0; index < passengers?.length ?? 0; index++) {
-        let namePrefix;
-        const infant = 2 * 365 * 24 * 3600 * 1000;
-        const child = 12 * 365 * 24 * 3600 * 1000
-        const age = new Date() - new Date(passengers[index].birthDate);
-
-        const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
-        switch (passengers[index].gender) {
-            case "Male":
-                namePrefix = (type === "ADT") ? "Mr" : "Master";
-                break;
-
-            case "Female":
-                namePrefix = (type === "ADT") ? "Mrs" : "Miss";
-                break;
-        }
-
-        travelers.push(`
-        <PassengerName>
-            <NamePrefix>${prefixName}</NamePrefix>
-            <GivenName>${passengers[index].firstName}</GivenName>
-            <Surname>${passengers[index].lastName}</Surname>
-        </PassengerName>
-    `);
-    }
-
-    const query = `<?xml version="1.0" encoding="UTF-8"?>
-    <OTA_AirDemandTicketRQ xmlns="http://www.opentravel.org/OTA/2003/05"
-     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-     xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
-     OTA_AirDemandTicketRQ.xsd" TimeStamp="${new Date().toISOString()}"
-      Version="1.000">
+const ticketDemand = async (providerPnr, testMode = false) => {
+    // modeText = !!testMode ? "" : "_TEST";
+    const query = `<OTA_AirDemandTicketRQ xmlns="http://www.opentravel.org/OTA/2003/05"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirDemandTicketRQ.xsd"
+    TimeStamp="${new Date().toISOString()}" Version="1.000" >
     <DemandTicketDetail>
-        <MessageFunction Function="ET"/>
-        <BookingReferenceID Type="14" ID=${bookedFlight.providerPnr}>
-            <CompanyName Code="123"/>
+        <BookingReferenceID Type="14" ID="${providerPnr}">
         </BookingReferenceID>
-        <PaymentInfo PaymentType="1">
-        </PaymentInfo>
-        ${travelers.join("\n")}
-        </DemandTicketDetail>
-    </OTA_AirDemandTicketRQ>`;
+    </DemandTicketDetail>
+</OTA_AirDemandTicketRQ>`;
+
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-        data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
-    };
-    return result;
+    if (!!responseJson?.OTA_AirDemandTicketRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirDemandTicketRS?.Success,
+            data: responseJson?.OTA_AirDemandTicketRS,
+        }
+    } else {
+        return {
+            success: !responseJson?.OTA_AirDemandTicketRS?.Success,
+            data: { error: responseJson?.OTA_AirDemandTicketRS?.Errors?.Error.$t },
+        }
+    }
 };
 
 const airRead = async (bookedFlight, passengers) => {
@@ -597,15 +578,21 @@ const airRead = async (bookedFlight, passengers) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env.FLYERBIL_BASE_URL}/${process.env.FLYERBIL_TENANT}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
-    const result = {
-        success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
-        data: responseJson?.OTA_AirLowFareSearchRS?.PricedItineraries?.PricedItinerary,
-    };
-    return result;
+    if (!!responseJson?.OTA_AirBookRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_AirBookRS?.Success,
+            data: responseJson?.OTA_AirBookRS?.AirReservation,
+        }
+    } else {
+        return {
+            success: !responseJson?.OTA_AirBookRS?.Success,
+            data: { error: responseJson?.OTA_AirBookRS?.Errors?.Error.$t },
+        }
+    }
 };
 
 module.exports = {

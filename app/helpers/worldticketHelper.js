@@ -4,6 +4,7 @@ const worldticket = require("../services/worldticket");
 const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
 const { accountManagement } = require("../services");
 const { EProvider } = require("../constants");
+const segment = require("../models/subdocuments/segment");
 
 
 const regenerateBookSegment = segments => {
@@ -101,29 +102,21 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.TotalFare.Amount),
   grandTotal: parseFloat(flightPrice.TotalFare.Amount),
   base: parseFloat(flightPrice.BaseFare.Amount),
-  fees: flightPrice.Fees ? Array.isArray(flightPrice.Fees) ? flightPrice.Fees : [flightPrice.Fees.Fee].map(fee => ({
+  fees: flightPrice.Fees ? !!Array.isArray(flightPrice.Fees) ? flightPrice.Fees.map(fee => ({
     amount: fee.Amount,
     type: "SUPPLIER"
-  })) : [],
-  taxes: Array.isArray(travelerPricings) ? travelerPricings : [travelerPricings.PTC_FareBreakdown].reduce((res, cur) => {
-    const result = res;
-    cur.PassengerFare.Taxes ?
-      cur.PassengerFare.Taxes.Tax.forEach(tax => {
-        const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
-
-        if (taxIndex >= 0) {
-          result[taxIndex].amount += tax.Amount;
-        } else {
-          result.push({
-            amount: parseFloat(tax.Amount),
-            code: tax.TaxCode,
-          });
-        }
-      }) : [];
-
-    return result;
-  }, []),
-  travelerPrices: Array.isArray(travelerPricings) ? travelerPricings : [travelerPricings.PTC_FareBreakdown].map(travelerPrice => {
+  })) : [flightPrice.Fees.Fee].map(fee => ({
+    amount: fee.Amount,
+    type: "SUPPLIER"
+  })) : undefined,
+  taxes: flightPrice.Taxes ? !!Array.isArray(flightPrice.Taxes.Tax) ? flightPrice.Taxes.Tax.map(tax => ({
+    amount: parseFloat(tax.Amount),
+    code: tax.TaxCode
+  })) : [flightPrice.Taxes.Tax].map(tax => ({
+    amount: parseFloat(tax.Amount),
+    code: tax.TaxCode
+  })) : undefined,
+  travelerPrices: (!!Array.isArray(travelerPricings) ? travelerPricings : [travelerPricings]).map(travelerPrice => {
     let travelerType;
     switch (travelerPrice.PassengerTypeQuantity.Code) {
       case "ADT":
@@ -146,48 +139,223 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
       base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
       count: travelerPrice.PassengerTypeQuantity.Quantity,
       travelerType,
-      fees: flightPrice.Fees ? Array.isArray(flightPrice.Fees) ? flightPrice.Fees : [flightPrice.Fees.Fee].map(fee => ({
-        amount: fee.Amount,
-        type: "SUPPLIER"
-      })) : [],
-      taxes: travelerPrice.PassengerFare.Taxes ? travelerPrice.PassengerFare.Taxes.Tax.map(tax => ({
-        amount: parseFloat(tax.Amount),
-        code: tax.TaxCode,
-      })) : [],
+      fees: travelerPrice.PassengerFare.Fees ?
+        (!!Array.isArray(travelerPrice.PassengerFare.Fees.Fee) ?
+          travelerPrice.PassengerFare.Fees.Fee : [travelerPrice.PassengerFare.Fees.Fee]).map(fee => ({
+            amount: fee.Amount,
+            type: "SUPPLIER"
+          }))
+        : undefined,
+      taxes: travelerPrice.PassengerFare.Taxes ?
+        !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
+          const result = res;
+          cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+            const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+
+            if (taxIndex >= 0) {
+              result[taxIndex].amount += tax.Amount;
+            } else {
+              result.push({
+                amount: parseFloat(tax.Amount),
+                code: tax.TaxCode,
+              });
+            }
+          });
+
+          return result;
+        }, []) : [travelerPricings].reduce((res, cur) => {
+          const result = res;
+          cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+            const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+
+            if (taxIndex >= 0) {
+              result[taxIndex].amount += tax.Amount;
+            } else {
+              result.push({
+                amount: parseFloat(tax.Amount),
+                code: tax.TaxCode,
+              });
+            }
+          });
+
+          return result;
+        }, []) : undefined,
     };
   }),
+  // travelerPrices: !!Array.isArray(travelerPricings) ? travelerPricings.map(travelerPrice => {
+  //   let travelerType;
+  //   switch (travelerPrice.PassengerTypeQuantity.Code) {
+  //     case "ADT":
+  //       travelerType = "ADULT";
+  //       break;
+
+  //     case "CHD":
+  //       travelerType = "CHILD";
+  //       break;
+
+  //     case "INF":
+  //       travelerType = "INFANT";
+  //       break;
+
+  //     default:
+  //   }
+
+  //   return {
+  //     total: parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
+  //     base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
+  //     count: travelerPrice.PassengerTypeQuantity.Quantity,
+  //     travelerType,
+  //     fees: flightPrice.Fees ? !!Array.isArray(flightPrice.Fees) ? flightPrice.Fees.map(fee => ({
+  //       amount: fee.Amount,
+  //       type: "SUPPLIER"
+  //     })) : [flightPrice.Fees?.Fee].map(fee => ({
+  //       amount: fee.Amount,
+  //       type: "SUPPLIER"
+  //     })) : undefined,
+  //     taxes: !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
+  //       const result = res;
+  //       cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+  //         const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+
+  //         if (taxIndex >= 0) {
+  //           result[taxIndex].amount += tax.Amount;
+  //         } else {
+  //           result.push({
+  //             amount: parseFloat(tax.Amount),
+  //             code: tax.TaxCode,
+  //           });
+  //         }
+  //       });
+
+  //       return result;
+  //     }, []) : [travelerPricings].reduce((res, cur) => {
+  //       const result = res;
+  //       cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+  //         const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+
+  //         if (taxIndex >= 0) {
+  //           result[taxIndex].amount += tax.Amount;
+  //         } else {
+  //           result.push({
+  //             amount: parseFloat(tax.Amount),
+  //             code: tax.TaxCode,
+  //           });
+  //         }
+  //       });
+
+  //       return result;
+  //     }, []),
+  //   };
+  // }) : [travelerPricings.PTC_FareBreakdown].map(travelerPrice => {
+  //   let travelerType;
+  //   switch (travelerPrice.PassengerTypeQuantity.Code) {
+  //     case "ADT":
+  //       travelerType = "ADULT";
+  //       break;
+
+  //     case "CHD":
+  //       travelerType = "CHILD";
+  //       break;
+
+  //     case "INF":
+  //       travelerType = "INFANT";
+  //       break;
+
+  //     default:
+  //   }
+
+  //   return {
+  //     total: parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
+  //     base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
+  //     count: travelerPrice.PassengerTypeQuantity.Quantity,
+  //     travelerType,
+  //     fees: flightPrice.Fees ? Array.isArray(flightPrice.Fees) ? flightPrice.Fees : [flightPrice.Fees?.Fee].map(fee => ({
+  //       amount: fee.Amount,
+  //       type: "SUPPLIER"
+  //     })) : [],
+  //     taxes: travelerPrice.PassengerFare.Taxes?.Tax.map(tax => ({
+  //       amount: parseFloat(tax.Amount),
+  //       code: tax.TaxCode,
+  //     })),
+  //   };
+  // }),
 });
 
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
   return (flight, index) => {
-    let code = flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline.Code.length === 2 ? flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline.Code : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline.Code[0] + flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.OperatingAirline.Code[2];
+    
+    let code = flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code.length === 2 ? flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[0] + flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[2];
     result = {
       code: `WDT-${index}`,
       owner: airlines[code],
-      availableSeats: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.BookingClassAvails.BookingClassAvail.ResBookDesigQuantity,
+      availableSeats: Math.min(...flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption
+        .reduce((res, cur) => [...res, ...cur.FlightSegment.BookingClassAvails.BookingClassAvail], [])
+        .map(value => value.ResBookDesigQuantity)),
       currencyCode: flight.AirItineraryPricingInfo.ItinTotalFare.BaseFare.CurrencyCode,
       travelClass,
       provider: EProvider.get("WORLDTICKET"),
       providerData: {
-        FareBasis: flight.AirItineraryPricingInfo.FareInfos.FareInfo.FareReference.$t,
-        Status: Array.isArray(flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption) ? flight.AirItinerary.OriginDestinationOptions[0].OriginDestinationOption.FlightSegment.Status : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.Status,
-        resBookCode: Array.isArray(flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption) ? flight.AirItinerary.OriginDestinationOptions[0].OriginDestinationOption.FlightSegment.ResBookDesigCode : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.ResBookDesigCode,
-        codeAirline: flight.AirItineraryPricingInfo.FareInfos.FareInfo.FilingAirline?.$t
+        FareBasis: flight.AirItineraryPricingInfo.FareInfos.FareInfo[0].FareReference.$t,
+        Status: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.Status,
+        resBookCode: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.ResBookDesigCode,
+        codeAirline: flight.AirItineraryPricingInfo.FareInfos.FareInfo[0].FilingAirline?.$t
       },
-      // price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare),
-      itineraries: Array.isArray(flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption) ?
-        flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption : [flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption]
-          .map(itinerary => ({
-            duration: Math.floor((new Date(itinerary.FlightSegment.ArrivalDateTime) - new Date(itinerary.FlightSegment.DepartureDateTime)) / 60 / 1000),
-            segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
-          })),
+      itineraries: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.map(itinerary => ({
+        duration: Math.floor((new Date(itinerary.FlightSegment.ArrivalDateTime) - new Date(itinerary.FlightSegment.DepartureDateTime)) / 60 / 1000),
+        segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+      })),
     };
 
     return result;
   };
 };
 
-module.exports.searchFlights = async params => {
+const reformRoutes = (routes) => {
+  return routes
+    .map(route => {
+      return {
+        origin: {
+          code: route.origin.code,
+          name: route.origin.name
+        },
+        destinations: route.destinations
+          .map(dest => {
+            return {
+              code: dest.code,
+              name: dest.name
+            }
+          })
+      }
+    })
+}
+
+const makeAvailFlight = (item) => {
+  let items = !Array.isArray(item) ? [item] : item;
+  let x = items.map(i => ({
+    duration: Math.floor((new Date(i.FlightSegment.ArrivalDateTime) - new Date(i.FlightSegment.DepartureDateTime)) / 60 / 1000),
+    flightNumber: i.FlightSegment.FlightNumber,
+    aircraft: i.FlightSegment.Equipment.AirEquipType,
+    at: i.FlightSegment.DepartureDateTime
+  }))
+  return x;
+}
+
+const makeTicketInfo = (ticketInfo) => {
+  let segments = !Array.isArray(ticketInfo.TicketItemInfo) ? [ticketInfo.TicketItemInfo] : ticketInfo.TicketItemInfo;
+  return {
+    bookingId: ticketInfo.BookingReferenceID.ID,
+    tickets: segments.map(s => ({
+      type: s.PassengerName?.PassengerTypeCode === 'ADT' ? 'ADULT' : 'CHD' ? 'CHILD' : 'INFANT',
+      prefixName: s.PassengerName?.NamePrefix,
+      firstName: s.PassengerName?.GivenName,
+      lastName: s.PassengerName?.Surname,
+      price: s.NetAmount,
+      ticketNumber: s.TicketNumber
+    }))
+  }
+}
+
+module.exports.searchFlights = async (params, testMode = false) => {
   let segments = makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
@@ -195,17 +363,19 @@ module.exports.searchFlights = async params => {
 
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
-  let { data: worldticketSearchResult } = await worldticket.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
-
-  if (!worldticketSearchResult || !!worldticketSearchResult.error) {
+  let { data: worldticketSearchResult } = await worldticket.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, testMode);
+  if (!worldticketSearchResult) {
     return {
-      flightDetails: [],
+      flightDetails: []
     };
+  }
+  if (!!worldticketSearchResult.error) {
+    return worldticketSearchResult.error;
   }
 
   const stops = Object.keys(
     worldticketSearchResult
-      .reduce((res, cur) => [...res, cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
+      .reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
       .reduce((res, cur) => ({
         ...res,
         [cur.FlightSegment.DepartureAirport.LocationCode]: 1,
@@ -214,14 +384,14 @@ module.exports.searchFlights = async params => {
   );
 
   const carriers = Object.keys(worldticketSearchResult
-    .reduce((res, cur) => [...res, cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
+    .reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
     .reduce((res, cur) => ({
       ...res,
       [cur.FlightSegment.OperatingAirline.Code.length === 2 ? cur.FlightSegment.OperatingAirline.Code : cur.FlightSegment.OperatingAirline.Code[0] + cur.FlightSegment.OperatingAirline.Code[2]]: 1,
     }), {})
   );
 
-  const aircrafts = worldticketSearchResult.reduce((res, cur) => [...res, cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
+  const aircrafts = worldticketSearchResult.reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
     .reduce((res, cur) => ({
       ...res,
       [cur.FlightSegment.TPA_Extensions.Equipment.AirEquipType]: cur.FlightSegment.TPA_Extensions.Equipment.AirEquipType,
@@ -234,8 +404,8 @@ module.exports.searchFlights = async params => {
   const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
   for (flight of flightDetails) {
-    let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants);
-    flight['price'] = makePriceObject(info.AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns);
+    let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
+    flight['price'] = makePriceObject(info.AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
     flight.providerData['FareRule'] = info.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.FareRule.$t.replace(/[\r\n]/gm, '')
   };
   return {
@@ -250,7 +420,7 @@ module.exports.searchFlights = async params => {
  * @param {Object} params 
  * @param {FlightInfo} params.flightDetails
  */
-module.exports.bookFlight = async params => {
+module.exports.bookFlight = async (params, testMode = false) => {
   const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
@@ -312,8 +482,10 @@ module.exports.bookFlight = async params => {
     currency: params.flightDetails.flights.currencyCode,
   };
 
-  const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers);
-  console.log(bookedFlight)
+  const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers, testMode);
+  if (!bookedFlight || !!bookedFlight.error) {
+    return bookedFlight.error;
+  }
   if (!bookedFlight.error) {
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
     await flightInfo.save();
@@ -332,4 +504,67 @@ module.exports.issueBookedFlight = async bookedFlight => {
 
 module.exports.airRevalidate = async flightInfo => {
   return flightInfo.flights.price;
+}
+
+module.exports.availableRoutes = async (testMode = false) => {
+  let routes = await worldticket.availableRoutes(testMode);
+  return reformRoutes(routes);
+}
+
+module.exports.calendarAvailability = async (params, testMode = false) => {
+  let calendar = await worldticket.calendarAvailability(params.origin, params.destination, params.start, params.end, testMode);
+  const {
+    origin,
+    destination
+  } = await flightHelper.getOriginDestinationCity(calendar.departure, calendar.arrival);
+  return {
+    origin,
+    destination,
+    startDate: calendar.startDate,
+    endDate: calendar.endDate,
+    dates: calendar.dates.sort()
+  }
+}
+
+module.exports.airPrice = async (flight, params, testMode = false) => {
+  let { data: priceInfo } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
+  if (!!priceInfo.error) {
+    return priceInfo.error;
+  }
+  return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
+}
+
+module.exports.airAvailable = async (params, testMode = false) => {
+  let { data: worldticketSearchResult } = await worldticket.airAvailable(params.origin, params.destination, params.departureDate, params.travelClass, testMode);
+  if (!!worldticketSearchResult.error) {
+    return worldticketSearchResult.error;
+  }
+  if (!worldticketSearchResult) {
+    return [];
+  }
+  if (!Array.isArray(worldticketSearchResult)) {
+    worldticketSearchResult = [worldticketSearchResult];
+  }
+  const {
+    origin,
+    destination
+  } = await flightHelper.getOriginDestinationCity(worldticketSearchResult[0].OriginLocation.LocationCode, worldticketSearchResult[0].DestinationLocation.LocationCode);
+  return worldticketSearchResult.map(res => ({
+    origin,
+    destination,
+    flightsInfo: makeAvailFlight(res.OriginDestinationOptions.OriginDestinationOption)
+  }));
+}
+
+module.exports.ticketDemand = async (providerPnr, testMode = false) => {
+  let { data: ticketInfo } = await worldticket.ticketDemand(providerPnr, testMode);
+  if (!!ticketInfo.error) {
+    return ticketInfo.error;
+  }
+  if (!!ticketInfo.TicketItemInfo)
+    return makeTicketInfo(ticketInfo);
+  else
+    return {
+      bookingId: ticketInfo.BookingReferenceID.ID
+    }
 }

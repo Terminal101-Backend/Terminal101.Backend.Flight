@@ -248,7 +248,6 @@ module.exports.bookFlight = async (req, res) => {
 
     const providerName = flightDetails.flights.provider.toLowerCase();
     const providerHelper = eval(providerName + "Helper");
-    console.log('providerHelper ==> ', providerHelper)
 
     const bookedFlightSegments = [flightDetails.flights?.itineraries?.[0].segments?.[0]];
     const lastIndex = (flightDetails.flights?.itineraries?.[0].segments?.length ?? 0) - 1;
