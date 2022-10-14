@@ -5,7 +5,6 @@ const { ETravelClass } = require("../constants");
 module.exports.lowFareSearch = baseValidator({
   body: {},
   params: {
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
   query: {
@@ -21,29 +20,10 @@ module.exports.lowFareSearch = baseValidator({
       Joi.string(),
       Joi.array().items(Joi.string()),
     ],
-    // originLocationCode: Joi.string().required(),
-    // destinationLocationCode: Joi.string().required(),
-    // departureDate: Joi.date().required(),
-    // returnDate: Joi.date(),
-    // segments: [
-    //   Joi.array().items(Joi.string()).default([]),
-    //   Joi.string(),
-    // ],
-    // adults: Joi.number().default(1),
-    // children: Joi.number().default(0),
-    // infants: Joi.number().default(0),
-    // travelClass: ETravelClass.validator({default: "ECONOMY"}),
-    // includedAirlineCodes: [
-    //   Joi.array().items(Joi.string()).default([]),
-    //   Joi.string(),
-    // ],
-    // excludedAirlineCodes: [
-    //   Joi.array().items(Joi.string()).default([]),
-    //   Joi.string(),
-    // ],
-    // nonStop: Joi.boolean().default(false),
-    // currency: Joi.string().default("USD"),
   },
+  headers: {
+    username: Joi.string().required()
+  }
 });
 
 module.exports.book = baseValidator({
@@ -64,32 +44,37 @@ module.exports.book = baseValidator({
     })).min(1)
   },
   params: {
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
+  headers: {
+    username: Joi.string().required()
+  }
 });
 
 module.exports.readBook = baseValidator({
   body: {},
   params: {
-    // providerTitle: Joi.string().required(),
     bookedId: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
+  headers: {
+    username: Joi.string().required()
+  }
 });
 
 module.exports.availableRoutes = baseValidator({
   body: {},
   params: {
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
+  headers: {
+    username: Joi.string().required()
+  }
 });
 
 module.exports.calendarAvailability = baseValidator({
   body: {},
   params: {
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
   query: {
@@ -97,13 +82,15 @@ module.exports.calendarAvailability = baseValidator({
     destination: Joi.string().required(),
     start: Joi.date().required(),
     end: Joi.date().required(),
+  },
+  headers: {
+    username: Joi.string().required()
   }
 });
 
 module.exports.airAvailable = baseValidator({
   body: {},
   params: {
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
   query: {
@@ -111,6 +98,9 @@ module.exports.airAvailable = baseValidator({
     destination: Joi.string().required(),
     departureDate: Joi.date().required(),
     travelClass: ETravelClass.validator({ default: "ECONOMY" }),
+  },
+  headers: {
+    username: Joi.string().required()
   }
 });
 
@@ -119,13 +109,15 @@ module.exports.airPrice = baseValidator({
   params: {
     searchedFlightCode: Joi.string().required(),
     flightDetailsCode: Joi.string().required(),
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
   query: {
     adults: Joi.number().default(1),
     children: Joi.number(),
     infants: Joi.number()
+  },
+  headers: {
+    username: Joi.string().required()
   }
 });
 
@@ -133,7 +125,9 @@ module.exports.ticketDemand = baseValidator({
   body: {},
   params: {
     bookedId: Joi.string().required(),
-    // providerTitle: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
+  headers: {
+    username: Joi.string().required()
+  }
 });

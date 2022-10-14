@@ -4,15 +4,24 @@ const { providerRepository, flightInfoRepository, bookedFlightRepository } = req
 const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
 const { amadeus, parto, avtra, accountManagement, wallet } = require("../services");
 const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper } = require("../helpers");
+
 // NOTE: Search flights by provider
 module.exports.lowFareSearch = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
+    if (!testMode) {
+      response.error(res, "Access denied", 401);
+      return;
+    }
+
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
 
     let timestamp = new Date().toISOString();
 
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let availableProviders = ["WORLDTICKET"]
     const lastSearch = [];
     const providerCount = availableProviders.length;
@@ -27,16 +36,16 @@ module.exports.lowFareSearch = async (req, res) => {
     } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
     const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
     const searchCode = flightInfo.code;
-
     for (const provider of availableProviders) {
       switch (provider) {
         case "WORLDTICKET":
-          await worldticketHelper.searchFlights(req.query, true).then(async flight => {
-            lastSearch.push(...flight.flightDetails);
-            appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
-              console.trace(e);
-            });
-          })
+          let flight = await worldticketHelper.searchFlights(req.query, testMode);
+          if (!!flight.error) {
+            response.error(res, flight.error, 400);
+            return;
+          }
+          lastSearch.push(...flight.flightDetails);
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
       }
     }
     response.success(res, {
@@ -45,7 +54,6 @@ module.exports.lowFareSearch = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(e);
     response.exception(res, e);
   }
 };
@@ -55,8 +63,16 @@ module.exports.book = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
+    if (!testMode) {
+      response.error(res, "Access denied", 401);
+      return;
+    }
 
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
     let timestamp = new Date().toISOString();
 
     let flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
@@ -71,9 +87,9 @@ module.exports.book = async (req, res) => {
       return;
     }
 
-    const { data: user } = await accountManagement.getUserInfo("YYEO69EXLHV3PS5");
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
     const existsBookedFlight = await bookedFlightRepository.findOne({
-      bookedBy: "YYEO69EXLHV3PS5",
+      bookedBy: decodedToken.user,
       searchedFlightCode: req.body.searchedFlightCode,
       flightDetailsCode: req.body.flightDetailsCode
     });
@@ -96,47 +112,58 @@ module.exports.book = async (req, res) => {
       case "WORLDTICKET":
         worldticketBookResult = await worldticketHelper.bookFlight({
           flightDetails,
-          userCode: "YYEO69EXLHV3PS5",
+          userCode: decodedToken.user,
           contact: req.body.contact,
           passengers: req.body.passengers
         }, testMode);
-
-        const userWallet = await wallet.getUserWallet("YYEO69EXLHV3PS5");
-        bookedFlight = await bookedFlightRepository.createBookedFlight("YYEO69EXLHV3PS5", flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-        const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
-
-        bookedFlight.statuses.push({
-          status: EBookedFlightStatus.get("PAYING"),
-          description: 'Payment is in progress',
-          changedBy: "SERVICE",
-        });
-
-        if (userWallet.credit >= flightInfo.flights.price.total) {
-          await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
-          bookedFlight.statuses.push({
-            status: EBookedFlightStatus.get("PAID"),
-            description: 'Payment is done.',
-            changedBy: "SERVICE",
-          });
-
-          bookedFlight.statuses.push({
-            status: EBookedFlightStatus.get("INPROGRESS"),
-            description: "Wait for booking by backoffice.",
-            changedBy: bookedFlight.bookedBy,
-          });
-
-          await bookedFlight.save();
+        if (!!worldticketBookResult.error) {
+          response.error(res, worldticketBookResult.error, 400);
+          return;
         }
-        else {
+        if (!testMode) {
+          const userWallet = await wallet.getUserWallet(decodedToken.user);
+          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+          const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get("PAYING"),
-            description: "Client credit is not enough",
+            description: 'Payment is in progress',
             changedBy: "SERVICE",
           });
-          await bookedFlight.save();
+
+          if (userWallet.credit >= flightInfo.flights.price.total) {
+            await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
+            bookedFlight.statuses.push({
+              status: EBookedFlightStatus.get("PAID"),
+              description: 'Payment is done.',
+              changedBy: "SERVICE",
+            });
+
+            bookedFlight.statuses.push({
+              status: EBookedFlightStatus.get("INPROGRESS"),
+              description: "Wait for booking by backoffice.",
+              changedBy: bookedFlight.bookedBy,
+            });
+
+            await bookedFlight.save();
+          }
+          else {
+            bookedFlight.statuses.push({
+              status: EBookedFlightStatus.get("PAYING"),
+              description: "Client credit is not enough",
+              changedBy: "SERVICE",
+            });
+            await bookedFlight.save();
+          }
+        } else {
+          bookedFlight.statuses.push({
+            status: EBookedFlightStatus.get("BOOKED"),
+            description: '--- Test API ---',
+            changedBy: "SERVICE",
+          });
         }
     }
-    bookedFlight = await bookedFlightRepository.getBookedFlight("YYEO69EXLHV3PS5", bookedFlight.code);
+    bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, bookedFlight.code);
 
     response.success(res, {
       timestamp,
@@ -188,15 +215,28 @@ module.exports.book = async (req, res) => {
   }
 };
 
-// NOTE: Get booked flight by provider
+// NOTE: Get booked flight
 module.exports.readBook = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
+    if (!testMode) {
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
 
     let timestamp = new Date().toISOString();
 
-    const bookedFlight = await bookedFlightRepository.getBookedFlight("YYEO69EXLHV3PS5", req.params.bookedId);
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedId);
+    if (!bookedFlight) {
+      response.error(res, "booked flight not found", 404);
+      return;
+    }
+
     const { data: user } = await accountManagement.getUserInfo(bookedFlight.bookedBy);
 
     response.success(res, {
@@ -249,11 +289,20 @@ module.exports.readBook = async (req, res) => {
   }
 };
 
+// NOTE: Get available Routes by provider
 module.exports.availableRoutes = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    if(!testMode){
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
     const availableProviders = ["WORLDTICKET"];
     let timestamp = new Date().toISOString();
     let availableRoutes;
@@ -273,11 +322,20 @@ module.exports.availableRoutes = async (req, res) => {
   }
 }
 
+// NOTE: Get calendar Availability by provider
 module.exports.calendarAvailability = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    if(!testMode){
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
     let availableProviders = ["WORLDTICKET"];
 
     let timestamp = new Date().toISOString();
@@ -289,6 +347,11 @@ module.exports.calendarAvailability = async (req, res) => {
       }
     }
 
+    if (!!availableDates.error) {
+      response.error(res, availableDates.error, 400);
+      return;
+    }
+
     response.success(res, {
       timestamp,
       availableDates
@@ -298,11 +361,20 @@ module.exports.calendarAvailability = async (req, res) => {
   }
 }
 
+// NOTE: Get flight Availability by provider
 module.exports.airAvailable = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    if(!testMode){
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
     let availableProviders = ["WORLDTICKET"];
     let timestamp = new Date().toISOString();
     let availableFlights;
@@ -313,6 +385,10 @@ module.exports.airAvailable = async (req, res) => {
       }
     }
 
+    if (!!availableFlights.error) {
+      response.error(res, availableFlights.error, 400);
+      return;
+    }
     response.success(res, {
       timestamp,
       availableFlights
@@ -322,11 +398,20 @@ module.exports.airAvailable = async (req, res) => {
   }
 }
 
+// NOTE: Get price flight by provider
 module.exports.airPrice = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    // const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    if(!testMode){
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
     let availableProviders = ["WORLDTICKET"];
     let timestamp = new Date().toISOString();
 
@@ -343,11 +428,15 @@ module.exports.airPrice = async (req, res) => {
           priceInfo = await worldticketHelper.airPrice(flightDetails.flights, req.query, testMode);
       }
     }
+    if (!!priceInfo.error) {
+      response.error(res, priceInfo.error, 400);
+      return;
+    }
     const {
       origin,
       destination
     } = await flightHelper.getOriginDestinationCity(flightDetails.origin.code, flightDetails.destination.code);
-    
+
     response.success(res, {
       timestamp,
       pricInfo: {
@@ -362,14 +451,23 @@ module.exports.airPrice = async (req, res) => {
   }
 }
 
+// NOTE: Get ticket flight by provider
 module.exports.ticketDemand = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    let availableProviders = ["WORLDTICKET"];
+    if(!testMode){
+      response.error(res, "Access denied", 401);
+      return;
+    }
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
 
+    let availableProviders = ["WORLDTICKET"];
     let timestamp = new Date().toISOString();
-    const bookedFlight = await bookedFlightRepository.getBookedFlight("YYEO69EXLHV3PS5", req.params.bookedId);
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedId);
 
     let ticketInfo;
     for (const provider of availableProviders) {
@@ -377,6 +475,10 @@ module.exports.ticketDemand = async (req, res) => {
         case "WORLDTICKET":
           ticketInfo = await worldticketHelper.ticketDemand(bookedFlight.providerPnr, testMode);
       }
+    }
+    if (!!ticketInfo.error) {
+      response.error(res, ticketInfo.error, 400);
+      return;
     }
     response.success(res, {
       timestamp,
@@ -387,7 +489,7 @@ module.exports.ticketDemand = async (req, res) => {
   }
 }
 
-
+// Internal Functions
 const appendProviderResult = async (origin, destination, time, flights, searchCode) => {
   let flightInfo = await flightInfoRepository.createFlightInfo(
     origin,

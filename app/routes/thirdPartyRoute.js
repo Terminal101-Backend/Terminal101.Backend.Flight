@@ -40,11 +40,11 @@ router
     thirdPartyValidator.readBook.check,
     thirdPartyController.readBook);
 
-// NOTE: Get booked flight
+// NOTE: Get available routes
 router
   .get("/available-routes",
     (req, res, next) => {
-      console.log("Get booked flight", req.params, req.body, req.query);
+      console.log("Get available routes", req.params, req.body, req.query);
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
@@ -52,11 +52,11 @@ router
     thirdPartyValidator.availableRoutes.check,
     thirdPartyController.availableRoutes);
 
-// NOTE: Get booked flight
+// NOTE: Get calendare availability
 router
   .get("/calendar-availability",
     (req, res, next) => {
-      console.log("Get booked flight", req.params, req.body, req.query);
+      console.log("Get calendar availability", req.params, req.body, req.query);
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
@@ -64,11 +64,11 @@ router
     thirdPartyValidator.calendarAvailability.check,
     thirdPartyController.calendarAvailability);
 
-// NOTE: Get booked flight
+// NOTE: Get flight availability
 router
 .get("/availability",
   (req, res, next) => {
-    console.log("Get booked flight", req.params, req.body, req.query);
+    console.log("Get flight availability", req.params, req.body, req.query);
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
@@ -76,11 +76,11 @@ router
   thirdPartyValidator.airAvailable.check,
   thirdPartyController.airAvailable);
 
-// NOTE: Get booked flight
+// NOTE: Get price flight
 router
 .get("/get-price/:searchedFlightCode/:flightDetailsCode",
   (req, res, next) => {
-    console.log("Get booked flight", req.params, req.body, req.query);
+    console.log("Get price flight", req.params, req.body, req.query);
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
@@ -88,11 +88,11 @@ router
   thirdPartyValidator.airPrice.check,
   thirdPartyController.airPrice);
 
-// NOTE: Get booked flight
+// NOTE: Get ticket flight
 router
 .get("/ticket-demand/:bookedId",
   (req, res, next) => {
-    console.log("Get booked flight", req.params, req.body, req.query);
+    console.log("Get ticket flight", req.params, req.body, req.query);
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),

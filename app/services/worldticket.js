@@ -245,6 +245,12 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
     if (!!responseJson?.OTA_AirLowFareSearchRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirLowFareSearchRS?.Success,
@@ -276,11 +282,14 @@ const calendarAvailability = async (departure, arrival, start_date, end_date, te
         start_date,
         end_date
     }
-    const {
-        data: response
-    } = await axiosApiInstance.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/calendar/availability`, { params: data });
-
-    return response;
+    try {
+        const {
+            data: response
+        } = await axiosApiInstance.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/calendar/availability`, { params: data });
+        return response;
+    } catch (e) {
+        return { error: 'Bad Request' }
+    }
 };
 
 const airAvailable = async (originLocationCode, destinationLocationCode, departureDate, travelClass, testMode = false) => {
@@ -321,7 +330,20 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
 
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
+
     if (!!responseJson?.OTA_AirAvailRS?.Success) {
+        if (!responseJson?.OTA_AirAvailRS?.OriginDestinationInformation) {
+            return {
+                success: !responseJson?.OTA_AirAvailRS?.Success,
+                data: { error: 'This flight is not available.' }
+            }
+        }
         return {
             success: !!responseJson?.OTA_AirAvailRS?.Success,
             data: responseJson?.OTA_AirAvailRS?.OriginDestinationInformation,
@@ -412,6 +434,14 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
+
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
+
     if (!!responseJson?.OTA_AirPriceRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirPriceRS?.Success,
@@ -500,6 +530,14 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
     let response = response_.replaceAll('ota:', '');
 
     const responseJson = xmlParser.parse(response);
+
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
+
     if (!!responseJson?.OTA_AirBookRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirBookRS?.Success,
@@ -532,6 +570,14 @@ const ticketDemand = async (providerPnr, testMode = false) => {
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
+
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
+
     if (!!responseJson?.OTA_AirDemandTicketRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirDemandTicketRS?.Success,
@@ -582,6 +628,14 @@ const airRead = async (bookedFlight, passengers) => {
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
+
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+        }
+    }
+
     if (!!responseJson?.OTA_AirBookRS?.Success) {
         return {
             success: !!responseJson?.OTA_AirBookRS?.Success,

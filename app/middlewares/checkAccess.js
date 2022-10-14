@@ -47,17 +47,13 @@ exports.checkUserAccess = async (req, res, next) => {
     if (!decodedToken) {
       throw "access_denied";
     }
-    console.log(await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, path, req.header("Username"), testMode));
 
     if (await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, path, req.header("Username"), testMode)) {
-      console.log(2222222222)
       return next();
     } else {
-      console.log(333333333)
       return response.error(res, "access_denied", 403);
     }
   } catch (e) {
-    console.log(44444444)
     return response.error(res, "access_denied", 401);
   }
 }

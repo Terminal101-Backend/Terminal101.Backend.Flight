@@ -370,7 +370,7 @@ module.exports.searchFlights = async (params, testMode = false) => {
     };
   }
   if (!!worldticketSearchResult.error) {
-    return worldticketSearchResult.error;
+    return worldticketSearchResult;
   }
 
   const stops = Object.keys(
@@ -484,7 +484,7 @@ module.exports.bookFlight = async (params, testMode = false) => {
 
   const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers, testMode);
   if (!bookedFlight || !!bookedFlight.error) {
-    return bookedFlight.error;
+    return bookedFlight;
   }
   if (!bookedFlight.error) {
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
@@ -513,6 +513,10 @@ module.exports.availableRoutes = async (testMode = false) => {
 
 module.exports.calendarAvailability = async (params, testMode = false) => {
   let calendar = await worldticket.calendarAvailability(params.origin, params.destination, params.start, params.end, testMode);
+  if(!!calendar.error){
+    return calendar;
+  }
+
   const {
     origin,
     destination
@@ -529,7 +533,7 @@ module.exports.calendarAvailability = async (params, testMode = false) => {
 module.exports.airPrice = async (flight, params, testMode = false) => {
   let { data: priceInfo } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
   if (!!priceInfo.error) {
-    return priceInfo.error;
+    return priceInfo;
   }
   return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
 }
@@ -537,14 +541,22 @@ module.exports.airPrice = async (flight, params, testMode = false) => {
 module.exports.airAvailable = async (params, testMode = false) => {
   let { data: worldticketSearchResult } = await worldticket.airAvailable(params.origin, params.destination, params.departureDate, params.travelClass, testMode);
   if (!!worldticketSearchResult.error) {
-    return worldticketSearchResult.error;
+    return worldticketSearchResult;
   }
   if (!worldticketSearchResult) {
-    return [];
+    return;
   }
+
   if (!Array.isArray(worldticketSearchResult)) {
     worldticketSearchResult = [worldticketSearchResult];
   }
+
+  // const aircrafts = worldticketSearchResult.reduce((res, cur) => [...res, ...cur.AirItinerary.OriginDestinationOptions.OriginDestinationOption], [])
+  //   .reduce((res, cur) => ({
+  //     ...res,
+  //     [cur.FlightSegment.TPA_Extensions.Equipment.AirEquipType]: cur.FlightSegment.TPA_Extensions.Equipment.AirEquipType,
+  //   }), {});
+
   const {
     origin,
     destination
@@ -559,7 +571,7 @@ module.exports.airAvailable = async (params, testMode = false) => {
 module.exports.ticketDemand = async (providerPnr, testMode = false) => {
   let { data: ticketInfo } = await worldticket.ticketDemand(providerPnr, testMode);
   if (!!ticketInfo.error) {
-    return ticketInfo.error;
+    return ticketInfo;
   }
   if (!!ticketInfo.TicketItemInfo)
     return makeTicketInfo(ticketInfo);
