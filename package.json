@@ -9,7 +9,7 @@
     "seed": "node app/core/seed.js",
     "test": "jest --detectOpenHandles"
   },
-  "author": "",
+  "author": " ",
   "license": "ISC",
   "dependencies": {
     "amadeus": "^5.7.0",
