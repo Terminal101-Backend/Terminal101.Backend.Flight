@@ -23,9 +23,9 @@ router
       console.log("Book flight", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType("THIRD_PARTY"),
+    checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
-    // thirdPartyValidator.book.check,
+    thirdPartyValidator.book.check,
     thirdPartyController.book);
 
 // NOTE: Get booked flight
