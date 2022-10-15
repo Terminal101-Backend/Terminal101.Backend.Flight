@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const Condition = require("./condition");
 
 const commission = new Schema({
-  businesses: {
+  business: {
     type: Condition,
     default: {},
   },

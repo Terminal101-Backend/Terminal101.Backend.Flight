@@ -156,7 +156,7 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         const originCode = itinerary.segments[first].departure.airport.code;
         const destinationCode = itinerary.segments[last].arrival.airport.code;
         const airlineCode = itinerary.segments[first].airline.code;
-        flightDetails;
+        let result = false;
 
         // NOTE: Check if origin exclude is false and flight origin is in origins list
         let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
@@ -174,16 +174,25 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
 
         if (!foundOrigin || !foundDestination || !foundAirline) {
-          return true;
+          result = true;
         }
         if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-          return true;
+          result = true;
         }
         if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
-          return true;
+          result = true;
         }
 
-        return false;
+        if (!!result) {
+          if (flightCondition.commissions.length > 0) {
+            flightDetails.price.fees.push(...flightCondition.commissions.map(commission => ({
+              amount: Math.round(flightDetails.price.total * commission.value) / 100,
+              type: "COMMISSION"
+            })));
+          }
+        }
+
+        return result;
       })
     );
   });
@@ -194,7 +203,12 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
-    let decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.trace(e);
+    }
     /**
      * @type {Promise<Array>}
      */

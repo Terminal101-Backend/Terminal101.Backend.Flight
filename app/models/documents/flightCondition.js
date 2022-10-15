@@ -27,7 +27,7 @@ const flightCondition = new Schema({
     type: [String],
     default: [],
   },
-  commisions: {
+  commissions: {
     type: [Commission],
     default: [],
   },

@@ -190,6 +190,7 @@ class FlightConditionRepository extends BaseRepository {
           code: 1,
           providerNames: 1,
           isRestricted: 1,
+          commissions: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -327,6 +328,7 @@ class FlightConditionRepository extends BaseRepository {
       {
         $project: {
           code: 1,
+          commissions: 1,
           providerNames: 1,
           isRestricted: 1,
           isActive: 1,
