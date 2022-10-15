@@ -5,7 +5,7 @@ const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
 const { amadeus, parto, avtra, accountManagement, wallet } = require("../services");
 const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper } = require("../helpers");
 
-// NOTE: Search flights by provider
+// NOTE: Search flights by provider owner
 module.exports.lowFareSearch = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
@@ -105,6 +105,8 @@ module.exports.book = async (req, res) => {
     if (lastIndex > 0) {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
+
+    await accountManagement.addPerson(decodedToken.owner, req.body.passengers);
 
     let worldticketBookResult;
     let bookedFlight;
