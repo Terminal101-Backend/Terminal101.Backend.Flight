@@ -87,9 +87,9 @@ module.exports.book = async (req, res) => {
       return;
     }
 
-    const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
     const existsBookedFlight = await bookedFlightRepository.findOne({
-      bookedBy: decodedToken.user,
+      bookedBy: decodedToken.owner,
       searchedFlightCode: req.body.searchedFlightCode,
       flightDetailsCode: req.body.flightDetailsCode
     });
@@ -112,7 +112,7 @@ module.exports.book = async (req, res) => {
       case "WORLDTICKET":
         worldticketBookResult = await worldticketHelper.bookFlight({
           flightDetails,
-          userCode: decodedToken.user,
+          userCode: decodedToken.owner,
           contact: req.body.contact,
           passengers: req.body.passengers
         }, testMode);
@@ -121,8 +121,8 @@ module.exports.book = async (req, res) => {
           return;
         }
         if (!testMode) {
-          const userWallet = await wallet.getUserWallet(decodedToken.user);
-          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+          const userWallet = await wallet.getUserWallet(decodedToken.owner);
+          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
           const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
 
           bookedFlight.statuses.push({
@@ -163,7 +163,7 @@ module.exports.book = async (req, res) => {
           });
         }
     }
-    bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, bookedFlight.code);
+    bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, bookedFlight.code);
 
     response.success(res, {
       timestamp,
@@ -231,7 +231,7 @@ module.exports.readBook = async (req, res) => {
 
     let timestamp = new Date().toISOString();
 
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedId);
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, req.params.bookedId);
     if (!bookedFlight) {
       response.error(res, "booked flight not found", 404);
       return;
@@ -294,7 +294,7 @@ module.exports.availableRoutes = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if(!testMode){
+    if (!testMode) {
       response.error(res, "Access denied", 401);
       return;
     }
@@ -327,7 +327,7 @@ module.exports.calendarAvailability = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if(!testMode){
+    if (!testMode) {
       response.error(res, "Access denied", 401);
       return;
     }
@@ -366,7 +366,7 @@ module.exports.airAvailable = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if(!testMode){
+    if (!testMode) {
       response.error(res, "Access denied", 401);
       return;
     }
@@ -403,7 +403,7 @@ module.exports.airPrice = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if(!testMode){
+    if (!testMode) {
       response.error(res, "Access denied", 401);
       return;
     }
@@ -456,7 +456,7 @@ module.exports.ticketDemand = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if(!testMode){
+    if (!testMode) {
       response.error(res, "Access denied", 401);
       return;
     }
@@ -467,7 +467,7 @@ module.exports.ticketDemand = async (req, res) => {
 
     let availableProviders = ["WORLDTICKET"];
     let timestamp = new Date().toISOString();
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedId);
+    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, req.params.bookedId);
 
     let ticketInfo;
     for (const provider of availableProviders) {
