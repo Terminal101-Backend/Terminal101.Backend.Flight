@@ -35,12 +35,19 @@ module.exports.book = baseValidator({
       mobileNumber: Joi.string(),
     }),
     passengers: Joi.array().items(Joi.object().keys({
+      gender: Joi.string().required(),
       firstName: Joi.string().required(),
       lastName: Joi.string().required(),
       birthDate: Joi.date().required(),
-      documentIssuedAt: Joi.string().length(2),
-      expirationDate: Joi.date().required(),
-      documentCode: Joi.string().required(),
+      nickName: Joi.string().allow(null, ""),
+      middleName: Joi.string().allow(null, ""),
+      document: Joi.object().required().keys({
+        type: Joi.string(),
+        code: Joi.string().required(),
+        issuedAt: Joi.string().required(),
+        expirationDate: Joi.date().required(),
+        postCode: Joi.string(),
+      }),
     })).min(1)
   },
   params: {
