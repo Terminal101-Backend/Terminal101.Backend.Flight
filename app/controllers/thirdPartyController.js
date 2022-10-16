@@ -128,9 +128,12 @@ module.exports.book = async (req, res) => {
           return;
         }
         let userWallet;
-        if (!testMode) {
-          userWallet = await wallet.getUserWallet(decodedToken.owner);
+        userWallet = await wallet.getUserWallet(decodedToken.owner);
+        if ( !testMode && flightInfo.flights.price.total >= userWallet.credit) {
+          response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
+          return;
         }
+
         bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
         const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
 
@@ -157,14 +160,7 @@ module.exports.book = async (req, res) => {
 
             await bookedFlight.save();
           }
-          else {
-            bookedFlight.statuses.push({
-              status: EBookedFlightStatus.get("PAYING"),
-              description: "Client credit is not enough",
-              changedBy: "SERVICE",
-            });
-            await bookedFlight.save();
-          }
+
         } else {
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get("BOOKED"),
