@@ -22,7 +22,7 @@ module.exports.lowFareSearch = async (req, res) => {
 
     let timestamp = new Date().toISOString();
 
-    let availableProviders = ["WORLDTICKET"]
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     const lastSearch = [];
     const providerCount = availableProviders.length;
 
@@ -116,7 +116,16 @@ module.exports.book = async (req, res) => {
           flightDetails,
           userCode: decodedToken.owner,
           contact: req.body.contact,
-          passengers: req.body.passengers
+          passengers: req.body.passengers.map(passenger => {
+            return {
+              firstName: passenger.firstName,
+              middleName: passenger.middleName,
+              nickName: passenger.nickName,
+              lastName: passenger.lastName,
+              birthDate: passenger.birthDate,
+              gender: passenger.gender,
+            }
+          })
         }, testMode);
         if (!!worldticketBookResult.error) {
           response.error(res, worldticketBookResult.error, 400);
@@ -305,7 +314,7 @@ module.exports.availableRoutes = async (req, res) => {
       return;
     }
 
-    const availableProviders = ["WORLDTICKET"];
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let timestamp = new Date().toISOString();
     let availableRoutes;
 
@@ -338,7 +347,7 @@ module.exports.calendarAvailability = async (req, res) => {
       return;
     }
 
-    let availableProviders = ["WORLDTICKET"];
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
 
     let timestamp = new Date().toISOString();
     let availableDates;
@@ -377,7 +386,7 @@ module.exports.airAvailable = async (req, res) => {
       return;
     }
 
-    let availableProviders = ["WORLDTICKET"];
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let timestamp = new Date().toISOString();
     let availableFlights;
     for (const provider of availableProviders) {
@@ -414,7 +423,7 @@ module.exports.airPrice = async (req, res) => {
       return;
     }
 
-    let availableProviders = ["WORLDTICKET"];
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let timestamp = new Date().toISOString();
 
     let flightDetails = await flightInfoRepository.getFlight(req.params.searchedFlightCode, req.params.flightDetailsCode);
@@ -467,7 +476,7 @@ module.exports.ticketDemand = async (req, res) => {
       return;
     }
 
-    let availableProviders = ["WORLDTICKET"];
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let timestamp = new Date().toISOString();
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, req.params.bookedId);
 
