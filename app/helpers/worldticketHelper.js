@@ -283,7 +283,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
 
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
   return (flight, index) => {
-    
+
     let code = flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code.length === 2 ? flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[0] + flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[2];
     result = {
       code: `WDT-${index}`,
@@ -353,6 +353,11 @@ const makeTicketInfo = (ticketInfo) => {
     }))
   }
 }
+const createBaggage = (flight, segment) => {
+  flight.itineraries[0].segments.map(s => {
+    s['baggage'] = segment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1]
+  })
+}
 
 module.exports.searchFlights = async (params, testMode = false) => {
   let segments = makeSegmentsArray(params.segments);
@@ -405,6 +410,7 @@ module.exports.searchFlights = async (params, testMode = false) => {
   for (flight of flightDetails) {
     let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
     flight['price'] = makePriceObject(info.AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
+    createBaggage(flight, info.AirItinerary.OriginDestinationOptions.OriginDestinationOption)
     flight.providerData['FareRule'] = info.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.FareRule.$t.replace(/[\r\n]/gm, '')
   };
   return {
@@ -512,7 +518,7 @@ module.exports.availableRoutes = async (testMode = false) => {
 
 module.exports.calendarAvailability = async (params, testMode = false) => {
   let calendar = await worldticket.calendarAvailability(params.origin, params.destination, params.start, params.end, testMode);
-  if(!!calendar.error){
+  if (!!calendar.error) {
     return calendar;
   }
 

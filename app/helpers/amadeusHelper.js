@@ -93,6 +93,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
         terminal: segment.originDestination.arrival.terminalName,
         at: segment.originDestination.arrival.date + "T" + segment.originDestination.arrival.time,
       },
+      baggage: segment.baggage
     };
 
     return result;

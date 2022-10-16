@@ -86,6 +86,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
         },
         at: segment.ArrivalDateTime,
       },
+      baggage: segment.Baggage
     };
 
     return result;
