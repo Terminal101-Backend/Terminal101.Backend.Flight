@@ -21,9 +21,6 @@ module.exports.lowFareSearch = baseValidator({
       Joi.array().items(Joi.string()),
     ],
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.book = baseValidator({
@@ -53,9 +50,6 @@ module.exports.book = baseValidator({
   params: {
     0: Joi.string().allow(null, ""),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.readBook = baseValidator({
@@ -64,9 +58,6 @@ module.exports.readBook = baseValidator({
     bookedId: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.availableRoutes = baseValidator({
@@ -74,9 +65,6 @@ module.exports.availableRoutes = baseValidator({
   params: {
     0: Joi.string().allow(null, ""),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.calendarAvailability = baseValidator({
@@ -90,9 +78,6 @@ module.exports.calendarAvailability = baseValidator({
     start: Joi.date().required(),
     end: Joi.date().required(),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.airAvailable = baseValidator({
@@ -106,9 +91,6 @@ module.exports.airAvailable = baseValidator({
     departureDate: Joi.date().required(),
     travelClass: ETravelClass.validator({ default: "ECONOMY" }),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.airPrice = baseValidator({
@@ -123,9 +105,6 @@ module.exports.airPrice = baseValidator({
     children: Joi.number(),
     infants: Joi.number()
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
 
 module.exports.ticketDemand = baseValidator({
@@ -134,7 +113,4 @@ module.exports.ticketDemand = baseValidator({
     bookedId: Joi.string().required(),
     0: Joi.string().allow(null, ""),
   },
-  headers: {
-    // username: Joi.string().required()
-  }
 });
