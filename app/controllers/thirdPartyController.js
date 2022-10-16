@@ -108,6 +108,11 @@ module.exports.book = async (req, res) => {
 
     await accountManagement.addPerson(decodedToken.owner, req.body.passengers);
 
+    let passengers = req.body.passengers.map(passenger => ({
+      documentCode: passenger.document.code,
+      documentIssuedAt: passenger.document.issuedAt
+    }));
+
     let worldticketBookResult;
     let bookedFlight;
     switch (providerName) {
@@ -116,37 +121,26 @@ module.exports.book = async (req, res) => {
           flightDetails,
           userCode: decodedToken.owner,
           contact: req.body.contact,
-          passengers: req.body.passengers.map(passenger => {
-            return {
-              documentCode: passenger.document.code,
-              documentIssuedAt: passenger.document.issuedAt 
-            }
-          })
+          passengers,
         }, testMode);
         if (!!worldticketBookResult.error) {
           response.error(res, worldticketBookResult.error, 400);
           return;
         }
+        let userWallet;
         if (!testMode) {
-          let passengers = req.body.passengers.map(passenger => {
-            return {
-            firstName: passenger.firstName,
-            middleName: passenger.middleName,
-            nickName: passenger.nickName,
-            lastName: passenger.lastName,
-            birthDate: passenger.birthDate,
-            gender: passenger.gender,
-          }});
-          const userWallet = await wallet.getUserWallet(decodedToken.owner);
-          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, passengers , bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-          const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+          userWallet = await wallet.getUserWallet(decodedToken.owner);
+        }
+        bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+        const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
 
-          bookedFlight.statuses.push({
-            status: EBookedFlightStatus.get("PAYING"),
-            description: 'Payment is in progress',
-            changedBy: "SERVICE",
-          });
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("PAYING"),
+          description: 'Payment is in progress',
+          changedBy: "SERVICE",
+        });
 
+        if (!testMode) {
           if (userWallet.credit >= flightInfo.flights.price.total) {
             await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
             bookedFlight.statuses.push({
