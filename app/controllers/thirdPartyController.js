@@ -118,12 +118,8 @@ module.exports.book = async (req, res) => {
           contact: req.body.contact,
           passengers: req.body.passengers.map(passenger => {
             return {
-              firstName: passenger.firstName,
-              middleName: passenger.middleName,
-              nickName: passenger.nickName,
-              lastName: passenger.lastName,
-              birthDate: passenger.birthDate,
-              gender: passenger.gender,
+              documentCode: passenger.document.code,
+              documentIssuedAt: passenger.document.issuedAt 
             }
           })
         }, testMode);
@@ -132,8 +128,17 @@ module.exports.book = async (req, res) => {
           return;
         }
         if (!testMode) {
+          let passengers = req.body.passengers.map(passenger => {
+            return {
+            firstName: passenger.firstName,
+            middleName: passenger.middleName,
+            nickName: passenger.nickName,
+            lastName: passenger.lastName,
+            birthDate: passenger.birthDate,
+            gender: passenger.gender,
+          }});
           const userWallet = await wallet.getUserWallet(decodedToken.owner);
-          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+          bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet.externalTransactionId, req.body.contact, passengers , bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
           const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
 
           bookedFlight.statuses.push({
