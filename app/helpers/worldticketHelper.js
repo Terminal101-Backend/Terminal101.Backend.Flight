@@ -343,7 +343,6 @@ const makeAvailFlight = (item) => {
 const makeTicketInfo = (ticketInfo) => {
   let segments = !Array.isArray(ticketInfo.TicketItemInfo) ? [ticketInfo.TicketItemInfo] : ticketInfo.TicketItemInfo;
   return {
-    bookingId: ticketInfo.BookingReferenceID.ID,
     tickets: segments.map(s => ({
       type: s.PassengerName?.PassengerTypeCode === 'ADT' ? 'ADULT' : 'CHD' ? 'CHILD' : 'INFANT',
       prefixName: s.PassengerName?.NamePrefix,
@@ -575,8 +574,5 @@ module.exports.ticketDemand = async (providerPnr, testMode = false) => {
   }
   if (!!ticketInfo.TicketItemInfo)
     return makeTicketInfo(ticketInfo);
-  else
-    return {
-      bookingId: ticketInfo.BookingReferenceID.ID
-    }
+  else return []
 }
