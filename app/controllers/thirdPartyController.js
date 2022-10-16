@@ -106,7 +106,7 @@ module.exports.book = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    await accountManagement.addPerson(decodedToken.owner, req.body.passengers);
+    await accountManagement.addEditPersons(decodedToken.owner, req.body.passengers);
 
     let worldticketBookResult;
     let bookedFlight;
