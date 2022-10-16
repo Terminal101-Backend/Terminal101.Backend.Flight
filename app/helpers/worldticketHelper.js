@@ -574,5 +574,5 @@ module.exports.ticketDemand = async (providerPnr, testMode = false) => {
   }
   if (!!ticketInfo.TicketItemInfo)
     return makeTicketInfo(ticketInfo);
-  else return []
+  else return {}
 }
