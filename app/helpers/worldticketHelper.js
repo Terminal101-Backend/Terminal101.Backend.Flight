@@ -512,7 +512,6 @@ module.exports.airRevalidate = async flightInfo => {
 }
 
 module.exports.availableRoutes = async (testMode) => {
-  console.log(2222)
   let routes = await worldticket.availableRoutes(testMode);
   return reformRoutes(routes);
 }
