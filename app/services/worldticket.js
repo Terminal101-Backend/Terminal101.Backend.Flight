@@ -111,7 +111,6 @@ axiosApiInstance.interceptors.response.use((response) => {
 });
 
 const getAccessToken = async (pathPostFix) => {
-    console.log('@@ ===> ', pathPostFix)
     var data = {
         "grant_type": process.env["FLYERBIL_GRANT_TYPE" + pathPostFix],
         "client_id": process.env["FLYERBIL_CLIENT_ID" + pathPostFix],
