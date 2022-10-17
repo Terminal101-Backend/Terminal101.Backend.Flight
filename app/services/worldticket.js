@@ -217,7 +217,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
      DirectFlightsOnly="false"
      AvailableFlightsOnly="true">
         <POS>
-            <Source ISOCurrency="EUR">
+            <Source ISOCurrency="USD">
                 <RequestorID Type="5" ID="08336230"/>
             </Source>
         </POS>
@@ -304,7 +304,7 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
    DirectFlightsOnly="false" 
    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirAvailRQ.xsd">
       <POS>
-          <Source ISOCurrency="EUR">
+          <Source ISOCurrency="USD">
               <RequestorID Type="5" ID="35896241"/>
           </Source>
       </POS>
@@ -411,7 +411,7 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
     OTA_AirPriceRQ.xsd" TimeStamp="${new Date().toISOString().split('Z')[0]}" 
     Version="2.001" PrimaryLangID="en" Type="PerSegment">
         <POS>
-            <Source ISOCurrency="EUR">
+            <Source ISOCurrency="USD">
                 <RequestorID Type="5" ID="35896241"/>
             </Source>
         </POS>
@@ -609,7 +609,7 @@ const airRead = async (bookedFlight, passengers) => {
     Version="2.001"
     PrimaryLangID="en">
     <POS>
-        <Source ISOCurrency="EUR" >
+        <Source ISOCurrency="USD" >
         </Source>
     </POS>
     <ReadRequests>
