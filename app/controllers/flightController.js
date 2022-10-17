@@ -191,6 +191,7 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
+    let testMode = process.env.TEST_MODE;
     /**
      * @type {Promise<Array>}
      */
@@ -233,7 +234,7 @@ module.exports.searchFlights = async (req, res) => {
     notRestrictedProviders.forEach(provider => {
       const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
-      providerHelper.searchFlights(req.query).then(async flight => {
+      providerHelper.searchFlights(req.query, testMode).then(async flight => {
         if (req.method === "SOCKET") {
           if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
             return;

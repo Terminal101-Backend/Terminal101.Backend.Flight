@@ -183,6 +183,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 // NOTE: Book a flight
 module.exports.bookFlight = async (req, res) => {
   try {
+    let testMode = process.env.TEST_MODE;
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
     let flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
@@ -280,7 +281,7 @@ module.exports.bookFlight = async (req, res) => {
       userCode: decodedToken.user,
       contact: req.body.contact,
       passengers: req.body.passengers
-    });
+    }, testMode);
     const userWallet = await wallet.getUserWallet(decodedToken.user);
 
     if (!!req.body.useWallet) {
@@ -615,6 +616,8 @@ module.exports.getBookedFlights = async (req, res) => {
           travelClass: bookedFlight.flightInfo.travelClass,
           price: bookedFlight.flightInfo.flights.price.total,
           currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+          userType: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.userType,
+          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,    
         };
       })
     });
@@ -713,6 +716,8 @@ module.exports.getBookedFlight = async (req, res) => {
       price: bookedFlight.flightInfo.flights.price.total,
       currencyCode: bookedFlight.flightInfo.flights.currencyCode,
       transaction,
+      userType: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.userType,
+      testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,
     });
   } catch (e) {
     response.exception(res, e);

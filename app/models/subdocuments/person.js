@@ -12,7 +12,7 @@ const person = new Schema({
 		required: true,
 	},
 	ticketNumber: {
-		
+		type: Number,
 	}
 }, {
 	timestamps: true

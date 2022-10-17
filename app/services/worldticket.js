@@ -111,6 +111,7 @@ axiosApiInstance.interceptors.response.use((response) => {
 });
 
 const getAccessToken = async (pathPostFix) => {
+    console.log('@@ ===> ', pathPostFix)
     var data = {
         "grant_type": process.env["FLYERBIL_GRANT_TYPE" + pathPostFix],
         "client_id": process.env["FLYERBIL_CLIENT_ID" + pathPostFix],
@@ -135,8 +136,8 @@ const getAccessToken = async (pathPostFix) => {
 };
 
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
-    segments = [], adults = 1, children = 0, infants = 0, travelClass, testMode = false, includedAirlineCodes,
-    excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+    segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes,
+    excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
     console.log('111', testMode)
     let travelClassCode;
     switch (travelClass) {
@@ -269,9 +270,11 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 };
 
 const availableRoutes = async (testMode = false) => {
+    let pathPostFix = testMode ? "_TEST" : "";
+
     const {
         data: response
-    } = await axios.get(`/rest/route`, { testMode });
+    } = await axios.get(`${process.env["FLYERBIL_BASE_URL" + pathPostFix]}/${process.env["FLYERBIL_TENANT" + pathPostFix]}/rest/route`);
 
     return response;
 };
@@ -288,7 +291,9 @@ const calendarAvailability = async (departure, arrival, start_date, end_date, te
             data: response
         } = await axiosApiInstance.get(`/rest/calendar/availability`, { params: data, testMode });
         return response;
+
     } catch (e) {
+        console.log(e)
         return { error: 'Bad Request' }
     }
 };

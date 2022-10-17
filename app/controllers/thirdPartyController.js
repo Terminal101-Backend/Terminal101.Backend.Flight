@@ -41,7 +41,7 @@ module.exports.lowFareSearch = async (req, res) => {
             return;
           }
           lastSearch.push(...flight.flightDetails);
-          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize"));
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode,req.header("Page"), req.header("PageSize"));
       }
     }
     response.success(res, {
@@ -50,7 +50,8 @@ module.exports.lowFareSearch = async (req, res) => {
     });
 
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 };
 
@@ -209,7 +210,8 @@ module.exports.book = async (req, res) => {
       }
     });
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 };
 
@@ -280,7 +282,8 @@ module.exports.readBook = async (req, res) => {
     });
 
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 };
 
@@ -310,7 +313,8 @@ module.exports.availableRoutes = async (req, res) => {
       availableRoutes
     })
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 }
 
@@ -346,7 +350,8 @@ module.exports.calendarAvailability = async (req, res) => {
       availableDates
     })
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 }
 
@@ -380,7 +385,8 @@ module.exports.airAvailable = async (req, res) => {
       availableFlights
     })
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 }
 
@@ -430,7 +436,8 @@ module.exports.airPrice = async (req, res) => {
       }
     })
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 }
 
@@ -465,12 +472,13 @@ module.exports.ticketDemand = async (req, res) => {
       ticketInfo
     })
   } catch (e) {
-    response.exception(res, e);
+    console.trace(`Code: 500, Message: ${e}`);
+    response.error(res, 'Internal Server Error', 500);
   }
 }
 
 // Internal Functions
-const appendProviderResult = async (origin, destination, time, flights, searchCode) => {
+const appendProviderResult = async (origin, destination, time, flights, searchCode, userType, testMode) => {
   let flightInfo = await flightInfoRepository.createFlightInfo(
     origin,
     destination,
@@ -479,6 +487,8 @@ const appendProviderResult = async (origin, destination, time, flights, searchCo
   );
 
   flightInfo.flights = flights;
+  flightInfo.userType = userType;
+  flightInfo.testMode = testMode;
   flightInfo.filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flights);
 
   await flightInfo.save();

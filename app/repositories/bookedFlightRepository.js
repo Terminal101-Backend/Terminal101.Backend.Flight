@@ -179,6 +179,8 @@ class BookedFlightRepository extends BaseRepository {
         "flightInfo.travelClass": 1,
         "flightInfo.flights.price.total": 1,
         "flightInfo.flights.currencyCode": 1,
+        "flightInfo.userType": 1,
+        "flightInfo.testMode": 1,
       }
     });
 

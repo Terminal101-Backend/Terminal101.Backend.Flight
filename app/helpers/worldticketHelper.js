@@ -367,7 +367,7 @@ module.exports.searchFlights = async (params, testMode) => {
 
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
-  let { data: worldticketSearchResult } = await worldticket.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, testMode);
+  let { data: worldticketSearchResult } = await worldticket.airLowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
   if (!worldticketSearchResult) {
     return {
       flightDetails: []
@@ -512,6 +512,7 @@ module.exports.airRevalidate = async flightInfo => {
 }
 
 module.exports.availableRoutes = async (testMode) => {
+  console.log(2222)
   let routes = await worldticket.availableRoutes(testMode);
   return reformRoutes(routes);
 }
