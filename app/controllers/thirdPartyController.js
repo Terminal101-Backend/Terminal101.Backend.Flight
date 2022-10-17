@@ -218,10 +218,7 @@ module.exports.readBook = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
@@ -292,10 +289,7 @@ module.exports.availableRoutes = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
@@ -325,10 +319,7 @@ module.exports.calendarAvailability = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
@@ -364,10 +355,7 @@ module.exports.airAvailable = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
@@ -401,10 +389,7 @@ module.exports.airPrice = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
@@ -454,10 +439,7 @@ module.exports.ticketDemand = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
+
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
