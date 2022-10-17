@@ -3,7 +3,6 @@ const qs = require('qs');
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 let accessToken = "";
-let modeText = "_TEST";
 
 const reformatToArray = path => {
     const root = path.split(".")[0];
@@ -81,7 +80,9 @@ const xmlParser = new xmljsonParser.XMLParser(option);
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
     async config => {
-        config.baseURL = process.env["FLYERBIL_BASE_URL" + modeText];
+        const testMode = config?.testMode ?? false;
+        const pathPostFix = testMode ? "_TEST" : "";
+        config.baseURL = `${process.env["FLYERBIL_BASE_URL" + pathPostFix]}/${process.env["FLYERBIL_TENANT" + pathPostFix]}`;
         config.headers = {
             'Authorization': `Bearer ${accessToken}`,
             'Accept': '*/*',
@@ -97,30 +98,34 @@ axiosApiInstance.interceptors.request.use(
 axiosApiInstance.interceptors.response.use((response) => {
     return response
 }, async function (error) {
+    console.log(JSON.stringify(error))
+    const testMode = error.config?.testMode ?? false;
+    const pathPostFix = testMode ? "_TEST" : "";
+    console.log('pathPostFix ==> ', pathPostFix, testMode)
     const originalRequest = error.config;
     if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
         originalRequest._retry = true;
-        await getAccessToken();
+        await getAccessToken(pathPostFix);
         axios.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
         return axiosApiInstance(originalRequest);
     }
     return Promise.reject(error);
 });
 
-const getAccessToken = async () => {
+const getAccessToken = async (pathPostFix) => {
     var data = {
-        "grant_type": process.env["FLYERBIL_GRANT_TYPE" + modeText],
-        "client_id": process.env["FLYERBIL_CLIENT_ID" + modeText],
-        "client_secret": process.env["FLYERBIL_CLIENT_SECRET" + modeText],
-        "username": process.env["FLYERBIL_USERNAME" + modeText],
-        "password": process.env["FLYERBIL_PASSWORD" + modeText]
+        "grant_type": process.env["FLYERBIL_GRANT_TYPE" + pathPostFix],
+        "client_id": process.env["FLYERBIL_CLIENT_ID" + pathPostFix],
+        "client_secret": process.env["FLYERBIL_CLIENT_SECRET" + pathPostFix],
+        "username": process.env["FLYERBIL_USERNAME" + pathPostFix],
+        "password": process.env["FLYERBIL_PASSWORD" + pathPostFix]
     }
 
     delete axios.defaults.headers.common['Authorization'];
 
     const {
         data: response
-    } = await axios.post(process.env["FLYERBIL_BASE_AUTH_URL" + modeText] + `/auth/realms/${process.env["FLYERBIL_TENANT" + modeText]}/protocol/openid-connect/token`, qs.stringify(data), {
+    } = await axios.post(process.env["FLYERBIL_BASE_AUTH_URL" + pathPostFix] + `/auth/realms/${process.env["FLYERBIL_TENANT" + pathPostFix]}/protocol/openid-connect/token`, qs.stringify(data), {
         headers: {
             'content-type': 'application/x-www-form-urlencoded',
         },
@@ -132,9 +137,10 @@ const getAccessToken = async () => {
 };
 
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
-    segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes,
-    excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
+    segments = [], adults = 1, children = 0, infants = 0, travelClass, testMode = false, includedAirlineCodes,
+    excludedAirlineCodes, nonStop, currencyCode = "USD") => {
     // modeText = !!testMode ? "" : "_TEST";
+    console.log('111', testMode)
     let travelClassCode;
     switch (travelClass) {
         case "FIRST":
@@ -240,7 +246,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
         </TravelerInfoSummary>
     </OTA_AirLowFareSearchRQ>`;
 
-    const { data: response_ } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    const { data: response_ } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
 
@@ -269,13 +275,14 @@ const availableRoutes = async (testMode = false) => {
     // modeText = !!testMode ? "" : "_TEST";
     const {
         data: response
-    } = await axios.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/route`);
+    } = await axios.get(`/rest/route`, { testMode });
 
     return response;
 };
 
 const calendarAvailability = async (departure, arrival, start_date, end_date, testMode = false) => {
     // modeText = !!testMode ? "" : "_TEST";
+    console.log('111 -> ', testMode)
     const data = {
         departure,
         arrival,
@@ -285,7 +292,7 @@ const calendarAvailability = async (departure, arrival, start_date, end_date, te
     try {
         const {
             data: response
-        } = await axiosApiInstance.get(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/rest/calendar/availability`, { params: data });
+        } = await axiosApiInstance.get(`/rest/calendar/availability`, { params: data }, { testMode });
         return response;
     } catch (e) {
         return { error: 'Bad Request' }
@@ -325,7 +332,7 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
@@ -429,7 +436,7 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
 
@@ -525,7 +532,7 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
 
@@ -566,7 +573,7 @@ const ticketDemand = async (providerPnr, testMode = false) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
@@ -624,7 +631,7 @@ const airRead = async (bookedFlight, passengers) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`${process.env["FLYERBIL_BASE_URL" + modeText]}/${process.env["FLYERBIL_TENANT" + modeText]}/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query);
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);

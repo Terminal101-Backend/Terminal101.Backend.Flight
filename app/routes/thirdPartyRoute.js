@@ -11,7 +11,7 @@ router
       console.log("Search flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("THIRD_PARTY"),
+    // checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
     thirdPartyValidator.lowFareSearch.check,
     thirdPartyController.lowFareSearch);

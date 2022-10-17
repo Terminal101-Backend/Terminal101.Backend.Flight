@@ -10,10 +10,6 @@ module.exports.lowFareSearch = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
 
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
@@ -63,10 +59,6 @@ module.exports.book = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const testMode = req.params[0] === "/test";
-    if (!testMode) {
-      response.error(res, "Access denied", 401);
-      return;
-    }
 
     if (decodedToken.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);

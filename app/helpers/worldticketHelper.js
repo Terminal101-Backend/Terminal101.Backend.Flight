@@ -355,11 +355,11 @@ const makeTicketInfo = (ticketInfo) => {
 }
 const createBaggage = (flight, segment) => {
   flight.itineraries[0].segments.map(s => {
-    s['baggage'] = segment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1]
+    s['baggage'] = segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] ? segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] : segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('\n\n')[0]
   })
 }
 
-module.exports.searchFlights = async (params, testMode = false) => {
+module.exports.searchFlights = async (params, testMode) => {
   let segments = makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
@@ -425,7 +425,7 @@ module.exports.searchFlights = async (params, testMode = false) => {
  * @param {Object} params 
  * @param {FlightInfo} params.flightDetails
  */
-module.exports.bookFlight = async (params, testMode = false) => {
+module.exports.bookFlight = async (params, testMode) => {
   const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
@@ -511,12 +511,12 @@ module.exports.airRevalidate = async flightInfo => {
   return flightInfo.flights.price;
 }
 
-module.exports.availableRoutes = async (testMode = false) => {
+module.exports.availableRoutes = async (testMode) => {
   let routes = await worldticket.availableRoutes(testMode);
   return reformRoutes(routes);
 }
 
-module.exports.calendarAvailability = async (params, testMode = false) => {
+module.exports.calendarAvailability = async (params, testMode) => {
   let calendar = await worldticket.calendarAvailability(params.origin, params.destination, params.start, params.end, testMode);
   if (!!calendar.error) {
     return calendar;
@@ -535,7 +535,7 @@ module.exports.calendarAvailability = async (params, testMode = false) => {
   }
 }
 
-module.exports.airPrice = async (flight, params, testMode = false) => {
+module.exports.airPrice = async (flight, params, testMode) => {
   let { data: priceInfo } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
   if (!!priceInfo.error) {
     return priceInfo;
@@ -543,7 +543,7 @@ module.exports.airPrice = async (flight, params, testMode = false) => {
   return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
 }
 
-module.exports.airAvailable = async (params, testMode = false) => {
+module.exports.airAvailable = async (params, testMode) => {
   let { data: worldticketSearchResult } = await worldticket.airAvailable(params.origin, params.destination, params.departureDate, params.travelClass, testMode);
   if (!!worldticketSearchResult.error) {
     return worldticketSearchResult;
@@ -573,7 +573,7 @@ module.exports.airAvailable = async (params, testMode = false) => {
   }));
 }
 
-module.exports.ticketDemand = async (providerPnr, testMode = false) => {
+module.exports.ticketDemand = async (providerPnr, testMode) => {
   let { data: ticketInfo } = await worldticket.ticketDemand(providerPnr, testMode);
   if (!!ticketInfo.error) {
     return ticketInfo;

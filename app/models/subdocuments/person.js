@@ -11,6 +11,9 @@ const person = new Schema({
 		type: String,
 		required: true,
 	},
+	ticketNumber: {
+		
+	}
 }, {
 	timestamps: true
 });
