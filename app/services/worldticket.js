@@ -98,10 +98,8 @@ axiosApiInstance.interceptors.request.use(
 axiosApiInstance.interceptors.response.use((response) => {
     return response
 }, async function (error) {
-    console.log(JSON.stringify(error))
     const testMode = error.config?.testMode ?? false;
     const pathPostFix = testMode ? "_TEST" : "";
-    console.log('pathPostFix ==> ', pathPostFix, testMode)
     const originalRequest = error.config;
     if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
         originalRequest._retry = true;
@@ -139,7 +137,6 @@ const getAccessToken = async (pathPostFix) => {
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
     segments = [], adults = 1, children = 0, infants = 0, travelClass, testMode = false, includedAirlineCodes,
     excludedAirlineCodes, nonStop, currencyCode = "USD") => {
-    // modeText = !!testMode ? "" : "_TEST";
     console.log('111', testMode)
     let travelClassCode;
     switch (travelClass) {
@@ -223,7 +220,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
      DirectFlightsOnly="false"
      AvailableFlightsOnly="true">
         <POS>
-            <Source ISOCurrency="EUR">
+            <Source ISOCurrency="USD">
                 <RequestorID Type="5" ID="08336230"/>
             </Source>
         </POS>
@@ -272,7 +269,6 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 };
 
 const availableRoutes = async (testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
     const {
         data: response
     } = await axios.get(`/rest/route`, { testMode });
@@ -281,8 +277,6 @@ const availableRoutes = async (testMode = false) => {
 };
 
 const calendarAvailability = async (departure, arrival, start_date, end_date, testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
-    console.log('111 -> ', testMode)
     const data = {
         departure,
         arrival,
@@ -292,7 +286,7 @@ const calendarAvailability = async (departure, arrival, start_date, end_date, te
     try {
         const {
             data: response
-        } = await axiosApiInstance.get(`/rest/calendar/availability`, { params: data }, { testMode });
+        } = await axiosApiInstance.get(`/rest/calendar/availability`, { params: data, testMode });
         return response;
     } catch (e) {
         return { error: 'Bad Request' }
@@ -300,7 +294,6 @@ const calendarAvailability = async (departure, arrival, start_date, end_date, te
 };
 
 const airAvailable = async (originLocationCode, destinationLocationCode, departureDate, travelClass, testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
     let tClass = travelClass.toLowerCase().charAt(0).toUpperCase() + travelClass.toLowerCase().slice(1);
     const query = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
   <OTA_AirAvailRQ xmlns="http://www.opentravel.org/OTA/2003/05" 
@@ -311,7 +304,7 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
    DirectFlightsOnly="false" 
    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirAvailRQ.xsd">
       <POS>
-          <Source ISOCurrency="EUR">
+          <Source ISOCurrency="USD">
               <RequestorID Type="5" ID="35896241"/>
           </Source>
       </POS>
@@ -364,7 +357,6 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
 };
 
 const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
     const segments = flight.itineraries[0].segments;
     const flightSegments = [];
     for (let index = 0; index < segments?.length ?? 0; index++) {
@@ -418,7 +410,7 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
     OTA_AirPriceRQ.xsd" TimeStamp="${new Date().toISOString().split('Z')[0]}" 
     Version="2.001" PrimaryLangID="en" Type="PerSegment">
         <POS>
-            <Source ISOCurrency="EUR">
+            <Source ISOCurrency="USD">
                 <RequestorID Type="5" ID="35896241"/>
             </Source>
         </POS>
@@ -463,7 +455,6 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
 };
 
 const book = async (segments, price, contact, passengers, testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
     const originDestinations = [];
     for (let index = 0; index < segments?.length ?? 0; index++) {
         originDestinations.push(`<OriginDestinationOption>
@@ -560,7 +551,6 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
 };
 
 const ticketDemand = async (providerPnr, testMode = false) => {
-    // modeText = !!testMode ? "" : "_TEST";
     const query = `<OTA_AirDemandTicketRQ xmlns="http://www.opentravel.org/OTA/2003/05"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirDemandTicketRQ.xsd"
@@ -573,7 +563,7 @@ const ticketDemand = async (providerPnr, testMode = false) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
@@ -616,7 +606,7 @@ const airRead = async (bookedFlight, passengers) => {
     Version="2.001"
     PrimaryLangID="en">
     <POS>
-        <Source ISOCurrency="EUR" >
+        <Source ISOCurrency="USD" >
         </Source>
     </POS>
     <ReadRequests>
@@ -631,7 +621,7 @@ const airRead = async (bookedFlight, passengers) => {
 
     const {
         data: response_
-    } = await axiosApiInstance.post(`/ota-ecom-saml`, query);
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
 
     let response = response_.replaceAll('ota:', '');
     const responseJson = xmlParser.parse(response);
