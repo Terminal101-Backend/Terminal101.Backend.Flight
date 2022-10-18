@@ -1313,6 +1313,13 @@ definitions:
       price:
         type: number
         example: 234
+      testMode:
+        type: boolean
+        example: true
+      userType:
+        enum: [SERVICE, SUPER_ADMIN, ADMIN, BUSINESS, CLIENT, THIRD_PARTY]
+        example: ['CLIENT']
+
 
   BookFlightInfo:
     required:
