@@ -12,7 +12,7 @@ const {
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus, accountManagement } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, tokenHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper } = require("../helpers");
 const socketClients = {};
 
 // NOTE: Flight
@@ -209,6 +209,7 @@ module.exports.searchFlights = async (req, res) => {
     } catch (e) {
       console.trace(e);
     }
+    let testMode = process.env.TEST_MODE;
     /**
      * @type {Promise<Array>}
      */
@@ -252,7 +253,7 @@ module.exports.searchFlights = async (req, res) => {
     activeProviders.forEach(provider => {
       const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
-      providerHelper.searchFlights(req.query).then(async flight => {
+      providerHelper.searchFlights(req.query, testMode).then(async flight => {
         if (req.method === "SOCKET") {
           if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
             return;

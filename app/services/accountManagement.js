@@ -87,10 +87,17 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   return response.data;
 };
 
+const addEditPersons = async (userCode, persons) => {
+  const { data: response } = await axiosApiInstance.patch(`/person/${userCode}`, { persons });
+
+  return response;
+};
+
 module.exports = {
   loginAsService,
   getUserInfo,
   getUsersInfo,
   checkUserAccess,
   getThirdPartyUserAvailableProviders,
+  addEditPersons,
 };

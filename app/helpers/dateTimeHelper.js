@@ -12,6 +12,13 @@ module.exports.convertAmadeusTime = time => {
   return parseInt(reH[1] ?? 0) * 60 + parseInt(reM[1] ?? 0);
 };
 
+module.exports.calculateWorldticketDurationTime = (depTime, arivTime) => {
+  let timeOne = new Date(depTime);
+  let timeTwo = new Date(arivTime);
+  let diff = timeOne - timeTwo;
+  return diff / (1000 * 60);
+};
+
 module.exports.excludeDateFromIsoString = isoString => {
   const re = /(\d+-\d+-\d+)T(\d+:\d+:\d+)(?:\.\d+Z)?/;
   const reTest = re.exec(isoString);

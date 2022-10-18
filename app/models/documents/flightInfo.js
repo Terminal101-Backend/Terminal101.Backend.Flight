@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const Location = require("../subdocuments/location");
 const FlightDetails = require("../subdocuments/flightDetails");
 const FilterLimit = require("../subdocuments/filterLimit");
+const { EUserType } = require("../../constants");
 
 const flightInfo = new Schema({
     origin: {
@@ -46,6 +47,8 @@ const flightInfo = new Schema({
         type: Date,
         default: Date.now,
     },
+    testMode: Boolean,
+    userType: EUserType.mongoField(),
 }, {
     timestamps: true
 });

@@ -11,7 +11,7 @@ router
       console.log("Search flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("THIRD_PARTY"),
+    // checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
     thirdPartyValidator.lowFareSearch.check,
     thirdPartyController.lowFareSearch);
@@ -25,8 +25,8 @@ router
     },
     checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
-    thirdPartyValidator.bookFlight.check,
-    thirdPartyController.bookFlight);
+    thirdPartyValidator.book.check,
+    thirdPartyController.book);
 
 // NOTE: Get booked flight
 router
@@ -37,7 +37,67 @@ router
     },
     checkAccess.checkUserType("THIRD_PARTY"),
     // checkAccess.checkUserAccess,
-    thirdPartyValidator.getBookedFlight.check,
-    thirdPartyController.getBookedFlight);
+    thirdPartyValidator.readBook.check,
+    thirdPartyController.readBook);
+
+// NOTE: Get available routes
+router
+  .get("/available-routes",
+    (req, res, next) => {
+      console.log("Get available routes", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType("THIRD_PARTY"),
+    // checkAccess.checkUserAccess,
+    thirdPartyValidator.availableRoutes.check,
+    thirdPartyController.availableRoutes);
+
+// NOTE: Get calendare availability
+router
+  .get("/calendar-availability",
+    (req, res, next) => {
+      console.log("Get calendar availability", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType("THIRD_PARTY"),
+    // checkAccess.checkUserAccess,
+    thirdPartyValidator.calendarAvailability.check,
+    thirdPartyController.calendarAvailability);
+
+// NOTE: Get flight availability
+router
+.get("/availability",
+  (req, res, next) => {
+    console.log("Get flight availability", req.params, req.body, req.query);
+    next();
+  },
+  checkAccess.checkUserType("THIRD_PARTY"),
+  // checkAccess.checkUserAccess,
+  thirdPartyValidator.airAvailable.check,
+  thirdPartyController.airAvailable);
+
+// NOTE: Get price flight
+router
+.get("/get-price/:searchedFlightCode/:flightDetailsCode",
+  (req, res, next) => {
+    console.log("Get price flight", req.params, req.body, req.query);
+    next();
+  },
+  checkAccess.checkUserType("THIRD_PARTY"),
+  // checkAccess.checkUserAccess,
+  thirdPartyValidator.airPrice.check,
+  thirdPartyController.airPrice);
+
+// NOTE: Get ticket flight
+router
+.get("/ticket-demand/:bookedId",
+  (req, res, next) => {
+    console.log("Get ticket flight", req.params, req.body, req.query);
+    next();
+  },
+  checkAccess.checkUserType("THIRD_PARTY"),
+  // checkAccess.checkUserAccess,
+  thirdPartyValidator.ticketDemand.check,
+  thirdPartyController.ticketDemand);
 
 module.exports = router;

@@ -57,11 +57,11 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
   };
 
   flights.forEach(flight => {
-    if (!filter.airlines.some(airline => airline.code === flight.owner.code)) {
+    if (!filter.airlines.some(airline => airline?.code === flight.owner?.code)) {
       filter.airlines.push({
-        code: flight.owner.code,
-        name: flight.owner.name,
-        description: flight.owner.description,
+        code: flight.owner?.code,
+        name: flight.owner?.name,
+        description: flight.owner?.description,
       });
     }
 
@@ -85,17 +85,17 @@ module.exports.getFilterLimitsFromFlightDetailsArray = flights => {
         //   });
         // }
 
-        if (!!segment.departure.airport.code && !filter.airports.some(airport => airport.code === segment.departure.airport.code)) {
+        if (!!segment.departure.airport.code && !filter.airports.some(airport => airport?.code === segment.departure.airport?.code)) {
           filter.airports.push({
-            code: segment.departure.airport.code,
-            name: segment.departure.airport.name,
+            code: segment.departure.airport?.code,
+            name: segment.departure.airport?.name,
           });
         }
 
-        if (!!segment.arrival.airport.code && !filter.airports.some(airport => airport.code === segment.arrival.airport.code)) {
+        if (!!segment.arrival.airport?.code && !filter.airports.some(airport => airport?.code === segment.arrival.airport?.code)) {
           filter.airports.push({
-            code: segment.arrival.airport.code,
-            name: segment.arrival.airport.name,
+            code: segment.arrival.airport?.code,
+            name: segment.arrival.airport?.name,
           });
         }
 

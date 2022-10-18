@@ -47,6 +47,7 @@ exports.checkUserAccess = async (req, res, next) => {
     if (!decodedToken) {
       throw "access_denied";
     }
+
     if (await accountManagement.checkUserAccess(decodedToken.user, decodedToken.type, decodedToken.service, req.method, path, req.header("Username"), testMode)) {
       return next();
     } else {

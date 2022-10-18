@@ -9,7 +9,7 @@
     "seed": "node app/core/seed.js",
     "test": "jest --detectOpenHandles"
   },
-  "author": "",
+  "author": " ",
   "license": "ISC",
   "dependencies": {
     "amadeus": "^5.7.0",
@@ -33,6 +33,7 @@
     "nodemailer": "^6.7.6",
     "package.json": "^2.0.1",
     "puppeteer": "^14.4.0",
+    "qs": "^6.11.0",
     "redis": "^4.0.1",
     "sha1": "^1.1.1",
     "soap": "^0.43.0",
