@@ -221,7 +221,7 @@ module.exports.book = async (req, res) => {
     });
   } catch (e) {
     console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    response.error(res, 'provider_error', 500);
   }
 };
 
