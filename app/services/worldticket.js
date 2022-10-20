@@ -137,7 +137,7 @@ const getAccessToken = async (pathPostFix) => {
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
     segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes,
     excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
-    console.log('111', testMode)
+
     let travelClassCode;
     switch (travelClass) {
         case "FIRST":

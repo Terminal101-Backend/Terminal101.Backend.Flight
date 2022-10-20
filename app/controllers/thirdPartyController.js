@@ -8,10 +8,15 @@ const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper }
 // NOTE: Search flights by provider owner
 module.exports.lowFareSearch = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
-    if (decodedToken.type !== 'THIRD_PARTY') {
+    if (decodedToken?.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
     }
@@ -41,7 +46,7 @@ module.exports.lowFareSearch = async (req, res) => {
             return;
           }
           lastSearch.push(...flight.flightDetails);
-          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode,req.header("Page"), req.header("PageSize"));
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
       }
     }
     response.success(res, {
@@ -122,7 +127,7 @@ module.exports.book = async (req, res) => {
         }
         let userWallet;
         userWallet = await wallet.getUserWallet(decodedToken.owner);
-        if ( !testMode && flightInfo.flights.price.total >= userWallet.credit) {
+        if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
           response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
           return;
         }
