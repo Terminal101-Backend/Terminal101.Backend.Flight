@@ -375,7 +375,7 @@ module.exports.searchFlights = async (params, testMode) => {
     };
   }
   if (!!worldticketSearchResult.error || !Array.isArray(worldticketSearchResult)) {
-    return worldticketSearchResult;
+    throw worldticketSearchResult;
   }
 
   const stops = Object.keys(
