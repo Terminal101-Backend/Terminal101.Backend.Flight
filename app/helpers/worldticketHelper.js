@@ -374,7 +374,7 @@ module.exports.searchFlights = async (params, testMode) => {
       flightDetails: []
     };
   }
-  if (!!worldticketSearchResult.error || !Array.isArray(worldticketBookResult)) {
+  if (!!worldticketSearchResult.error || !Array.isArray(worldticketSearchResult)) {
     return worldticketSearchResult;
   }
 
