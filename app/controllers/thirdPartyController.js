@@ -63,7 +63,12 @@ module.exports.lowFareSearch = async (req, res) => {
 // NOTE: Book flight by provider
 module.exports.book = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -223,7 +228,12 @@ module.exports.book = async (req, res) => {
 // NOTE: Get booked flight
 module.exports.readBook = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -295,7 +305,12 @@ module.exports.readBook = async (req, res) => {
 // NOTE: Get available Routes by provider
 module.exports.availableRoutes = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -326,7 +341,12 @@ module.exports.availableRoutes = async (req, res) => {
 // NOTE: Get calendar Availability by provider
 module.exports.calendarAvailability = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -363,7 +383,12 @@ module.exports.calendarAvailability = async (req, res) => {
 // NOTE: Get flight Availability by provider
 module.exports.airAvailable = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -398,7 +423,12 @@ module.exports.airAvailable = async (req, res) => {
 // NOTE: Get price flight by provider
 module.exports.airPrice = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -449,7 +479,12 @@ module.exports.airPrice = async (req, res) => {
 // NOTE: Get ticket flight by provider
 module.exports.ticketDemand = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
