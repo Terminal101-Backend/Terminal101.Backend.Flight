@@ -8,10 +8,15 @@ const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper }
 // NOTE: Search flights by provider owner
 module.exports.lowFareSearch = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
-    if (decodedToken.type !== 'THIRD_PARTY') {
+    if (decodedToken?.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
     }
@@ -41,7 +46,7 @@ module.exports.lowFareSearch = async (req, res) => {
             return;
           }
           lastSearch.push(...flight.flightDetails);
-          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode,req.header("Page"), req.header("PageSize"));
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
       }
     }
     response.success(res, {
@@ -50,15 +55,20 @@ module.exports.lowFareSearch = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Book flight by provider
 module.exports.book = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -122,7 +132,7 @@ module.exports.book = async (req, res) => {
         }
         let userWallet;
         userWallet = await wallet.getUserWallet(decodedToken.owner);
-        if ( !testMode && flightInfo.flights.price.total >= userWallet.credit) {
+        if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
           response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
           return;
         }
@@ -210,15 +220,20 @@ module.exports.book = async (req, res) => {
       }
     });
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Get booked flight
 module.exports.readBook = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -282,15 +297,20 @@ module.exports.readBook = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Get available Routes by provider
 module.exports.availableRoutes = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -313,15 +333,20 @@ module.exports.availableRoutes = async (req, res) => {
       availableRoutes
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get calendar Availability by provider
 module.exports.calendarAvailability = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -350,15 +375,20 @@ module.exports.calendarAvailability = async (req, res) => {
       availableDates
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get flight Availability by provider
 module.exports.airAvailable = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -385,15 +415,20 @@ module.exports.airAvailable = async (req, res) => {
       availableFlights
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get price flight by provider
 module.exports.airPrice = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -436,15 +471,20 @@ module.exports.airPrice = async (req, res) => {
       }
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get ticket flight by provider
 module.exports.ticketDemand = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -472,8 +512,8 @@ module.exports.ticketDemand = async (req, res) => {
       ticketInfo
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
