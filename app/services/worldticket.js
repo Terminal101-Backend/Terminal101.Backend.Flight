@@ -248,6 +248,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 
     const responseJson = xmlParser.parse(response);
     if (!!responseJson.OTA_ErrorRS) {
+        console.error(JSON.stringify(responseJson));
         return {
             success: false,
             data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
