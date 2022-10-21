@@ -219,11 +219,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
      DirectFlightsOnly="false"
      AvailableFlightsOnly="true">
         <POS>
-<<<<<<< HEAD
             <Source ISOCurrency="USD">
-=======
-            <Source ISOCurrency="EUR">
->>>>>>> feature/service-avtra
                 <RequestorID Type="5" ID="08336230"/>
             </Source>
         </POS>
