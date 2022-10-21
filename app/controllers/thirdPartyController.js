@@ -140,21 +140,6 @@ module.exports.book = async (req, res) => {
       passengers,
     }, testMode);
 
-    // switch (providerName) {
-    //   case "WORLDTICKET":
-    //     worldticketBookResult = await worldticketHelper.bookFlight({
-    //       flightDetails,
-    //       userCode: decodedToken.owner,
-    //       contact: req.body.contact,
-    //       passengers,
-    //     }, testMode);
-    //     if (!!worldticketBookResult.error) {
-    //       response.error(res, worldticketBookResult.error, 400);
-    //       return;
-    //     }
-    //     break;
-    //   }
-
     let userWallet;
     userWallet = await wallet.getUserWallet(decodedToken.owner);
     if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
