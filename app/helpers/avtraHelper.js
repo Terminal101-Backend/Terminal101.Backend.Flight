@@ -58,11 +58,12 @@ const makeSegmentStopsArray = airports => {
   });
 };
 
-const makeFlightSegmentsArray = (aircrafts, airlines, airports) => segment => ({
+const makeFlightSegmentsArray = (aircrafts, airlines, airports, baggage) => segment => ({
   duration: dateTimeHelper.convertAvtraTimeToMinutes(segment.Duration),
   flightNumber: segment.FlightNumber,
   aircraft: aircrafts[segment.Equipment.AirEquipType],
   airline: airlines[segment.OperatingAirline.Code],
+  baggage,
   stops: [],
   departure: {
     airport: !!airports[segment.DepartureAirport.LocationCode] ? airports[segment.DepartureAirport.LocationCode].airport : {
@@ -167,7 +168,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
       price: makePriceObject(flight.AirItineraryPricingInfo.ItinTotalFare, flight.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown),
       itineraries: flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption.map(itinerary => ({
         duration: dateTimeHelper.convertAvtraTimeToMinutes(itinerary.FlightSegment.Duration),
-        segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports)),
+        segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports, getBaggageInfo(flight.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown))),
       })),
     };
 
@@ -175,10 +176,10 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   };
 };
 
-const makeBaggageInfo = (flight, segment) => {
-  flight.itineraries[0].segments.map(s => {
-    s['baggage'] = segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] ? segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] : segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('\n\n')[0]
-  })
+const getBaggageInfo = priceInfo => {
+  console.log(priceInfo);
+  const baggage = priceInfo.reduce((res, cur) => res + cur.PassengerFare.FareBaggageAllowance.UnitOfMeasureQuantity * cur.PassengerTypeQuantity.Quantity, 0);
+  return `${baggage} ${priceInfo[0].PassengerFare.FareBaggageAllowance.UnitOfMeasure}`;
 }
 
 module.exports.searchFlights = async params => {

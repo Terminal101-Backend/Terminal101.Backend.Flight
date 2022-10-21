@@ -34,6 +34,10 @@ const segment = new Schema({
     type: [Stop],
     default: [],
   },
+  baggage: {
+    type: String,
+    default: ""
+  }
 }, {
   timestamps: true
 });
