@@ -3,7 +3,13 @@ const request = require("../helpers/requestHelper");
 const { providerRepository, flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
 const { amadeus, parto, avtra, accountManagement, wallet } = require("../services");
-const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper } = require("../helpers");
+const { tokenHelper, avtraHelper, worldticketHelper, partoHelper, amadeusHelper, flightHelper, arrayHelper } = require("../helpers");
+const providerHelpers = {
+  AVTRA: avtraHelper,
+  WORLDTICKET: worldticketHelper,
+  AMADEUS: amadeusHelper,
+  PARTO: partoHelper,
+}
 
 // NOTE: Search flights by provider owner
 module.exports.lowFareSearch = async (req, res) => {
@@ -24,6 +30,7 @@ module.exports.lowFareSearch = async (req, res) => {
     let timestamp = new Date().toISOString();
 
     const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    const completedProviders = availableProviders.reduce((res, cur) => ({ ...res, [cur]: false }), {});
     const lastSearch = [];
     const providerCount = availableProviders.length;
 
@@ -37,39 +44,33 @@ module.exports.lowFareSearch = async (req, res) => {
     } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
     const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
     const searchCode = flightInfo.code;
-    for (const provider of availableProviders) {
-      let flight;
-      switch (provider) {
-        case "WORLDTICKET":
-          flight = await worldticketHelper.searchFlights(req.query, testMode);
-          if (!!flight.error) {
-            response.error(res, flight.error, 400);
-            return;
-          }
-          break;
+    availableProviders.forEach(provider => {
+      providerHelpers[provider].searchFlights(req.query, testMode).then(flight => {
+        completedProviders[provider] = true;
 
-        case "AVTRA":
-          flight = await avtraHelper.searchFlights(req.query, testMode);
-          if (!!flight.error) {
-            response.error(res, flight.error, 400);
-            return;
-          }
-          break;
+        if (!!flight?.flightDetails && Array.isArray(flight.flightDetails)) {
+          lastSearch.push(...flight.flightDetails);
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
+        }
 
-        default:
-          console.error("Provider is not available");
-      }
+        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+          response.success(res, {
+            timestamp,
+            searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+          });
+        }
+      }).catch(e => {
+        completedProviders[provider] = true;
+        console.trace(e);
 
-      if (!!flight?.flightDetails && Array.isArray(flight.flightDetails)) {
-        lastSearch.push(...flight.flightDetails);
-        appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
-      }
-    }
-    response.success(res, {
-      timestamp,
-      searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+          response.success(res, {
+            timestamp,
+            searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+          });
+        }
+      });
     });
-
   } catch (e) {
     console.trace(`Code: 500, Message: `, e);
     response.error(res, 'provider_error', 500);
