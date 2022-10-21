@@ -38,15 +38,31 @@ module.exports.lowFareSearch = async (req, res) => {
     const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
     const searchCode = flightInfo.code;
     for (const provider of availableProviders) {
+      let flight;
       switch (provider) {
         case "WORLDTICKET":
-          let flight = await worldticketHelper.searchFlights(req.query, testMode);
+          flight = await worldticketHelper.searchFlights(req.query, testMode);
           if (!!flight.error) {
             response.error(res, flight.error, 400);
             return;
           }
-          lastSearch.push(...flight.flightDetails);
-          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
+          break;
+
+        case "AVTRA":
+          flight = await avtraHelper.searchFlights(req.query, testMode);
+          if (!!flight.error) {
+            response.error(res, flight.error, 400);
+            return;
+          }
+          break;
+
+        default:
+          console.error("Provider is not available");
+      }
+
+      if (!!flight?.flightDetails && Array.isArray(flight.flightDetails)) {
+        lastSearch.push(...flight.flightDetails);
+        appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
       }
     }
     response.success(res, {
