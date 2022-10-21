@@ -55,8 +55,8 @@ module.exports.lowFareSearch = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
@@ -220,7 +220,7 @@ module.exports.book = async (req, res) => {
       }
     });
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
+    console.trace(`Code: 500, Message: `, e);
     response.error(res, 'provider_error', 500);
   }
 };
@@ -297,8 +297,8 @@ module.exports.readBook = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
@@ -333,8 +333,8 @@ module.exports.availableRoutes = async (req, res) => {
       availableRoutes
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
@@ -375,8 +375,8 @@ module.exports.calendarAvailability = async (req, res) => {
       availableDates
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
@@ -415,8 +415,8 @@ module.exports.airAvailable = async (req, res) => {
       availableFlights
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
@@ -471,8 +471,8 @@ module.exports.airPrice = async (req, res) => {
       }
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
@@ -512,8 +512,8 @@ module.exports.ticketDemand = async (req, res) => {
       ticketInfo
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
