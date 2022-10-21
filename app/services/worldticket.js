@@ -264,7 +264,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
         };
     }
     else {
-        console.log(responseJson);
+        console.error(JSON.stringify(responseJson));
         return {
             success: !responseJson?.OTA_AirLowFareSearchRS?.Success,
             data: { error: responseJson?.OTA_AirLowFareSearchRS?.Errors?.Error.$t },
