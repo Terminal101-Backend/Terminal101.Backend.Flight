@@ -955,6 +955,125 @@ paths:
             $ref: "#/definitions/FlightConditionInfo"
             description: Flight condition info
 
+  /commission:
+    # NOTE: Get all commissions
+    get:
+      tags:
+        - Commission
+      description: Get all commissions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CommissionInfo"
+              description: Flight commission info
+
+    # NOTE: Add new commissions
+    post:
+      tags:
+        - Commission
+      description: Add new commissions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: commission
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Commission"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+  /commission/{code}:
+    # NOTE: Get one commission
+    get:
+      tags:
+        - Commission
+      description: Get one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+    # NOTE: Delete one commission
+    delete:
+      tags:
+        - Commission
+      description: Delete one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+    # NOTE: Edit one commission
+    patch:
+      tags:
+        - Commission
+      description: Edit one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+        - name: flightConditionInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditCommission"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
 
   /api/test/low-fare-search:
     # NOTE: Search low fare flights
