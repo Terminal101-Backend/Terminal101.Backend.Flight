@@ -137,7 +137,6 @@ const getAccessToken = async (pathPostFix) => {
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,
     segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes,
     excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
-    console.log('111', testMode)
     let travelClassCode;
     switch (travelClass) {
         case "FIRST":
@@ -249,9 +248,10 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 
     const responseJson = xmlParser.parse(response);
     if (!!responseJson.OTA_ErrorRS) {
+        console.error(JSON.stringify(responseJson));
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
     if (!!responseJson?.OTA_AirLowFareSearchRS?.Success) {
@@ -261,6 +261,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
         };
     }
     else {
+        console.error(JSON.stringify(responseJson));
         return {
             success: !responseJson?.OTA_AirLowFareSearchRS?.Success,
             data: { error: responseJson?.OTA_AirLowFareSearchRS?.Errors?.Error.$t },
@@ -337,7 +338,7 @@ const airAvailable = async (originLocationCode, destinationLocationCode, departu
     if (!!responseJson.OTA_ErrorRS) {
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
 
@@ -441,7 +442,7 @@ const airPrice = async (flight, adults = 1, children = 0, infants = 0, testMode 
     if (!!responseJson.OTA_ErrorRS) {
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
 
@@ -536,7 +537,7 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
     if (!!responseJson.OTA_ErrorRS) {
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
 
@@ -575,7 +576,7 @@ const ticketDemand = async (providerPnr, testMode = false) => {
     if (!!responseJson.OTA_ErrorRS) {
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
 
@@ -633,7 +634,7 @@ const airRead = async (bookedFlight, passengers) => {
     if (!!responseJson.OTA_ErrorRS) {
         return {
             success: false,
-            data: { error: responseJson.OTA_ErrorRS.ErrorMessage }
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
         }
     }
 

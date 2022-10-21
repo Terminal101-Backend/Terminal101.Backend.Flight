@@ -3,15 +3,26 @@ const request = require("../helpers/requestHelper");
 const { providerRepository, flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
 const { amadeus, parto, avtra, accountManagement, wallet } = require("../services");
-const { tokenHelper, avtraHelper, worldticketHelper, flightHelper, arrayHelper } = require("../helpers");
+const { tokenHelper, avtraHelper, worldticketHelper, partoHelper, amadeusHelper, flightHelper, arrayHelper } = require("../helpers");
+const providerHelpers = {
+  AVTRA: avtraHelper,
+  WORLDTICKET: worldticketHelper,
+  AMADEUS: amadeusHelper,
+  PARTO: partoHelper,
+}
 
 // NOTE: Search flights by provider owner
 module.exports.lowFareSearch = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
-    if (decodedToken.type !== 'THIRD_PARTY') {
+    if (decodedToken?.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
       return;
     }
@@ -19,6 +30,7 @@ module.exports.lowFareSearch = async (req, res) => {
     let timestamp = new Date().toISOString();
 
     const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    const completedProviders = availableProviders.reduce((res, cur) => ({ ...res, [cur]: false }), {});
     const lastSearch = [];
     const providerCount = availableProviders.length;
 
@@ -32,33 +44,48 @@ module.exports.lowFareSearch = async (req, res) => {
     } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
     const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
     const searchCode = flightInfo.code;
-    for (const provider of availableProviders) {
-      switch (provider) {
-        case "WORLDTICKET":
-          let flight = await worldticketHelper.searchFlights(req.query, testMode);
-          if (!!flight.error) {
-            response.error(res, flight.error, 400);
-            return;
-          }
-          lastSearch.push(...flight.flightDetails);
-          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode,req.header("Page"), req.header("PageSize"));
-      }
-    }
-    response.success(res, {
-      timestamp,
-      searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
-    });
+    availableProviders.forEach(provider => {
+      providerHelpers[provider].searchFlights(req.query, testMode).then(flight => {
+        completedProviders[provider] = true;
 
+        if (!!flight?.flightDetails && Array.isArray(flight.flightDetails)) {
+          lastSearch.push(...flight.flightDetails);
+          appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, decodedToken.type, testMode, req.header("Page"), req.header("PageSize"));
+        }
+
+        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+          response.success(res, {
+            timestamp,
+            searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+          });
+        }
+      }).catch(e => {
+        completedProviders[provider] = true;
+        console.trace(e);
+
+        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+          response.success(res, {
+            timestamp,
+            searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+          });
+        }
+      });
+    });
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Book flight by provider
 module.exports.book = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -106,62 +133,54 @@ module.exports.book = async (req, res) => {
       documentIssuedAt: passenger.document.issuedAt
     }));
 
-    let worldticketBookResult;
-    let bookedFlight;
-    switch (providerName) {
-      case "WORLDTICKET":
-        worldticketBookResult = await worldticketHelper.bookFlight({
-          flightDetails,
-          userCode: decodedToken.owner,
-          contact: req.body.contact,
-          passengers,
-        }, testMode);
-        if (!!worldticketBookResult.error) {
-          response.error(res, worldticketBookResult.error, 400);
-          return;
-        }
-        let userWallet;
-        userWallet = await wallet.getUserWallet(decodedToken.owner);
-        if ( !testMode && flightInfo.flights.price.total >= userWallet.credit) {
-          response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
-          return;
-        }
+    const providerBookResult = await providerHelpers[providerName].bookFlight({
+      flightDetails,
+      userCode: decodedToken.owner,
+      contact: req.body.contact,
+      passengers,
+    }, testMode);
 
-        bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-        const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+    let userWallet;
+    userWallet = await wallet.getUserWallet(decodedToken.owner);
+    if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
+      response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
+      return;
+    }
 
+    let bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+    const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+
+    bookedFlight.statuses.push({
+      status: EBookedFlightStatus.get("PAYING"),
+      description: 'Payment is in progress',
+      changedBy: "SERVICE",
+    });
+
+    if (!testMode) {
+      if (userWallet.credit >= flightInfo.flights.price.total) {
+        await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
         bookedFlight.statuses.push({
-          status: EBookedFlightStatus.get("PAYING"),
-          description: 'Payment is in progress',
+          status: EBookedFlightStatus.get("PAID"),
+          description: 'Payment is done.',
           changedBy: "SERVICE",
         });
 
-        if (!testMode) {
-          if (userWallet.credit >= flightInfo.flights.price.total) {
-            await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
-            bookedFlight.statuses.push({
-              status: EBookedFlightStatus.get("PAID"),
-              description: 'Payment is done.',
-              changedBy: "SERVICE",
-            });
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("INPROGRESS"),
+          description: "Wait for booking by backoffice.",
+          changedBy: bookedFlight.bookedBy,
+        });
 
-            bookedFlight.statuses.push({
-              status: EBookedFlightStatus.get("INPROGRESS"),
-              description: "Wait for booking by backoffice.",
-              changedBy: bookedFlight.bookedBy,
-            });
-
-            await bookedFlight.save();
-          }
-
-        } else {
-          bookedFlight.statuses.push({
-            status: EBookedFlightStatus.get("BOOKED"),
-            description: '--- Test API ---',
-            changedBy: "SERVICE",
-          });
-        }
+        await bookedFlight.save();
+      }
+    } else {
+      bookedFlight.statuses.push({
+        status: EBookedFlightStatus.get("BOOKED"),
+        description: '--- Test API ---',
+        changedBy: "SERVICE",
+      });
     }
+
     bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, bookedFlight.code);
 
     response.success(res, {
@@ -210,15 +229,20 @@ module.exports.book = async (req, res) => {
       }
     });
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Get booked flight
 module.exports.readBook = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -282,15 +306,20 @@ module.exports.readBook = async (req, res) => {
     });
 
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 };
 
 // NOTE: Get available Routes by provider
 module.exports.availableRoutes = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -313,15 +342,20 @@ module.exports.availableRoutes = async (req, res) => {
       availableRoutes
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get calendar Availability by provider
 module.exports.calendarAvailability = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -350,15 +384,20 @@ module.exports.calendarAvailability = async (req, res) => {
       availableDates
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get flight Availability by provider
 module.exports.airAvailable = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -385,15 +424,20 @@ module.exports.airAvailable = async (req, res) => {
       availableFlights
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get price flight by provider
 module.exports.airPrice = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -436,15 +480,20 @@ module.exports.airPrice = async (req, res) => {
       }
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
 // NOTE: Get ticket flight by provider
 module.exports.ticketDemand = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
     const testMode = req.params[0] === "/test";
 
     if (decodedToken.type !== 'THIRD_PARTY') {
@@ -472,8 +521,8 @@ module.exports.ticketDemand = async (req, res) => {
       ticketInfo
     })
   } catch (e) {
-    console.trace(`Code: 500, Message: ${e}`);
-    response.error(res, 'Internal Server Error', 500);
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
   }
 }
 
