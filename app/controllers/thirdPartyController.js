@@ -179,7 +179,6 @@ module.exports.book = async (req, res) => {
 
             await bookedFlight.save();
           }
-
         } else {
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get("BOOKED"),

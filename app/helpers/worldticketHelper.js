@@ -283,7 +283,6 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
 
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
   return (flight, index) => {
-
     let code = flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code.length === 2 ? flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code : flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[0] + flight.AirItinerary.OriginDestinationOptions.OriginDestinationOption[0].FlightSegment.OperatingAirline.Code[2];
     result = {
       code: `WDT-${index}`,
