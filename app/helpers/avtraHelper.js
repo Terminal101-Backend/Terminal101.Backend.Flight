@@ -175,6 +175,12 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   };
 };
 
+const createBaggage = (flight, segment) => {
+  flight.itineraries[0].segments.map(s => {
+    s['baggage'] = segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] ? segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('*BAGGAGE ALLOWANCE :')[1] : segment.FlightSegment.TPA_Extensions?.FareRule?.$t.split('\n\n')[0]
+  })
+}
+
 module.exports.searchFlights = async params => {
   let segments = makeSegmentsArray(params.segments);
 
