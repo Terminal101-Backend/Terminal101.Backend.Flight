@@ -133,61 +133,69 @@ module.exports.book = async (req, res) => {
       documentIssuedAt: passenger.document.issuedAt
     }));
 
-    let worldticketBookResult;
-    let bookedFlight;
-    switch (providerName) {
-      case "WORLDTICKET":
-        worldticketBookResult = await worldticketHelper.bookFlight({
-          flightDetails,
-          userCode: decodedToken.owner,
-          contact: req.body.contact,
-          passengers,
-        }, testMode);
-        if (!!worldticketBookResult.error) {
-          response.error(res, worldticketBookResult.error, 400);
-          return;
-        }
-        let userWallet;
-        userWallet = await wallet.getUserWallet(decodedToken.owner);
-        if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
-          response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
-          return;
-        }
+    const providerBookResult = await providerHelpers[providerName].bookFlight({
+      flightDetails,
+      userCode: decodedToken.owner,
+      contact: req.body.contact,
+      passengers,
+    }, testMode);
 
-        bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, worldticketBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-        const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+    // switch (providerName) {
+    //   case "WORLDTICKET":
+    //     worldticketBookResult = await worldticketHelper.bookFlight({
+    //       flightDetails,
+    //       userCode: decodedToken.owner,
+    //       contact: req.body.contact,
+    //       passengers,
+    //     }, testMode);
+    //     if (!!worldticketBookResult.error) {
+    //       response.error(res, worldticketBookResult.error, 400);
+    //       return;
+    //     }
+    //     break;
+    //   }
 
+    let userWallet;
+    userWallet = await wallet.getUserWallet(decodedToken.owner);
+    if (!testMode && flightInfo.flights.price.total >= userWallet.credit) {
+      response.error(res, 'Your credit is not enough for booking, Please recharge and try again.', 406);
+      return;
+    }
+
+    let bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+    const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
+
+    bookedFlight.statuses.push({
+      status: EBookedFlightStatus.get("PAYING"),
+      description: 'Payment is in progress',
+      changedBy: "SERVICE",
+    });
+
+    if (!testMode) {
+      if (userWallet.credit >= flightInfo.flights.price.total) {
+        await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
         bookedFlight.statuses.push({
-          status: EBookedFlightStatus.get("PAYING"),
-          description: 'Payment is in progress',
+          status: EBookedFlightStatus.get("PAID"),
+          description: 'Payment is done.',
           changedBy: "SERVICE",
         });
 
-        if (!testMode) {
-          if (userWallet.credit >= flightInfo.flights.price.total) {
-            await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
-            bookedFlight.statuses.push({
-              status: EBookedFlightStatus.get("PAID"),
-              description: 'Payment is done.',
-              changedBy: "SERVICE",
-            });
+        bookedFlight.statuses.push({
+          status: EBookedFlightStatus.get("INPROGRESS"),
+          description: "Wait for booking by backoffice.",
+          changedBy: bookedFlight.bookedBy,
+        });
 
-            bookedFlight.statuses.push({
-              status: EBookedFlightStatus.get("INPROGRESS"),
-              description: "Wait for booking by backoffice.",
-              changedBy: bookedFlight.bookedBy,
-            });
-
-            await bookedFlight.save();
-          }
-        } else {
-          bookedFlight.statuses.push({
-            status: EBookedFlightStatus.get("BOOKED"),
-            description: '--- Test API ---',
-            changedBy: "SERVICE",
-          });
-        }
+        await bookedFlight.save();
+      }
+    } else {
+      bookedFlight.statuses.push({
+        status: EBookedFlightStatus.get("BOOKED"),
+        description: '--- Test API ---',
+        changedBy: "SERVICE",
+      });
     }
+
     bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, bookedFlight.code);
 
     response.success(res, {

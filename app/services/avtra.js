@@ -74,8 +74,7 @@ axiosApiInstance.interceptors.request.use(
   },
   error => {
     Promise.reject(error)
-  }
-);
+  });
 
 // Response interceptor for API calls
 // axiosApiInstance.interceptors.response.use((response) => {
