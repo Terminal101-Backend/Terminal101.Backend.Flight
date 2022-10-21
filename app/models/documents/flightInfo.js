@@ -47,8 +47,12 @@ const flightInfo = new Schema({
         type: Date,
         default: Date.now,
     },
-    testMode: Boolean,
-    userType: EUserType.mongoField(),
+    testMode: {
+        type: Boolean,
+        default: false,
+    },
+    userType: EUserType.mongoField({ default: "CLIENT" }),
+        
 }, {
     timestamps: true
 });

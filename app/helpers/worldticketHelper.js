@@ -98,7 +98,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => segment => ({
   },
 });
 
-const makePriceObject = (flightPrice, travelerPricings) => ({
+const makePriceObject = (flightPrice, travelerPricings, params) => ({
   total: parseFloat(flightPrice.TotalFare.Amount),
   grandTotal: parseFloat(flightPrice.TotalFare.Amount),
   base: parseFloat(flightPrice.BaseFare.Amount),
@@ -115,170 +115,78 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   })) : [flightPrice.Taxes.Tax].map(tax => ({
     amount: parseFloat(tax.Amount),
     code: tax.TaxCode
-  })) : undefined,
+  })) : [{ amount: 0, code: 'Tax' }],
   travelerPrices: (!!Array.isArray(travelerPricings) ? travelerPricings : [travelerPricings]).map(travelerPrice => {
     let travelerType;
+    let count = 0;
     switch (travelerPrice.PassengerTypeQuantity.Code) {
       case "ADT":
         travelerType = "ADULT";
+        count = params.adults;
         break;
 
       case "CHD":
         travelerType = "CHILD";
+        count = params.children;
         break;
 
       case "INF":
         travelerType = "INFANT";
+        count = params.infants;
         break;
 
       default:
     }
+    if (count !== 0) {
+      return {
+        total: count * parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
+        base: count * parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
+        count,
+        travelerType,
+        fees: travelerPrice.PassengerFare.Fees ?
+          (!!Array.isArray(travelerPrice.PassengerFare.Fees.Fee) ?
+            travelerPrice.PassengerFare.Fees.Fee : [travelerPrice.PassengerFare.Fees.Fee]).map(fee => ({
+              amount: count * fee.Amount,
+              type: "SUPPLIER"
+            }))
+          : undefined,
+        taxes: travelerPrice.PassengerFare.Taxes ?
+          !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
+            const result = res;
+            cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+              const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
 
-    return {
-      total: parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
-      base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
-      count: travelerPrice.PassengerTypeQuantity.Quantity,
-      travelerType,
-      fees: travelerPrice.PassengerFare.Fees ?
-        (!!Array.isArray(travelerPrice.PassengerFare.Fees.Fee) ?
-          travelerPrice.PassengerFare.Fees.Fee : [travelerPrice.PassengerFare.Fees.Fee]).map(fee => ({
-            amount: fee.Amount,
-            type: "SUPPLIER"
-          }))
-        : undefined,
-      taxes: travelerPrice.PassengerFare.Taxes ?
-        !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
-          const result = res;
-          cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-            const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+              if (taxIndex >= 0) {
+                result[taxIndex].amount += count * tax.Amount;
+              } else {
+                result.push({
+                  amount: count * parseFloat(tax.Amount),
+                  code: tax.TaxCode,
+                });
+              }
+            });
 
-            if (taxIndex >= 0) {
-              result[taxIndex].amount += tax.Amount;
-            } else {
-              result.push({
-                amount: parseFloat(tax.Amount),
-                code: tax.TaxCode,
-              });
-            }
-          });
+            return result;
+          }, []) : [travelerPricings].reduce((res, cur) => {
+            const result = res;
+            cur.PassengerFare.Taxes?.Tax.forEach(tax => {
+              const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
 
-          return result;
-        }, []) : [travelerPricings].reduce((res, cur) => {
-          const result = res;
-          cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-            const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
+              if (taxIndex >= 0) {
+                result[taxIndex].amount += count * tax.Amount;
+              } else {
+                result.push({
+                  amount: count * parseFloat(tax.Amount),
+                  code: tax.TaxCode,
+                });
+              }
+            });
 
-            if (taxIndex >= 0) {
-              result[taxIndex].amount += tax.Amount;
-            } else {
-              result.push({
-                amount: parseFloat(tax.Amount),
-                code: tax.TaxCode,
-              });
-            }
-          });
-
-          return result;
-        }, []) : undefined,
-    };
+            return result;
+          }, []) : [{ amount: 0, code: 'Tax' }],
+      };
+    }
   }),
-  // travelerPrices: !!Array.isArray(travelerPricings) ? travelerPricings.map(travelerPrice => {
-  //   let travelerType;
-  //   switch (travelerPrice.PassengerTypeQuantity.Code) {
-  //     case "ADT":
-  //       travelerType = "ADULT";
-  //       break;
-
-  //     case "CHD":
-  //       travelerType = "CHILD";
-  //       break;
-
-  //     case "INF":
-  //       travelerType = "INFANT";
-  //       break;
-
-  //     default:
-  //   }
-
-  //   return {
-  //     total: parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
-  //     base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
-  //     count: travelerPrice.PassengerTypeQuantity.Quantity,
-  //     travelerType,
-  //     fees: flightPrice.Fees ? !!Array.isArray(flightPrice.Fees) ? flightPrice.Fees.map(fee => ({
-  //       amount: fee.Amount,
-  //       type: "SUPPLIER"
-  //     })) : [flightPrice.Fees?.Fee].map(fee => ({
-  //       amount: fee.Amount,
-  //       type: "SUPPLIER"
-  //     })) : undefined,
-  //     taxes: !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
-  //       const result = res;
-  //       cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-  //         const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
-
-  //         if (taxIndex >= 0) {
-  //           result[taxIndex].amount += tax.Amount;
-  //         } else {
-  //           result.push({
-  //             amount: parseFloat(tax.Amount),
-  //             code: tax.TaxCode,
-  //           });
-  //         }
-  //       });
-
-  //       return result;
-  //     }, []) : [travelerPricings].reduce((res, cur) => {
-  //       const result = res;
-  //       cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-  //         const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
-
-  //         if (taxIndex >= 0) {
-  //           result[taxIndex].amount += tax.Amount;
-  //         } else {
-  //           result.push({
-  //             amount: parseFloat(tax.Amount),
-  //             code: tax.TaxCode,
-  //           });
-  //         }
-  //       });
-
-  //       return result;
-  //     }, []),
-  //   };
-  // }) : [travelerPricings.PTC_FareBreakdown].map(travelerPrice => {
-  //   let travelerType;
-  //   switch (travelerPrice.PassengerTypeQuantity.Code) {
-  //     case "ADT":
-  //       travelerType = "ADULT";
-  //       break;
-
-  //     case "CHD":
-  //       travelerType = "CHILD";
-  //       break;
-
-  //     case "INF":
-  //       travelerType = "INFANT";
-  //       break;
-
-  //     default:
-  //   }
-
-  //   return {
-  //     total: parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
-  //     base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
-  //     count: travelerPrice.PassengerTypeQuantity.Quantity,
-  //     travelerType,
-  //     fees: flightPrice.Fees ? Array.isArray(flightPrice.Fees) ? flightPrice.Fees : [flightPrice.Fees?.Fee].map(fee => ({
-  //       amount: fee.Amount,
-  //       type: "SUPPLIER"
-  //     })) : [],
-  //     taxes: travelerPrice.PassengerFare.Taxes?.Tax.map(tax => ({
-  //       amount: parseFloat(tax.Amount),
-  //       code: tax.TaxCode,
-  //     })),
-  //   };
-  // }),
 });
 
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
@@ -407,9 +315,10 @@ module.exports.searchFlights = async (params, testMode) => {
 
   const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
+  let index = 0;
   for (flight of flightDetails) {
     let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
-    flight['price'] = makePriceObject(info.AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
+    flight['price'] = makePriceObject(worldticketSearchResult[index++].AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown, params);
     createBaggage(flight, info.AirItinerary.OriginDestinationOptions.OriginDestinationOption)
     flight.providerData['FareRule'] = info.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.FareRule.$t.replace(/[\r\n]/gm, '')
   };
