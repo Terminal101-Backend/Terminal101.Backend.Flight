@@ -37,14 +37,6 @@ module.exports.getFlightConditions = async (req, res) => {
             isActive: provider.isActive,
           }
         }).filter(provider => !!provider),
-        commissions: flightCondition.commissions.map(commission => ({
-          businesses: commission.busineeses.map(business => ({
-            items: business.items,
-            exclude: business.exclude,
-          })),
-          value: commission.value,
-          isActive: commission.isActive,
-        })),
         isActive: flightCondition.isActive,
         isRestricted: flightCondition.isRestricted,
       }))
@@ -89,14 +81,6 @@ module.exports.getFlightCondition = async (req, res) => {
           isActive: provider.isActive,
         }
       }).filter(provider => !!provider),
-      commissions: flightCondition.commissions.map(commission => ({
-        businesses: commission.busineeses.map(business => ({
-          items: business.items,
-          exclude: business.exclude,
-        })),
-        value: commission.value,
-        isActive: commission.isActive,
-      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
@@ -165,14 +149,6 @@ module.exports.editFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
-      commissions: flightCondition.commissions.map(commission => ({
-        businesses: commission.busineeses.map(business => ({
-          items: business.items,
-          exclude: business.exclude,
-        })),
-        value: commission.value,
-        isActive: commission.isActive,
-      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
@@ -202,14 +178,6 @@ module.exports.deleteFlightCondition = async (req, res) => {
           exclude: flightCondition.airline.exclude,
         },
         providerNames: flightCondition.providerNames,
-        commissions: flightCondition.commissions.map(commission => ({
-          businesses: commission.busineeses.map(business => ({
-            items: business.items,
-            exclude: business.exclude,
-          })),
-          value: commission.value,
-          isActive: commission.isActive,
-        })),
         isActive: flightCondition.isActive,
         isRestricted: flightCondition.isRestricted,
       }) :
@@ -239,14 +207,6 @@ module.exports.addFlightCondition = async (req, res) => {
         exclude: flightCondition.airline.exclude,
       },
       providerNames: flightCondition.providerNames,
-      commissions: flightCondition.commissions.map(commission => ({
-        businesses: commission.busineeses.map(business => ({
-          items: business.items,
-          exclude: business.exclude,
-        })),
-        value: commission.value,
-        isActive: commission.isActive,
-      })),
       isActive: flightCondition.isActive,
       isRestricted: flightCondition.isRestricted,
     });
