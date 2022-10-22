@@ -74,8 +74,7 @@ axiosApiInstance.interceptors.request.use(
   },
   error => {
     Promise.reject(error)
-  }
-);
+  });
 
 // Response interceptor for API calls
 // axiosApiInstance.interceptors.response.use((response) => {
@@ -345,7 +344,11 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
     }
   };
 
-  return result;
+  if (!!result.success) {
+    return result;
+  } else {
+    throw result.error;
+  }
 };
 
 module.exports.getBooked = async (id, testMode = false) => {

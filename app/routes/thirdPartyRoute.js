@@ -11,8 +11,7 @@ router
       console.log("Search flights", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType("THIRD_PARTY"),
-    // checkAccess.checkUserAccess,
+    checkAccess.checkUserType("THIRD_PARTY"),
     thirdPartyValidator.lowFareSearch.check,
     thirdPartyController.lowFareSearch);
 
@@ -24,7 +23,6 @@ router
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
-    // checkAccess.checkUserAccess,
     thirdPartyValidator.book.check,
     thirdPartyController.book);
 
@@ -36,7 +34,6 @@ router
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
-    // checkAccess.checkUserAccess,
     thirdPartyValidator.readBook.check,
     thirdPartyController.readBook);
 
@@ -48,7 +45,6 @@ router
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
-    // checkAccess.checkUserAccess,
     thirdPartyValidator.availableRoutes.check,
     thirdPartyController.availableRoutes);
 
@@ -60,7 +56,6 @@ router
       next();
     },
     checkAccess.checkUserType("THIRD_PARTY"),
-    // checkAccess.checkUserAccess,
     thirdPartyValidator.calendarAvailability.check,
     thirdPartyController.calendarAvailability);
 
@@ -72,7 +67,6 @@ router
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
-  // checkAccess.checkUserAccess,
   thirdPartyValidator.airAvailable.check,
   thirdPartyController.airAvailable);
 
@@ -84,7 +78,6 @@ router
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
-  // checkAccess.checkUserAccess,
   thirdPartyValidator.airPrice.check,
   thirdPartyController.airPrice);
 
@@ -96,7 +89,6 @@ router
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
-  // checkAccess.checkUserAccess,
   thirdPartyValidator.ticketDemand.check,
   thirdPartyController.ticketDemand);
 

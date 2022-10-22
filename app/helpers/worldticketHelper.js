@@ -399,7 +399,7 @@ module.exports.bookFlight = async (params, testMode) => {
 
   const { data: bookedFlight } = await worldticket.book(segments, price, params.contact, travelers, testMode);
   if (!bookedFlight || !!bookedFlight.error) {
-    return bookedFlight;
+    throw bookedFlight;
   }
   if (!bookedFlight.error) {
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
