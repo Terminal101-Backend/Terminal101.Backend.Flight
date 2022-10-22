@@ -30,7 +30,11 @@ const commission = new Schema({
     type: Condition,
     default: {},
   },
-  value: {
+  percent: {
+    type: Number,
+    default: 0,
+  },
+  constant: {
     type: Number,
     default: 0,
   },
