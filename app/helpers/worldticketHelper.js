@@ -450,7 +450,7 @@ module.exports.airPrice = async (flight, params, testMode) => {
   if (!!priceInfo.error) {
     return priceInfo;
   }
-  return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
+  return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown, params);
 }
 
 module.exports.airAvailable = async (params, testMode) => {

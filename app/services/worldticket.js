@@ -104,7 +104,6 @@ axiosApiInstance.interceptors.response.use((response) => {
     if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
         originalRequest._retry = true;
         await getAccessToken(pathPostFix);
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
         return axiosApiInstance(originalRequest);
     }
     return Promise.reject(error);
