@@ -118,8 +118,6 @@ const getAccessToken = async (pathPostFix) => {
         "password": process.env["FLYERBIL_PASSWORD" + pathPostFix]
     }
 
-    delete axios.defaults.headers.common['Authorization'];
-
     const {
         data: response
     } = await axios.post(process.env["FLYERBIL_BASE_AUTH_URL" + pathPostFix] + `/auth/realms/${process.env["FLYERBIL_TENANT" + pathPostFix]}/protocol/openid-connect/token`, qs.stringify(data), {
