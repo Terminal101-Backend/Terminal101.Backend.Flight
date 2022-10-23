@@ -617,7 +617,7 @@ module.exports.getBookedFlights = async (req, res) => {
           price: bookedFlight.flightInfo.flights.price.total,
           currencyCode: bookedFlight.flightInfo.flights.currencyCode,
           userType: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.userType,
-          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,    
+          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,
         };
       })
     });
