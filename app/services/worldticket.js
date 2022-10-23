@@ -101,12 +101,9 @@ axiosApiInstance.interceptors.response.use((response) => {
     const testMode = error.config?.testMode ?? false;
     const pathPostFix = testMode ? "_TEST" : "";
     const originalRequest = error.config;
-    if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
-        originalRequest._retry = true;
-        await getAccessToken(pathPostFix);
-        return axiosApiInstance(originalRequest);
-    }
-    return Promise.reject(error);
+    originalRequest._retry = true;
+    await getAccessToken(pathPostFix);
+    return axiosApiInstance(originalRequest);
 });
 
 const getAccessToken = async (pathPostFix) => {
