@@ -64,15 +64,15 @@ module.exports.lowFareSearch = async (req, res) => {
       }).catch(e => {
         completedProviders[provider] = true;
         console.trace(e);
-        if (!!hasResult) {
-          if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+          if (!!hasResult) {
             response.success(res, {
               timestamp,
               searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
             });
+          } else {
+            response.error(res, e.error, 400)
           }
-        } else {
-          response.error(res, e.error, 400)
         }
       });
     });
