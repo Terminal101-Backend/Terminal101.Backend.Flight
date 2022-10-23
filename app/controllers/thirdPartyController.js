@@ -21,6 +21,7 @@ module.exports.lowFareSearch = async (req, res) => {
       console.error(e);
     }
     const testMode = req.params[0] === "/test";
+    let hasResult = false;
 
     if (decodedToken?.type !== 'THIRD_PARTY') {
       response.error(res, "Access denied", 403);
@@ -46,6 +47,7 @@ module.exports.lowFareSearch = async (req, res) => {
     const searchCode = flightInfo.code;
     availableProviders.forEach(provider => {
       providerHelpers[provider].searchFlights(req.query, testMode).then(flight => {
+        hasResult = true;
         completedProviders[provider] = true;
 
         if (!!flight?.flightDetails && Array.isArray(flight.flightDetails)) {
@@ -62,14 +64,16 @@ module.exports.lowFareSearch = async (req, res) => {
       }).catch(e => {
         completedProviders[provider] = true;
         console.trace(e);
-
-        // if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
-        //   response.success(res, {
-        //     timestamp,
-        //     searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
-        //   });
-        // }
-        response.error(res, e.error, 400)
+        if (!!hasResult) {
+          if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+            response.success(res, {
+              timestamp,
+              searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+            });
+          }
+        } else {
+          response.error(res, e.error, 400)
+        }
       });
     });
   } catch (e) {
