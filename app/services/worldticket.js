@@ -2,7 +2,7 @@ const xmljsonParser = require("fast-xml-parser");
 const qs = require('qs');
 const axios = require("axios");
 const axiosApiInstance = axios.create();
-let accessToken = "";
+// let accessToken = "";
 
 const reformatToArray = path => {
     const root = path.split(".")[0];
@@ -82,6 +82,7 @@ axiosApiInstance.interceptors.request.use(
     async config => {
         const testMode = config?.testMode ?? false;
         const pathPostFix = testMode ? "_TEST" : "";
+        let accessToken = await getAccessToken(pathPostFix);
         config.baseURL = `${process.env["FLYERBIL_BASE_URL" + pathPostFix]}/${process.env["FLYERBIL_TENANT" + pathPostFix]}`;
         config.headers = {
             'Authorization': `Bearer ${accessToken}`,
@@ -101,13 +102,12 @@ axiosApiInstance.interceptors.response.use((response) => {
     const testMode = error.config?.testMode ?? false;
     const pathPostFix = testMode ? "_TEST" : "";
     const originalRequest = error.config;
-    if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
-        originalRequest._retry = true;
-        await getAccessToken(pathPostFix);
-        axios.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
-        return axiosApiInstance(originalRequest);
-    }
-    return Promise.reject(error);
+    // if (!!error.response && [401, 403, 406, 500].includes(error.response.status) && !originalRequest._retry) {
+    // originalRequest._retry = true;
+    // await getAccessToken(pathPostFix);
+    return axiosApiInstance(originalRequest);
+    // }
+    // return Promise.reject(error);
 });
 
 const getAccessToken = async (pathPostFix) => {
@@ -119,8 +119,6 @@ const getAccessToken = async (pathPostFix) => {
         "password": process.env["FLYERBIL_PASSWORD" + pathPostFix]
     }
 
-    delete axios.defaults.headers.common['Authorization'];
-
     const {
         data: response
     } = await axios.post(process.env["FLYERBIL_BASE_AUTH_URL" + pathPostFix] + `/auth/realms/${process.env["FLYERBIL_TENANT" + pathPostFix]}/protocol/openid-connect/token`, qs.stringify(data), {
@@ -129,9 +127,9 @@ const getAccessToken = async (pathPostFix) => {
         },
     });
 
-    accessToken = response.access_token;
+    // accessToken = response.access_token;
 
-    return response;
+    return response.access_token;
 };
 
 const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate,

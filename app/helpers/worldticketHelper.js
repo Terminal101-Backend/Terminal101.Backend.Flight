@@ -140,7 +140,7 @@ const makePriceObject = (flightPrice, travelerPricings, params) => ({
     if (count !== 0) {
       return {
         total: count * parseFloat(travelerPrice.PassengerFare.TotalFare.Amount),
-        base: count * parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
+        base: parseFloat(travelerPrice.PassengerFare.BaseFare.Amount),
         count,
         travelerType,
         fees: travelerPrice.PassengerFare.Fees ?
@@ -151,39 +151,13 @@ const makePriceObject = (flightPrice, travelerPricings, params) => ({
             }))
           : undefined,
         taxes: travelerPrice.PassengerFare.Taxes ?
-          !!Array.isArray(travelerPricings) ? travelerPricings.reduce((res, cur) => {
-            const result = res;
-            cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-              const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
-
-              if (taxIndex >= 0) {
-                result[taxIndex].amount += count * tax.Amount;
-              } else {
-                result.push({
-                  amount: count * parseFloat(tax.Amount),
-                  code: tax.TaxCode,
-                });
-              }
-            });
-
-            return result;
-          }, []) : [travelerPricings].reduce((res, cur) => {
-            const result = res;
-            cur.PassengerFare.Taxes?.Tax.forEach(tax => {
-              const taxIndex = result.findIndex(t => t.code === tax.TaxCode);
-
-              if (taxIndex >= 0) {
-                result[taxIndex].amount += count * tax.Amount;
-              } else {
-                result.push({
-                  amount: count * parseFloat(tax.Amount),
-                  code: tax.TaxCode,
-                });
-              }
-            });
-
-            return result;
-          }, []) : [{ amount: 0, code: 'Tax' }],
+          !!Array.isArray(travelerPrice.PassengerFare.Taxes.Tax) ? travelerPrice.PassengerFare.Taxes.Tax.map(tax => ({
+            amount: count * parseFloat(tax.Amount),
+            code: tax.TaxCode
+          })) : [travelerPrice.PassengerFare.Taxes.Tax].map(tax => ({
+            amount: count * parseFloat(tax.Amount),
+            code: tax.TaxCode
+          })) : [{ amount: 0, code: 'Tax' }]
       };
     }
   }),
@@ -450,7 +424,7 @@ module.exports.airPrice = async (flight, params, testMode) => {
   if (!!priceInfo.error) {
     return priceInfo;
   }
-  return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown);
+  return makePriceObject(priceInfo.AirItineraryPricingInfo.ItinTotalFare, priceInfo.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown, params);
 }
 
 module.exports.airAvailable = async (params, testMode) => {
