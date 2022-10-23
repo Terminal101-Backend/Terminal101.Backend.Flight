@@ -63,12 +63,13 @@ module.exports.lowFareSearch = async (req, res) => {
         completedProviders[provider] = true;
         console.trace(e);
 
-        if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
-          response.success(res, {
-            timestamp,
-            searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
-          });
-        }
+        // if (Object.entries(completedProviders).every(([p, c]) => !!c)) {
+        //   response.success(res, {
+        //     timestamp,
+        //     searchResult: getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"))
+        //   });
+        // }
+        response.error(res, e.error, 400)
       });
     });
   } catch (e) {
