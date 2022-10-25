@@ -189,8 +189,9 @@ class CommissionRepository extends BaseRepository {
         $project: {
           code: 1,
           providerNames: 1,
-          isRestricted: 1,
-          commissions: 1,
+          business: 1,
+          member: 1,
+          value: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -330,7 +331,8 @@ class CommissionRepository extends BaseRepository {
           code: 1,
           commissions: 1,
           providerNames: 1,
-          isRestricted: 1,
+          business: 1,
+          member: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -409,11 +411,10 @@ class CommissionRepository extends BaseRepository {
    * @param {TCondition} destination
    * @param {TCondition} airline
    * @param {String} providerNames
-   * @param Boolean} isRestricted
    * @returns {Promise<Commission>}
    */
-  async createCommission(origin, destination, airline, providerNames, commissions, isRestricted = false) {
-    const commission = new Commission({ origin, destination, airline, providerNames, isRestricted });
+  async createCommission(origin, destination, airline, providerNames, business, member, value) {
+    const commission = new Commission({ origin, destination, airline, providerNames, business, member, value });
 
     const lastCommission = await Commission.find().sort({ code: -1 }).limit(1);
     commission.code = !!lastCommission[0] ? lastCommission[0].code + 1 : 0;

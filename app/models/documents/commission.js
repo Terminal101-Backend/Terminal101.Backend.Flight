@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const Condition = require("../subdocuments/condition");
+const CommissionValue = require("../subdocuments/commissionValue");
 
 const commission = new Schema({
   code: {
@@ -26,17 +27,17 @@ const commission = new Schema({
     type: [String],
     default: [],
   },
+  member: {
+    type: Condition,
+    default: {},
+  },
   business: {
     type: Condition,
     default: {},
   },
-  percent: {
-    type: Number,
-    default: 0,
-  },
-  constant: {
-    type: Number,
-    default: 0,
+  value: {
+    type: CommissionValue,
+    default: {},
   },
   isActive: {
     type: Boolean,

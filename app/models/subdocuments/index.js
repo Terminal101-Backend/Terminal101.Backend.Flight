@@ -18,3 +18,4 @@ module.exports.Person = require("./person");
 module.exports.Contact = require("./contact");
 module.exports.Condition = require("./condition");
 module.exports.Status = require("./status");
+module.exports.CommissionValue = require("./commissionValue");

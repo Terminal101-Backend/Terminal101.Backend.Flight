@@ -88,7 +88,6 @@ paths:
             items:
               $ref: "#/definitions/City"
 
-
   # NOTE: Airline
   /airline:
     # NOTE: Get all airlines
@@ -103,7 +102,6 @@ paths:
             type: array
             items:
               $ref: "#/definitions/Airline"
-
 
   # NOTE: Country
   /country:
@@ -131,7 +129,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ ORIGIN, DESTINATION ]
+          enums: [ORIGIN, DESTINATION]
           required: true
           value: ORIGIN
         - name: keyword
@@ -157,7 +155,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ ORIGIN, DESTINATION ]
+          enums: [ORIGIN, DESTINATION]
           required: true
           value: ORIGIN
       responses:
@@ -179,7 +177,7 @@ paths:
         - name: waypointType
           in: path
           type: string
-          enums: [ ORIGIN, DESTINATION ]
+          enums: [ORIGIN, DESTINATION]
           required: true
           value: ORIGIN
         - name: keyword
@@ -247,7 +245,7 @@ paths:
         - name: travelClass
           in: query
           type: string
-          enum: [ ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST ]
+          enum: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
           required: false
           description: Default is ECONOMY class.
         - name: segments
@@ -798,7 +796,7 @@ paths:
         - name: name
           in: path
           type: string
-          enum: [ AMADEUS, PARTO ]
+          enum: [AMADEUS, PARTO]
           value: AMADEUS
           required: true
         - name: providerInfo
@@ -825,7 +823,7 @@ paths:
         - name: name
           in: path
           type: string
-          enum: [ AMADEUS, PARTO ]
+          enum: [AMADEUS, PARTO]
           value: AMADEUS
           required: true
       responses:
@@ -834,7 +832,6 @@ paths:
           schema:
             $ref: "#/definitions/ProviderInfo"
             description: Provider's info
-
 
   /condition:
     # NOTE: Get all flight conditions
@@ -1074,7 +1071,6 @@ paths:
             $ref: "#/definitions/CommissionInfo"
             description: Flight commission info
 
-
   /api/test/low-fare-search:
     # NOTE: Search low fare flights
     get:
@@ -1092,11 +1088,6 @@ paths:
           type: string
           value: 124dgwug4dd2gufg2ufg
           required: true
-        #        - name: providerTitle
-        #          in: path
-        #          type: string
-        #          value: Avtra
-        #          required: true
         - name: originLocationCode
           in: query
           type: string
@@ -1138,7 +1129,7 @@ paths:
         - name: travelClass
           in: query
           type: string
-          enums: [ ECONOMY,PREMIUM_ECONOMY,BUSINESS,FIRST ]
+          enums: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
           value: ECONOMY
           required: false
           default: ECONOMY
@@ -1216,7 +1207,6 @@ paths:
           schema:
             $ref: "#/definitions/ThirdPartyResult"
             description: Low fare search result
-
 
 definitions:
   Flight:
@@ -1315,7 +1305,7 @@ definitions:
       description:
         type: string
         example: Munchen airport
-  
+
   WaypointAmadeus:
     required:
       - subType
@@ -1326,7 +1316,7 @@ definitions:
     properties:
       subType:
         type: string
-        enum: [ CITY, AIRPORT ]
+        enum: [CITY, AIRPORT]
         example: AIRPORT
       name:
         type: string
@@ -1412,7 +1402,7 @@ definitions:
         example: 231f234rfh34yhf32y
       status:
         type: string
-        enum: [ PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED ]
+        enum: [PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED]
         example: PAYING
       time:
         type: string
@@ -1427,7 +1417,7 @@ definitions:
         $ref: "#/definitions/Waypoint"
       travelClass:
         type: string
-        enum: [ ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST ]
+        enum: [ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST]
         example: ECONOMY
       price:
         type: number
@@ -1437,8 +1427,7 @@ definitions:
         example: true
       userType:
         enum: [SERVICE, SUPER_ADMIN, ADMIN, BUSINESS, CLIENT, THIRD_PARTY]
-        example: ['CLIENT']
-
+        example: ["CLIENT"]
 
   BookFlightInfo:
     required:
@@ -1483,7 +1472,18 @@ definitions:
           $ref: "#/definitions/BookFlightPassenger"
       status:
         type: string
-        enum: [ PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL ]
+        enum:
+          [
+            PAYING,
+            INPROGRESS,
+            BOOKED,
+            CANCEL,
+            REJECT,
+            REFUND,
+            REFUND_ACCEPTED,
+            REFUND_REJECTED,
+            REFUND_CANCEL,
+          ]
 
   ContactInfo:
     required:
@@ -1504,7 +1504,7 @@ definitions:
         example: asdfhkadfhdksaa
       type:
         type: string
-        enum: [ PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT ]
+        enum: [PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT]
         example: DEPOSIT
       value:
         type: number
@@ -1535,7 +1535,7 @@ definitions:
         example: credit-card
       payWay:
         type: string
-        enum: [ PAY, WALLET ]
+        enum: [PAY, WALLET]
         example: WALLET
 
   BookFlightPassenger:
@@ -1557,7 +1557,7 @@ definitions:
     properties:
       name:
         type: string
-        enum: [ AMADEUS, PARTO ]
+        enum: [AMADEUS, PARTO]
         example: AMADEUS
       title:
         type: string
@@ -1653,6 +1653,86 @@ definitions:
         type: boolean
         example: false
 
+  CommissionValue:
+    properties:
+      percent:
+        type: number
+        value: 0
+      constant:
+        type: number
+        value: 0
+
+  Commission:
+    required:
+      - origin
+      - destination
+      - airline
+      - providerNames
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+
+  CommissionInfo:
+    properties:
+      code:
+        type: number
+        example: 1
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+
+  EditCommission:
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+
   GeoCode:
     properties:
       latitude:
@@ -1661,7 +1741,7 @@ definitions:
       longitude:
         type: number
         example: 8.55603
-  
+
   Address:
     properties:
       cityName:
@@ -1686,7 +1766,7 @@ definitions:
         type: string
       refundTo:
         type: string
-        enum: [ WALLET, CREDIT_CARD, CRYPTO_CURRENCY ]
+        enum: [WALLET, CREDIT_CARD, CRYPTO_CURRENCY]
         example: WALLET
       refundInfo:
         type: string
@@ -1695,7 +1775,18 @@ definitions:
   BookFlightStatus:
     properties:
       status:
-        enum: [ PAYING,INPROGRESS,BOOKED,CANCEL,REJECT,REFUND,REFUND_ACCEPTED,REFUND_REJECTED,REFUND_CANCEL ]
+        enum:
+          [
+            PAYING,
+            INPROGRESS,
+            BOOKED,
+            CANCEL,
+            REJECT,
+            REFUND,
+            REFUND_ACCEPTED,
+            REFUND_REJECTED,
+            REFUND_CANCEL,
+          ]
         type: string
         example: INPROGRESS
       description:
@@ -1744,10 +1835,10 @@ definitions:
               type: date
             type:
               type: string
-              enums: [ ADT,CHD,INF ]
+              enums: [ADT, CHD, INF]
             genderCode:
               type: string
-              enums: [ M,F ]
+              enums: [M, F]
             document:
               type: object
               properties:

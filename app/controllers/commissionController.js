@@ -3,7 +3,7 @@ const { commissionRepository, providerRepository } = require("../repositories");
 const { EProvider } = require("../constants");
 
 // NOTE: Commission tickets
-// NOTE: Get all commissions
+// NOTE: Get all business
 module.exports.getCommissions = async (req, res) => {
   try {
     const providers = await providerRepository.findMany();
@@ -25,6 +25,20 @@ module.exports.getCommissions = async (req, res) => {
           items: commission.airline.items,
           exclude: commission.airline.exclude,
         },
+        // TODO: If user is admin. For businesses users it must be disappear
+        business: {
+          items: commission.business.items,
+          exclude: commission.business.exclude,
+        },
+        member: {
+          items: commission.member.items,
+          exclude: commission.member.exclude,
+        },
+        value: {
+          percent: commission.value.percent,
+          constant: commission.value.constant,
+        },
+        // TODO: If user is admin. For businesses users it must be disappear
         providerNames: commission.providerNames.map(providerName => {
           const provider = providers.find(p => EProvider.check(p.name, providerName));
           if (!provider) {
@@ -37,7 +51,6 @@ module.exports.getCommissions = async (req, res) => {
           }
         }).filter(provider => !!provider),
         isActive: commission.isActive,
-        isRestricted: commission.isRestricted,
       }))
     });
   } catch (e) {
@@ -69,6 +82,20 @@ module.exports.getCommission = async (req, res) => {
         items: commission.airline.items,
         exclude: commission.airline.exclude,
       },
+      // TODO: If user is admin. For businesses users it must be disappear
+      business: {
+        items: commission.business.items,
+        exclude: commission.business.exclude,
+      },
+      member: {
+        items: commission.member.items,
+        exclude: commission.member.exclude,
+      },
+      value: {
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      },
+      // TODO: If user is admin. For businesses users it must be disappear
       providerNames: commission.providerNames.map(providerName => {
         const provider = providers.find(p => EProvider.check(p.name, providerName));
         if (!provider) {
@@ -81,7 +108,6 @@ module.exports.getCommission = async (req, res) => {
         }
       }).filter(provider => !!provider),
       isActive: commission.isActive,
-      isRestricted: commission.isRestricted,
     });
   } catch (e) {
     response.exception(res, e);
@@ -94,6 +120,10 @@ module.exports.editCommission = async (req, res) => {
     let modified = false;
 
     const commission = await commissionRepository.findOne({ code: req.params.code });
+    if (!commission) {
+      response.error(res, "commission_not_exists", 404);
+    }
+
     if (!!req.body.origin && ((commission.origin.exclude !== req.body.origin.exclude) || (JSON.stringify(commission.origin.items) !== JSON.stringify(req.body.origin.items)))) {
       commission.origin = req.body.origin;
       modified = true;
@@ -114,13 +144,23 @@ module.exports.editCommission = async (req, res) => {
       modified = true;
     }
 
-    if (!!req.body.commissions && (JSON.stringify(commission.commissions) !== JSON.stringify(req.body.commissions))) {
-      commission.commissions = req.body.commissions;
+    if (!!req.body.business && (JSON.stringify(commission.business) !== JSON.stringify(req.body.business))) {
+      commission.business = req.body.business;
       modified = true;
     }
 
-    if ((req.body.isRestricted !== undefined) && (commission.isRestricted !== req.body.isRestricted)) {
-      commission.isRestricted = req.body.isRestricted;
+    if (!!req.body.member && (JSON.stringify(commission.member) !== JSON.stringify(req.body.member))) {
+      commission.member = req.body.member;
+      modified = true;
+    }
+
+    if (!!req.body.value && (JSON.stringify(commission.value) !== JSON.stringify(req.body.value))) {
+      if (!!req.body.value.percent) {
+        commission.value.percent = req.body.value.percent;
+      }
+      if (!!req.body.value.constant) {
+        commission.value.constant = req.body.value.constant;
+      }
       modified = true;
     }
 
@@ -147,9 +187,22 @@ module.exports.editCommission = async (req, res) => {
         items: commission.airline.items,
         exclude: commission.airline.exclude,
       },
+      // TODO: If user is admin. For businesses users it must be disappear
+      business: {
+        items: commission.business.items,
+        exclude: commission.business.exclude,
+      },
+      member: {
+        items: commission.member.items,
+        exclude: commission.member.exclude,
+      },
+      value: {
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      },
+      // TODO: If user is admin. For businesses users it must be disappear
       providerNames: commission.providerNames,
       isActive: commission.isActive,
-      isRestricted: commission.isRestricted,
     });
   } catch (e) {
     response.exception(res, e);
@@ -160,36 +213,9 @@ module.exports.editCommission = async (req, res) => {
 module.exports.deleteCommission = async (req, res) => {
   try {
     const commission = await commissionRepository.deleteOne({ code: req.params.code });
-
-    !!commission ?
-      response.success(res, {
-        code: commission.code,
-        origin: {
-          items: commission.origin.items,
-          exclude: commission.origin.exclude,
-        },
-        destination: {
-          items: commission.destination.items,
-          exclude: commission.destination.exclude,
-        },
-        airline: {
-          items: commission.airline.items,
-          exclude: commission.airline.exclude,
-        },
-        providerNames: commission.providerNames,
-        isActive: commission.isActive,
-        isRestricted: commission.isRestricted,
-      }) :
-      response.exception(res, 'condition_not_exist');
-  } catch (e) {
-    response.exception(res, e);
-  }
-};
-
-// NOTE: Add flight dondition
-module.exports.addCommission = async (req, res) => {
-  try {
-    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commissions, req.body.isRestricted);
+    if (!commission) {
+      response.error(res, "commission_not_exists", 404);
+    }
 
     response.success(res, {
       code: commission.code,
@@ -205,9 +231,63 @@ module.exports.addCommission = async (req, res) => {
         items: commission.airline.items,
         exclude: commission.airline.exclude,
       },
+      // TODO: If user is admin. For businesses users it must be disappear
+      business: {
+        items: commission.business.items,
+        exclude: commission.business.exclude,
+      },
+      member: {
+        items: commission.member.items,
+        exclude: commission.member.exclude,
+      },
+      value: {
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      },
+      // TODO: If user is admin. For businesses users it must be disappear
       providerNames: commission.providerNames,
       isActive: commission.isActive,
-      isRestricted: commission.isRestricted,
+    });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Add flight dondition
+module.exports.addCommission = async (req, res) => {
+  try {
+    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, req.body.member, req.body.value);
+
+    response.success(res, {
+      code: commission.code,
+      origin: {
+        items: commission.origin.items,
+        exclude: commission.origin.exclude,
+      },
+      destination: {
+        items: commission.destination.items,
+        exclude: commission.destination.exclude,
+      },
+      airline: {
+        items: commission.airline.items,
+        exclude: commission.airline.exclude,
+      },
+      // TODO: If user is admin. For businesses users it must be disappear
+      business: {
+        items: commission.business.items,
+        exclude: commission.business.exclude,
+      },
+      member: {
+        items: commission.member.items,
+        exclude: commission.member.exclude,
+      },
+      value: {
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      },
+      // TODO: If user is admin. For businesses users it must be disappear
+      providerNames: commission.providerNames,
+      isActive: commission.isActive,
     });
   } catch (e) {
     response.exception(res, e);
