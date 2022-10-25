@@ -8,7 +8,8 @@ const {
   airlineRepository,
   flightInfoRepository,
   flightConditionRepository,
-  bookedFlightRepository
+  bookedFlightRepository,
+  commissionRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus, accountManagement } = require("../services");
@@ -245,6 +246,7 @@ module.exports.searchFlights = async (req, res) => {
     }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    const commission = await commissionRepository.findCommission(req.query.origin, req.query.destination);
     const providersResultCompleted = activeProviders.reduce((res, cur) => ({
       ...res,
       [cur.title]: false,
