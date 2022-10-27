@@ -309,7 +309,7 @@ module.exports.bookFlight = async params => {
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
 
-  return {...bookedFlight, bookedId: bookedFlight.UniqueId};
+  return { ...bookedFlight, bookedId: bookedFlight.UniqueId, timeout: new Date(bookedFlight.TktTimeLimit).getTime() };
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {

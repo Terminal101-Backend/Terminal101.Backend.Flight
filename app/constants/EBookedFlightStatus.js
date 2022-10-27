@@ -19,6 +19,7 @@ class EFlightBook extends Enum {
         this.add("PAID");
         this.add("BOOK");
         this.add("ERROR");
+        this.add("EXPIRED_PAYMENT");
 
         this.freeze();
     }
