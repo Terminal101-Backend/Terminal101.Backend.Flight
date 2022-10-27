@@ -374,7 +374,7 @@ module.exports.bookFlight = async params => {
   // flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
   // await flightInfo.save();
 
-  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
+  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr, timeout: new Date().getTime() + process.env.PAYMENT_TIMEOUT_CREDIT };
 };
 
 /**
@@ -553,8 +553,9 @@ module.exports.airReValidate = async flightInfo => {
   try {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
     let { result: airReValidate } = await amadeusSoap.airReValidate(flightInfoAmadeusObject);
-    if (!airReValidate){ 
-      return {error: 'ReValidation failed'}}
+    if (!airReValidate) {
+      return { error: 'ReValidation failed' }
+    }
     return makePriceObject(airReValidate.price, airReValidate.price.offerPrices);
 
   } catch (e) {

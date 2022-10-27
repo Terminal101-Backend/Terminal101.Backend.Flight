@@ -73,7 +73,7 @@ class BookedFlightRepository extends BaseRepository {
       throw "flight_not_found";
     }
 
-    bookedFlight.status.push({status, changedBy, description});
+    bookedFlight.statuses.push({status, changedBy, description});
     await bookedFlight.save();
 
     return bookedFlight.status;

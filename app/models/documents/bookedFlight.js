@@ -29,7 +29,7 @@ const bookedFlight = new Schema({
     required: false,
   },
   providerTimeout: {
-    type: String,
+    type: Number,
     required: false,
   },
   providerError: {
