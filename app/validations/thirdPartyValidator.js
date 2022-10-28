@@ -114,3 +114,11 @@ module.exports.ticketDemand = baseValidator({
     0: Joi.string().allow(null, ""),
   },
 });
+
+module.exports.cancelBook = baseValidator({
+  body: {},
+  params: {
+    bookedId: Joi.string().required(),
+    0: Joi.string().allow(null, ""),
+  },
+});

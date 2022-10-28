@@ -226,11 +226,9 @@ const makeTicketInfo = (ticketInfo) => {
   let segments = !Array.isArray(ticketInfo.TicketItemInfo) ? [ticketInfo.TicketItemInfo] : ticketInfo.TicketItemInfo;
   return {
     tickets: segments.map(s => ({
-      type: s.PassengerName?.PassengerTypeCode === 'ADT' ? 'ADULT' : 'CHD' ? 'CHILD' : 'INFANT',
-      prefixName: s.PassengerName?.NamePrefix,
-      firstName: s.PassengerName?.GivenName,
-      lastName: s.PassengerName?.Surname,
-      price: s.NetAmount,
+      prefixName: s.PassengerName?.NamePrefix.$t,
+      firstName: s.PassengerName?.GivenName.$t,
+      lastName: s.PassengerName?.Surname.$t,
       ticketNumber: s.TicketNumber
     }))
   }
@@ -383,12 +381,24 @@ module.exports.bookFlight = async (params, testMode) => {
   }
 };
 
-module.exports.cancelBookFlight = async bookedFlight => {
-  throw "prvoider_unavailable";
+module.exports.cancelBookFlight = async (bookedFlight, testMode) => {
+  let { data: cancelInfo } = await worldticket.cancelBook(bookedFlight.providerPnr, testMode);
+  if (!!cancelInfo.error) {
+    return cancelInfo;
+  }
+  if (cancelInfo.pnr === bookedFlight.providerPnr)
+    return true;
+  else return false;
 }
 
-module.exports.issueBookedFlight = async bookedFlight => {
-  throw "prvoider_unavailable";
+module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
+  let { data: ticketInfo } = await worldticket.ticketDemand(bookedFlight.providerPnr, bookedFlight.passengers, testMode);
+  if (!!ticketInfo.error) {
+    return ticketInfo;
+  }
+  if (!!ticketInfo.TicketItemInfo)
+    return makeTicketInfo(ticketInfo);
+  else return undefined
 }
 
 module.exports.airRevalidate = async flightInfo => {
@@ -455,14 +465,4 @@ module.exports.airAvailable = async (params, testMode) => {
     destination,
     flightsInfo: makeAvailFlight(res.OriginDestinationOptions.OriginDestinationOption)
   }));
-}
-
-module.exports.ticketDemand = async (providerPnr, testMode) => {
-  let { data: ticketInfo } = await worldticket.ticketDemand(providerPnr, testMode);
-  if (!!ticketInfo.error) {
-    return ticketInfo;
-  }
-  if (!!ticketInfo.TicketItemInfo)
-    return makeTicketInfo(ticketInfo);
-  else return {}
 }

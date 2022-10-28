@@ -81,15 +81,26 @@ router
   thirdPartyValidator.airPrice.check,
   thirdPartyController.airPrice);
 
-// NOTE: Get ticket flight
+// NOTE: Issue ticket flight
 router
-.get("/ticket-demand/:bookedId",
+.post("/ticket-demand/:bookedId",
   (req, res, next) => {
-    console.log("Get ticket flight", req.params, req.body, req.query);
+    console.log("Issue ticket flight", req.params, req.body, req.query);
     next();
   },
   checkAccess.checkUserType("THIRD_PARTY"),
   thirdPartyValidator.ticketDemand.check,
   thirdPartyController.ticketDemand);
+
+// NOTE: Cancel ticket flight
+router
+.post("/cancel/:bookedId",
+  (req, res, next) => {
+    console.log("Cancel ticket flight", req.params, req.body, req.query);
+    next();
+  },
+  checkAccess.checkUserType("THIRD_PARTY"),
+  thirdPartyValidator.cancelBook.check,
+  thirdPartyController.cancelBook);
 
 module.exports = router;

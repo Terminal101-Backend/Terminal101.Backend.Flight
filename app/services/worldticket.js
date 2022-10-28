@@ -476,7 +476,7 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
     for (let index = 0; index < passengers?.length ?? 0; index++) {
         let namePrefix;
         const infant = 2 * 365 * 24 * 3600 * 1000;
-        const child = 12 * 365 * 24 * 3600 * 1000
+        const child = 15 * 365 * 24 * 3600 * 1000;
         const age = new Date() - new Date(passengers[index].birthDate);
 
         const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
@@ -553,16 +553,23 @@ const book = async (segments, price, contact, passengers, testMode = false) => {
     }
 };
 
-const ticketDemand = async (providerPnr, testMode = false) => {
-    const query = `<OTA_AirDemandTicketRQ xmlns="http://www.opentravel.org/OTA/2003/05"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirDemandTicketRQ.xsd"
+const ticketDemand = async (providerPnr, passengers, testMode = false) => {
+    let PassengerRPH = '';
+    for (let index = 0; index < passengers?.length ?? 0; index++) {
+        PassengerRPH += `${index + 1} `
+    }
+    const query = `<OTA_AirDemandTicketRQ 
+    xmlns="http://www.opentravel.org/OTA/2003/05" 
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_AirDemandTicketRQ.xsd" 
     TimeStamp="${new Date().toISOString()}" Version="1.000" >
     <DemandTicketDetail>
+        <MessageFunction Function="ET" />
         <BookingReferenceID Type="14" ID="${providerPnr}">
         </BookingReferenceID>
+        <PaymentInfo PaymentType="1" PassengerRPH="${PassengerRPH}" CurrencyCode="USD"></PaymentInfo>
     </DemandTicketDetail>
-</OTA_AirDemandTicketRQ>`;
+</OTA_AirDemandTicketRQ>`
 
     const {
         data: response_
@@ -649,6 +656,48 @@ const airRead = async (bookedFlight, passengers) => {
     }
 };
 
+const cancelBook = async (providerPnr, testMode = false) => {
+    const query = `<OTA_CancelRQ xmlns="http://www.opentravel.org/OTA/2003/05"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 OTA_CancelRQ.xsd"
+    TimeStamp="${new Date().toISOString()}"
+    Target="Production" Version="2.001" CancelType="Commit">
+    <POS>
+        <Source >
+            <RequestorID Type="5" ID="35896241"/>
+            <BookingChannel Type="COM"/>
+        </Source>
+    </POS> 
+    <UniqueID Type="14" ID="${providerPnr}"/>
+    </OTA_CancelRQ>`
+
+    const {
+        data: response_
+    } = await axiosApiInstance.post(`/ota-ecom-saml`, query, { testMode });
+
+    let response = response_.replaceAll('ota:', '');
+    const responseJson = xmlParser.parse(response);
+
+    if (!!responseJson.OTA_ErrorRS) {
+        return {
+            success: false,
+            data: { error: responseJson.OTA_ErrorRS?.ErrorMessage }
+        }
+    }
+
+    if (!!responseJson?.OTA_CancelRS?.Success) {
+        return {
+            success: !!responseJson?.OTA_CancelRS?.Success,
+            data: { pnr: responseJson?.OTA_CancelRS.UniqueID.ID },
+        }
+    } else {
+        return {
+            success: !responseJson?.OTA_CancelRS?.Success,
+            data: { error: responseJson?.OTA_CancelRS?.Errors?.Error.$t },
+        }
+    }
+};
+
 module.exports = {
     airLowFareSearch,
     availableRoutes,
@@ -658,4 +707,5 @@ module.exports = {
     book,
     ticketDemand,
     airRead,
+    cancelBook,
 };
