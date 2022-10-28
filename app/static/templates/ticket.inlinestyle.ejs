@@ -376,7 +376,7 @@
 							<th style="color: #094899; padding: 25px 0; font-weight: bold">Type</th>
 							<th style="color: #094899; padding: 25px 0; font-weight: bold">Full Name</th>
 							<th style="color: #094899; padding: 25px 0; font-weight: bold">Passport Number</th>
-							<th style="color: #094899; padding: 25px 0; font-weight: bold">Birthday</th>
+							<th style="color: #094899; padding: 25px 0; font-weight: bold">Ticket Number</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -409,7 +409,7 @@
 										<%= passenger.documentCode%>
 									</td>
 									<td style="padding: 20px 0; position: relative">
-										<%= passenger.birthDate.split('T')[0] %>
+										<%= passenger.ticketNumber %>
 									</td>
 								</tr>
 								<% } else { %>
@@ -452,7 +452,7 @@
 											<%= passenger.documentCode%>
 										</td>
 										<td style="padding: 20px 0; position: relative">
-											<%= passenger.birthDate.split('T')[0] %>
+											<%= passenger.ticketNumber %>
 										</td>
 									</tr>
 									<% } %>

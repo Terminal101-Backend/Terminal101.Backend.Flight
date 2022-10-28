@@ -489,7 +489,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
-
+    let testMode = process.env.TEST_MODE;
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
     const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
@@ -535,7 +535,11 @@ module.exports.editUserBookedFlight = async (req, res) => {
       case "BOOK":
         console.log(status);
         try {
-          await providerHelper.issueBookedFlight(bookedFlight);
+          let ticketInfo = await providerHelper.issueBookedFlight(bookedFlight, testMode);
+          let index = 0;
+          bookedFlight.passengers.map(passenger => {
+            passenger.ticketNumber = ticketInfo.tickets[index++].ticketNumber;
+          });
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get('BOOKED'),
             description: 'The Flight Booked by Provider.',
@@ -668,7 +672,7 @@ module.exports.getBookedFlights = async (req, res) => {
           price: bookedFlight.flightInfo.flights.price.total,
           currencyCode: bookedFlight.flightInfo.flights.currencyCode,
           userType: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.userType,
-          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,    
+          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,
         };
       })
     });

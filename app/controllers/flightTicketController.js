@@ -90,6 +90,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
           gender: user.info.gender,
           type: user.info.type,
           documentCode: user.info.document.code,
+          ticketNumber: passenger.ticketNumber,
         }
       } else {
         const userPerson = user.persons.find(person => (person.document.code === passenger.documentCode) && (person.document.issuedAt === passenger.documentIssuedAt));
@@ -105,6 +106,7 @@ module.exports.getFlightTicketsView = async (req, res) => {
           gender: userPerson.gender,
           type: userPerson.type,
           documentCode: userPerson.document.code,
+          ticketNumber: passenger.ticketNumber,
         }
       }
     });
