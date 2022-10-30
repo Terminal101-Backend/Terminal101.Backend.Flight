@@ -11,7 +11,7 @@ const {
   bookedFlightRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const { amadeus } = require("../services");
+const { amadeus, accountManagement } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper } = require("../helpers");
 const socketClients = {};
 
@@ -146,6 +146,9 @@ const checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProvid
 module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
   let result = flightDetails;
 
+  // TODO: Check commission for each condition
+  // TODO: Check additional commission for business
+
   flightConditions.forEach(flightCondition => {
     result = result.filter(flightDetails =>
       flightDetails.itineraries.every(itinerary => {
@@ -153,7 +156,7 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         const originCode = itinerary.segments[first].departure.airport.code;
         const destinationCode = itinerary.segments[last].arrival.airport.code;
         const airlineCode = itinerary.segments[first].airline.code;
-        flightDetails;
+        let result = false;
 
         // NOTE: Check if origin exclude is false and flight origin is in origins list
         let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
@@ -171,16 +174,25 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
 
         if (!foundOrigin || !foundDestination || !foundAirline) {
-          return true;
+          result = true;
         }
         if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-          return true;
+          result = true;
         }
         if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
-          return true;
+          result = true;
         }
 
-        return false;
+        if (!!result) {
+          if (flightCondition.commissions.length > 0) {
+            flightDetails.price.fees.push(...flightCondition.commissions.map(commission => ({
+              amount: Math.round(flightDetails.price.total * commission.value) / 100,
+              type: "COMMISSION"
+            })));
+          }
+        }
+
+        return result;
       })
     );
   });
@@ -191,17 +203,24 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.trace(e);
+    }
     let testMode = process.env.TEST_MODE;
     /**
      * @type {Promise<Array>}
      */
-    const activeProviders = await providerRepository.getActiveProviders();
+    let activeProviders = await providerRepository.getActiveProviders();
+    if (!!decodedToken && (decodedToken.type === "BUSINESS")) {
+      const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+      const business = user.businesses.find(b => decodedToken.business === b.code);
+      activeProviders = activeProviders.filter(provider => EProvider.check(business.thirdPartyAccount.availableProviders, provider.name));
+    }
 
-    // const flightConditionsForProviders = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    // const notRestrictedProviders = this.checkIfProviderNotRestrictedForThisRoute(flightConditionsForProviders, activeProviders);
-    const notRestrictedProviders = activeProviders;
-
-    const activeProviderCount = notRestrictedProviders.length;
+    const activeProviderCount = activeProviders.length;
     const lastSearch = [];
     let hasResult = false;
     let providerNumber = 0;
@@ -221,17 +240,17 @@ module.exports.searchFlights = async (req, res) => {
     }
 
     if (activeProviderCount === 0) {
-      response.error(res, "provider_not_found", 404);
+      response.error(res, "provider_not_available", 404);
       return;
     }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
-    const providersResultCompleted = notRestrictedProviders.reduce((res, cur) => ({
+    const providersResultCompleted = activeProviders.reduce((res, cur) => ({
       ...res,
       [cur.title]: false,
     }), {});
 
-    notRestrictedProviders.forEach(provider => {
+    activeProviders.forEach(provider => {
       const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
 
       providerHelper.searchFlights(req.query, testMode).then(async flight => {

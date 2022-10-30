@@ -3,6 +3,7 @@ process.on("uncaughtException", function (err) {
   console.trace(`At ${time}`, err);
 });
 
+global.config = require("./app/config");
 const app = require("./app");
 const path = require("path");
 const mongo = require("./app/core/db/mongo");

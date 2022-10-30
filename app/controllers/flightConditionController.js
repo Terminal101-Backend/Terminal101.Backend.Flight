@@ -115,8 +115,8 @@ module.exports.editFlightCondition = async (req, res) => {
       modified = true;
     }
 
-    if (!!req.body.commisions && (JSON.stringify(flightCondition.commisions) !== JSON.stringify(req.body.commisions))) {
-      flightCondition.commisions = req.body.commisions;
+    if (!!req.body.commissions && (JSON.stringify(flightCondition.commissions) !== JSON.stringify(req.body.commissions))) {
+      flightCondition.commissions = req.body.commissions;
       modified = true;
     }
 
@@ -190,7 +190,7 @@ module.exports.deleteFlightCondition = async (req, res) => {
 // NOTE: Add flight dondition
 module.exports.addFlightCondition = async (req, res) => {
   try {
-    const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commisions, req.body.isRestricted);
+    const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commissions, req.body.isRestricted);
 
     response.success(res, {
       code: flightCondition.code,

@@ -646,14 +646,14 @@ module.exports.getBookedFlights = async (req, res) => {
       items: bookedFlights.map(bookedFlight => {
         const user = users.find(u => u.code === bookedFlight.bookedBy);
         return {
-          bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
-          provider: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerName,
-          providerPnr: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
+          bookedBy: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
+          provider: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? undefined : bookedFlight.providerName,
+          providerPnr: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? undefined : bookedFlight.providerPnr,
           email: user?.email,
           code: bookedFlight.code,
           searchedFlightCode: bookedFlight.searchedFlightCode,
           flightDetailsCode: bookedFlight.flightDetailsCode,
-          status: EUserType.check(["CLIENT"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
+          status: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status : EBookedFlightStatus.find(bookedFlight?.status) ?? bookedFlight?.status,
           time: bookedFlight.time,
           passengers: bookedFlight.passengers.map(passenger => user?.persons?.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user?.info),
           contact: {

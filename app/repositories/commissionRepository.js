@@ -1,5 +1,5 @@
 const BaseRepository = require("../core/baseRepository");
-const { FlightCondition, Country } = require("../models/documents");
+const { Commission, Country } = require("../models/documents");
 const pagination = require("../helpers/paginationHelper");
 const filterHelper = require("../helpers/filterHelper");
 
@@ -9,7 +9,7 @@ const filterHelper = require("../helpers/filterHelper");
  * @property {Boolean} exclude
  */
 
-class FlightConditionRepository extends BaseRepository {
+class CommissionRepository extends BaseRepository {
   /**
    * @param {Boolean} origin 
    * @param {Boolean} returnArrays = false
@@ -189,8 +189,9 @@ class FlightConditionRepository extends BaseRepository {
         $project: {
           code: 1,
           providerNames: 1,
-          isRestricted: 1,
-          commissions: 1,
+          business: 1,
+          member: 1,
+          value: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -330,7 +331,8 @@ class FlightConditionRepository extends BaseRepository {
           code: 1,
           commissions: 1,
           providerNames: 1,
-          isRestricted: 1,
+          business: 1,
+          member: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -400,7 +402,7 @@ class FlightConditionRepository extends BaseRepository {
   }
 
   constructor() {
-    super(FlightCondition);
+    super(Commission);
   }
 
   /**
@@ -409,18 +411,17 @@ class FlightConditionRepository extends BaseRepository {
    * @param {TCondition} destination
    * @param {TCondition} airline
    * @param {String} providerNames
-   * @param Boolean} isRestricted
-   * @returns {Promise<FlightCondition>}
+   * @returns {Promise<Commission>}
    */
-  async createFlightCondition(origin, destination, airline, providerNames, commissions, isRestricted = false) {
-    const flightCondition = new FlightCondition({ origin, destination, airline, providerNames, isRestricted });
+  async createCommission(origin, destination, airline, providerNames, business, member, value) {
+    const commission = new Commission({ origin, destination, airline, providerNames, business, member, value });
 
-    const lastFlightCondition = await FlightCondition.find().sort({ code: -1 }).limit(1);
-    flightCondition.code = !!lastFlightCondition[0] ? lastFlightCondition[0].code + 1 : 0;
+    const lastCommission = await Commission.find().sort({ code: -1 }).limit(1);
+    commission.code = !!lastCommission[0] ? lastCommission[0].code + 1 : 0;
 
-    await flightCondition.save();
+    await commission.save();
 
-    return flightCondition;
+    return commission;
   }
 
   /**
@@ -429,62 +430,62 @@ class FlightConditionRepository extends BaseRepository {
    * @param {Number} pageSize 
    * @param {{field: value}[]} filters
    * @param {String} sort
-   * @returns {Promise<FlightCondition[]>}
+   * @returns {Promise<Commission[]>}
    */
-  async getFlightConditions(page, pageSize, filters, sort) {
-    const agrFlightCondition = FlightCondition.aggregate();
-    agrFlightCondition.append(this.#getConditionCountryPipeline(true));
-    agrFlightCondition.append(this.#getConditionCityPipeline(true));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
+  async getCommissions(page, pageSize, filters, sort) {
+    const agrCommission = Commission.aggregate();
+    agrCommission.append(this.#getConditionCountryPipeline(true));
+    agrCommission.append(this.#getConditionCityPipeline(true));
+    agrCommission.append(this.#getConditionAirportPipeline(true));
 
-    agrFlightCondition.append(this.#getConditionCountryPipeline(false));
-    agrFlightCondition.append(this.#getConditionCityPipeline(false));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+    agrCommission.append(this.#getConditionCountryPipeline(false));
+    agrCommission.append(this.#getConditionCityPipeline(false));
+    agrCommission.append(this.#getConditionAirportPipeline(false));
 
-    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+    agrCommission.append(this.#getConditionAirlinePipeline());
 
-    agrFlightCondition.append(this.#getConditionFinalProjection());
+    agrCommission.append(this.#getConditionFinalProjection());
 
-    filterHelper.filterAndSort(agrFlightCondition, filters, sort);
-    const flightConditions = await pagination.rootPagination(agrFlightCondition, page, pageSize);
-    return flightConditions;
+    filterHelper.filterAndSort(agrCommission, filters, sort);
+    const commissions = await pagination.rootPagination(agrCommission, page, pageSize);
+    return commissions;
   }
 
   /**
    * 
    * @param {Number} code 
-   * @returns {Promise<FlightCondition>}
+   * @returns {Promise<Commission>}
    */
-  async getFlightCondition(code) {
-    const agrFlightCondition = FlightCondition.aggregate();
-    agrFlightCondition.append({
+  async getCommission(code) {
+    const agrCommission = Commission.aggregate();
+    agrCommission.append({
       $match: {
         code,
       }
     });
-    agrFlightCondition.append(this.#getConditionCountryPipeline(true));
-    agrFlightCondition.append(this.#getConditionCityPipeline(true));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
+    agrCommission.append(this.#getConditionCountryPipeline(true));
+    agrCommission.append(this.#getConditionCityPipeline(true));
+    agrCommission.append(this.#getConditionAirportPipeline(true));
 
-    agrFlightCondition.append(this.#getConditionCountryPipeline(false));
-    agrFlightCondition.append(this.#getConditionCityPipeline(false));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+    agrCommission.append(this.#getConditionCountryPipeline(false));
+    agrCommission.append(this.#getConditionCityPipeline(false));
+    agrCommission.append(this.#getConditionAirportPipeline(false));
 
-    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+    agrCommission.append(this.#getConditionAirlinePipeline());
 
-    agrFlightCondition.append(this.#getConditionFinalProjection());
+    agrCommission.append(this.#getConditionFinalProjection());
 
-    const flightCondition = await agrFlightCondition.exec();
-    return flightCondition[0];
+    const commission = await agrCommission.exec();
+    return commission[0];
   }
 
   /**
    * 
    * @param {String} origin 
    * @param {String} destination 
-   * @returns {Promise<FlightCondition>}
+   * @returns {Promise<Commission>}
    */
-  async findFlightCondition(origin, destination) {
+  async findCommission(origin, destination) {
     const airports = {
       origin: [],
       destination: [],
@@ -517,23 +518,23 @@ class FlightConditionRepository extends BaseRepository {
       airports[waypoint] = result.map(item => item.code);
     }
 
-    const agrFlightCondition = FlightCondition.aggregate();
-    agrFlightCondition.append({
+    const agrCommission = Commission.aggregate();
+    agrCommission.append({
       $match: {
         isActive: { $ne: false },
       }
     });
-    agrFlightCondition.append(this.#getConditionCountryPipeline(true, true));
-    agrFlightCondition.append(this.#getConditionCityPipeline(true, true));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(true));
+    agrCommission.append(this.#getConditionCountryPipeline(true, true));
+    agrCommission.append(this.#getConditionCityPipeline(true, true));
+    agrCommission.append(this.#getConditionAirportPipeline(true));
 
-    agrFlightCondition.append(this.#getConditionCountryPipeline(false, true));
-    agrFlightCondition.append(this.#getConditionCityPipeline(false, true));
-    agrFlightCondition.append(this.#getConditionAirportPipeline(false));
+    agrCommission.append(this.#getConditionCountryPipeline(false, true));
+    agrCommission.append(this.#getConditionCityPipeline(false, true));
+    agrCommission.append(this.#getConditionAirportPipeline(false));
 
-    agrFlightCondition.append(this.#getConditionAirlinePipeline());
+    agrCommission.append(this.#getConditionAirlinePipeline());
 
-    agrFlightCondition.append(this.#getConditionCheckFinalProjection());
+    agrCommission.append(this.#getConditionCheckFinalProjection());
 
     const conditions = {
       origin_destination: {
@@ -585,15 +586,15 @@ class FlightConditionRepository extends BaseRepository {
     //   none: { "origin.items.code": { $ne: origin }, "origin.exclude": true, "destination.items.code": { $ne: destination }, "destination.exclude": true },
     // };
 
-    agrFlightCondition.append({
+    agrCommission.append({
       $match: {
         $or: Object.values(conditions),
       }
     });
-    const flightConditions = await agrFlightCondition.exec();
+    const commissions = await agrCommission.exec();
 
-    return flightConditions;
+    return commissions;
   }
 };
 
-module.exports = new FlightConditionRepository();
+module.exports = new CommissionRepository();

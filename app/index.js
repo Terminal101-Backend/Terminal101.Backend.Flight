@@ -6,13 +6,12 @@ const app = express();
 const cors = require("cors");
 const yaml = require('yamljs');
 const fs = require("fs");
-const {l10n} = require("./middlewares");
+const { l10n } = require("./middlewares");
 // const pdf = require("express-pdf");
-const {twilio} = require("./services");
+const { twilio } = require("./services");
 const socket = require("./helpers/socketHelper");
 
 require("dotenv").config();
-global.config = require("./config");
 
 // twilio.initialize();
 
@@ -37,10 +36,10 @@ swaggerDocument = yaml.load('./app/swagger.yaml');
 
 app.use("/public", express.static(path.join(__dirname, 'static')));
 if (!fs.existsSync("app/static/tickets")) {
-  fs.mkdirSync("app/static/tickets", {recursive: true});
+  fs.mkdirSync("app/static/tickets", { recursive: true });
 }
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {customJs: "/public/scripts/swagger.js"}));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, { customJs: "/public/scripts/swagger.js" }));
 
 app.use(l10n.translate);
 
