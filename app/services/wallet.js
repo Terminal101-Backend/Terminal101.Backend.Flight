@@ -114,8 +114,13 @@ const addAndConfirmUserTransaction = async (userCode, amount, description) => {
   return response.data;
 };
 
-const cancelPayment = async transactionId => {
+const cancelCreditCardPayment = async transactionId => {
   const { data: response } = await axiosApiInstance.get(`/wallet/credit-card/cancel-payment/${transactionId}`);
+
+  return response.data;
+}
+const cancelCryptoCurrencyPayment = async transactionId => {
+  const { data: response } = await axiosApiInstance.get(`/wallet/crypto-currency/cancel-payment/${transactionId}`);
 
   return response.data;
 }
@@ -127,5 +132,6 @@ module.exports = {
   addAndConfirmUserTransaction,
   // chargeUserWalletByCryptoCurrency,
   getPaymentMethod,
-  cancelPayment,
+  cancelCreditCardPayment,
+  cancelCryptoCurrencyPayment,
 };
