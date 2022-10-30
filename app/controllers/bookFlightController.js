@@ -103,16 +103,20 @@ const paymentTimeout = async (args) => {
   if (!!paid) {
     return;
   }
+  let expire = await bookedFlightRepository.hasStatus(args.code, "EXPIRED_PAYMENT");
+  if (!!expire) {
+    return;
+  }
   const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
   //TODO: cancel booked
   const providerName = bookedFlight.providerName;
   providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
   try {
     await providerHelper.cancelBookFlight(bookedFlight);
-    //TODO: cancel stripe
-    let cancelStatus = await wallet.cancelPayment(bookedFlight.transactionId);
+    //TODO: cancel stripe or crypto
+    let cancelStatus = args.method === 'STRIPE' ? await wallet.cancelCreditCardPayment(bookedFlight.transactionId) : await wallet.cancelCryptoCurrencyPayment(bookedFlight.transactionId);
     if (cancelStatus !== 'canceled') {
-      console.error('cancel stripe payment failed. status: ', cancelStatus);
+      console.error(`cancel ${args.method} payment failed. status: `, cancelStatus);
       return;
     }
     //TODO: change status
