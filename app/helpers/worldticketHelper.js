@@ -291,6 +291,9 @@ module.exports.searchFlights = async (params, testMode) => {
   let index = 0;
   for (flight of flightDetails) {
     let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
+    if (!!info.error) {
+      throw info;
+    }
     flight['price'] = makePriceObject(worldticketSearchResult[index++].AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown, params);
     createBaggage(flight, info.AirItinerary.OriginDestinationOptions.OriginDestinationOption)
     flight.providerData['FareRule'] = info.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.FareRule.$t.replace(/[\r\n]/gm, '')
