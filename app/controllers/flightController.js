@@ -252,6 +252,9 @@ module.exports.searchFlights = async (req, res) => {
     try {
       decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     } catch (e) {
+      if (req.header("Business-Mode").toLowerCase() == "true") {
+        response.error(res, "access_denied", 401);
+      }
       console.trace(e);
     }
     let testMode = process.env.TEST_MODE;
