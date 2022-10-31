@@ -249,7 +249,7 @@ module.exports.addCommissionToFlightDetails = (commissions, providerName, flight
 module.exports.searchFlights = async (req, res) => {
   try {
     let decodedToken;
-    if ((req?.header("Business-Mode") || "").toLowerCase() == "true") {
+    if ((req?.header("BusinessMode") || "").toLowerCase() == "true") {
       try {
         decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
         if (decodedToken.type !== "BUSINESS") {
