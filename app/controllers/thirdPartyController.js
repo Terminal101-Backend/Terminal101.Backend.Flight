@@ -163,7 +163,7 @@ module.exports.book = async (req, res) => {
     //NOTE: Set Timer on Timeout
     bookedFlight.providerTimeout = providerBookResult.timeout;
     let timeout = providerBookResult.timeout - new Date().getTime();
-    setTimeout(paymentTimeout, timeout, bookedFlight.code);
+    setTimeout(paymentTimeout, timeout, {code: bookedFlight.code, mode: testMode});
     if (!testMode) {
       if (userWallet.credit >= flightInfo.flights.price.total) {
         await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
@@ -650,21 +650,21 @@ const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, add
   };
 };
 
-const paymentTimeout = async bookedFlightCode => {
-  let paid = await bookedFlightRepository.hasStatus(bookedFlightCode, "PAID");
+const paymentTimeout = async args => {
+  let paid = await bookedFlightRepository.hasStatus(args.code, "PAID");
   if (!!paid) {
     return;
   }
-  let expire = await bookedFlightRepository.hasStatus(bookedFlightCode, "EXPIRED_PAYMENT");
+  let expire = await bookedFlightRepository.hasStatus(args.code, "EXPIRED_PAYMENT");
   if (!!expire) {
     return;
   }
-  const bookedFlight = await bookedFlightRepository.findOne({ code: bookedFlightCode });
+  const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
   //TODO: cancel booked
-  const providerName = bookedFlight.providerName;
+  const providerName = EProvider.find(bookedFlight.providerName);
 
   try {
-    await providerHelpers[providerName].cancelBookFlight(bookedFlight, testMode);
+    await providerHelpers[providerName].cancelBookFlight(bookedFlight, args.mode);
     //TODO: change status
     bookedFlight.statuses.push({
       status: 'EXPIRED_PAYMENT',
@@ -672,6 +672,7 @@ const paymentTimeout = async bookedFlightCode => {
       changedBy: 'SERVICE',
     });
   } catch (e) {
+    console.log(e)
     bookedFlight.statuses.push({
       status: 'ERROR',
       description: 'Did not cancel from provider, reason -> (Timeout Payment)',

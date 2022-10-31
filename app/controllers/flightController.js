@@ -12,7 +12,7 @@ const {
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus, accountManagement } = require("../services");
-const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper } = require("../helpers");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
 const socketClients = {};
 
 // NOTE: Flight
