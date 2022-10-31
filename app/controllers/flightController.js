@@ -287,7 +287,7 @@ module.exports.searchFlights = async (req, res) => {
     if (!!decodedToken && (decodedToken.type === "BUSINESS")) {
       const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
       const business = user.businesses.find(b => decodedToken.business === b.code);
-      activeProviders = activeProviders.filter(provider => EProvider.check(business.thirdPartyAccount.availableProviders, provider.name));
+      activeProviders = activeProviders.filter(provider => EProvider.check(business?.thirdPartyAccount?.availableProviders ?? [], provider.name));
     }
 
     const activeProviderCount = activeProviders.length;
