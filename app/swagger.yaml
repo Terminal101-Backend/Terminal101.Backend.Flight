@@ -479,6 +479,25 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/BookFlightResult"
+  /flight/book/history:
+    # NOTE: Get all booked flights history
+    get:
+      tags:
+        - Book
+      description: Get all booked flights history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
 
   /flight/book/{bookedFlightCode}:
     # NOTE: Get booked flight

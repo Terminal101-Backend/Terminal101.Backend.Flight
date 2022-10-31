@@ -70,6 +70,17 @@ router
     bookFlightValidator.generateNewPaymentInfo.check,
     bookFlightController.generateNewPaymentInfo);
 
+// NOTE: Get Book flights history by business
+router
+  .get("/history",
+    (req, res, next) => {
+      console.log("Get Book flights history by business", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType("BUSINESS"),
+    bookFlightValidator.getBookedFlightsHistory.check,
+    bookFlightController.getBookedFlightsHistory);
+
 // NOTE: Get specific booked flight's details by user
 router
   .get("/:bookedFlightCode",

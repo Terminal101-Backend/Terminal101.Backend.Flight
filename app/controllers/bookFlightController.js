@@ -897,3 +897,61 @@ module.exports.getUserBookedFlight = async (req, res) => {
     response.exception(res, e);
   }
 };
+
+// NOTE: Get booked flights history
+module.exports.getBookedFlightsHistory = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    let userCode;
+
+    if (EUserType.check(["BUSINESS"], decodedToken.type)) {
+      userCode = decodedToken.user;
+    }
+
+    console.time("Get booked flights history: Get booked flight");
+    const {
+      items: bookedFlights,
+      ...result
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    console.timeEnd("Get booked flights history");
+    console.time("Get booked flights history: Get users");
+    const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
+    console.timeEnd("Get booked flights history: Get users");
+
+    console.time("Get booked flights history: Prepaire result");
+
+    response.success(res, {
+      ...result,
+      items: bookedFlights.map(bookedFlight => {
+        const user = users.find(u => u.code === bookedFlight.bookedBy);
+        return {
+          email: user?.email,
+          code: bookedFlight.code,
+          searchedFlightCode: bookedFlight.searchedFlightCode,
+          flightDetailsCode: bookedFlight.flightDetailsCode,
+          status: bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status,
+          time: bookedFlight.time,
+          passengers: bookedFlight.passengers.map(passenger => user?.persons?.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user?.info),
+          contact: {
+            email: bookedFlight.contact.email,
+            mobileNumber: bookedFlight.contact.mobileNumber,
+          },
+          origin: {
+            code: bookedFlight.flightInfo.origin.code,
+            name: bookedFlight.flightInfo.origin.name,
+          },
+          destination: {
+            code: bookedFlight.flightInfo.destination.code,
+            name: bookedFlight.flightInfo.destination.name,
+          },
+          travelClass: bookedFlight.flightInfo.travelClass,
+          price: bookedFlight.flightInfo.flights.price.total,
+          currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+        };
+      }).filter((bookedFlight => bookedFlight.status === 'BOOKED'))
+    });
+    console.timeEnd("Get booked flights history: Prepaire result");
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
