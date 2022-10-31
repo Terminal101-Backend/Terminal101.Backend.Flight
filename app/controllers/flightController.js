@@ -249,13 +249,18 @@ module.exports.addCommissionToFlightDetails = (commissions, providerName, flight
 module.exports.searchFlights = async (req, res) => {
   try {
     let decodedToken;
-    try {
-      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
-    } catch (e) {
-      if (req.header("Business-Mode").toLowerCase() == "true") {
-        response.error(res, "access_denied", 401);
+    if ((req?.header("Business-Mode") || "").toLowerCase() == "true") {
+      try {
+        decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+        if (decodedToken.type !== "BUSINESS") {
+          response.error(res, "user_invalid", 400);
+          return;
+        }
+      } catch (e) {
+        console.trace(e);
+        response.error(res, "access_denied", 403);
+        return;
       }
-      console.trace(e);
     }
     let testMode = process.env.TEST_MODE;
     /**
