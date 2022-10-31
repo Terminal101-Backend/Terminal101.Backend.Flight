@@ -231,13 +231,30 @@ module.exports.addCommissionToFlightDetails = (commissions, providerName, flight
       });
 
       if (!!passConditions) {
-        const lastBase = flight.price.base;
-        flight.price.base *= 1 + commission.value.percent / 100;
-        flight.price.base += commission.value.constant;
-        flight.price.base = Math.round(flight.price.base * 100) / 100;
+        let commissionValue = flight.price.base;
+        commissionValue *= commission.value.percent / 100;
+        // commissionValue += commission.value.constant;
+        commissionValue = Math.round(commissionValue * 100) / 100;
 
-        flight.price.total += flight.price.base - lastBase;
-        flight.price.grandTotal += flight.price.base - lastBase;
+        flight.price.fees.push({
+          amount: commissionValue,
+          type: "COMMISSION"
+        });
+
+        flight.price.fees.push({
+          amount: commission.value.constant,
+          type: "COMMISSION"
+        });
+        // const lastBase = flight.price.base;
+        // flight.price.base *= 1 + commission.value.percent / 100;
+        // flight.price.base += commission.value.constant;
+        // flight.price.base = Math.round(flight.price.base * 100) / 100;
+
+        // flight.price.total += flight.price.base - lastBase;
+        // flight.price.grandTotal += flight.price.base - lastBase;
+
+        flight.price.total += commissionValue + commission.value.constant;
+        flight.price.grandTotal += commissionValue + commission.value.constant;
       }
     });
   });
