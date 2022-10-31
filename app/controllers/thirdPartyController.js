@@ -160,7 +160,10 @@ module.exports.book = async (req, res) => {
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
-
+    //NOTE: Set Timer on Timeout
+    bookedFlight.providerTimeout = providerBookResult.timeout;
+    let timeout = providerBookResult.timeout - new Date().getTime();
+    setTimeout(paymentTimeout, timeout, bookedFlight.code);
     if (!testMode) {
       if (userWallet.credit >= flightInfo.flights.price.total) {
         await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
@@ -228,7 +231,8 @@ module.exports.book = async (req, res) => {
               postCode: person.document.postCode,
             }
           };
-        })
+        }),
+        ticketTimeLimit: new Date(providerBookResult.timeout),
       }
     });
   } catch (e) {
@@ -305,7 +309,8 @@ module.exports.readBook = async (req, res) => {
             },
             ticketNumber: passenger.ticketNumber
           };
-        })
+        }),
+        ticketTimeLimit: new Date(bookedFlight.providerTimeout),
       }
     });
 
@@ -518,7 +523,7 @@ module.exports.ticketDemand = async (req, res) => {
           ticketInfo = await worldticketHelper.issueBookedFlight(bookedFlight, testMode);
       }
     }
-    if(!ticketInfo){
+    if (!ticketInfo) {
       response.error(res, 'something_wrong', 400);
       return;
     }
@@ -644,3 +649,34 @@ const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, add
     }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
   };
 };
+
+const paymentTimeout = async bookedFlightCode => {
+  let paid = await bookedFlightRepository.hasStatus(bookedFlightCode, "PAID");
+  if (!!paid) {
+    return;
+  }
+  let expire = await bookedFlightRepository.hasStatus(bookedFlightCode, "EXPIRED_PAYMENT");
+  if (!!expire) {
+    return;
+  }
+  const bookedFlight = await bookedFlightRepository.findOne({ code: bookedFlightCode });
+  //TODO: cancel booked
+  const providerName = bookedFlight.providerName;
+
+  try {
+    await providerHelpers[providerName].cancelBookFlight(bookedFlight, testMode);
+    //TODO: change status
+    bookedFlight.statuses.push({
+      status: 'EXPIRED_PAYMENT',
+      description: 'Your reservation has been canceled by the provider, Please book again.',
+      changedBy: 'SERVICE',
+    });
+  } catch (e) {
+    bookedFlight.statuses.push({
+      status: 'ERROR',
+      description: 'Did not cancel from provider, reason -> (Timeout Payment)',
+      changedBy: "SERVICE",
+    });
+  }
+  bookedFlight.save();
+}

@@ -110,7 +110,7 @@ const paymentTimeout = async (args) => {
   const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
   //TODO: cancel booked
   const providerName = bookedFlight.providerName;
-  providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
+  let providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
   try {
     await providerHelper.cancelBookFlight(bookedFlight);
     //TODO: cancel stripe or crypto
@@ -143,7 +143,7 @@ module.exports.payForFlight = async (req, res) => {
 
     if (!!req.body.confirmed)
       await pay(bookedFlight);
-    else if(!await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")){
+    else if (!await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")) {
       //send SMS or Email to passenger
       bookedFlight.statuses.push({
         status: EBookedFlightStatus.get("PAYING"),

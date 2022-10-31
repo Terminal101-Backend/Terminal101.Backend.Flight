@@ -380,7 +380,7 @@ module.exports.bookFlight = async (params, testMode) => {
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
     await flightInfo.save();
 
-    return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
+    return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID, timeout: new Date(bookedFlight.Ticketing.TicketTimeLimit).getTime() };
   }
 };
 

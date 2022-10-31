@@ -94,7 +94,7 @@ router
 
 // NOTE: Cancel ticket flight
 router
-.post("/cancel/:bookedId",
+.delete("/cancel/:bookedId",
   (req, res, next) => {
     console.log("Cancel ticket flight", req.params, req.body, req.query);
     next();
