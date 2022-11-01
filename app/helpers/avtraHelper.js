@@ -327,5 +327,6 @@ module.exports.issueBookedFlight = async bookedFlight => {
 };
 
 module.exports.airRevalidate = async flightInfo => {
+  flightInfo.flights.price.total -= flightInfo.flights.price.fees.reduce((res, cur) => res + cur.amount, 0);
   return flightInfo.flights.price;
 };

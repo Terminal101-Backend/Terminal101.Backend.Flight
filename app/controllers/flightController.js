@@ -644,6 +644,10 @@ module.exports.getFlight = async (req, res) => {
       }
       let oldPrice = flightInfo.flights.price.total;
 
+      // const commissions = await commissionRepository.findCommission(flightInfo.origin.code, flightInfo.destination.code, decodedToken?.business);
+      newPrice.fees = flightInfo.flights.price.fees;
+      newPrice.total += newPrice.fees.reduce((res, cur) => res + cur.amount, 0);
+
       let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
       if (!!priceChange) {
         await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
