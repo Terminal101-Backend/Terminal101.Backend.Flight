@@ -104,6 +104,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.totalPrice),
   grandTotal: parseFloat(flightPrice.totalPrice),
   base: travelerPricings.reduce((total, travelerPrice) => total + parseFloat(travelerPrice.baseAmount * travelerPrice.numberOfUnits), 0),
+  commissions: [],
   fees: [],
   taxes: [
     {

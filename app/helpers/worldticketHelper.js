@@ -102,6 +102,7 @@ const makePriceObject = (flightPrice, travelerPricings, params) => ({
   total: parseFloat(flightPrice.TotalFare.Amount),
   grandTotal: parseFloat(flightPrice.TotalFare.Amount),
   base: parseFloat(flightPrice.BaseFare.Amount),
+  commissions: [],
   fees: flightPrice.Fees ? !!Array.isArray(flightPrice.Fees) ? flightPrice.Fees.map(fee => ({
     amount: fee.Amount,
     type: "SUPPLIER"
@@ -392,7 +393,11 @@ module.exports.issueBookedFlight = async bookedFlight => {
 }
 
 module.exports.airRevalidate = async flightInfo => {
-  return flightInfo.flights.price;
+  const result = JSON.parse(JSON.stringify(flightInfo.flights.price));
+  result.total = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
+  result.grandTotal = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
+
+  return result;
 }
 
 module.exports.availableRoutes = async (testMode) => {

@@ -192,74 +192,51 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
   return filteredFlights;
 };
 
-module.exports.addCommissionToFlightDetails = (commissions, providerName, flightDetails) => {
+module.exports.addCommissionToFlightDetails = commissions => flight => {
   commissions.forEach(commission => {
-    flightDetails.forEach(flight => {
-      const passConditions = flight.itineraries.every(itinerary => {
-        const first = 0, last = itinerary.segments.length - 1;
-        const originCode = itinerary.segments[first].departure.airport.code;
-        const destinationCode = itinerary.segments[last].arrival.airport.code;
-        const airlineCode = itinerary.segments[first].airline.code;
-        let found = false;
+    const passConditions = flight.itineraries.some(itinerary => {
+      const first = 0, last = itinerary.segments.length - 1;
+      const originCode = itinerary.segments[first].departure.airport.code;
+      const destinationCode = itinerary.segments[last].arrival.airport.code;
+      const airlineCode = itinerary.segments[first].airline.code;
+      let found = false;
 
-        // NOTE: Check if origin exclude is false and flight origin is in origins list
-        let foundOrigin = !commission.origin.exclude && commission.origin.items.some(origin => origin.code === originCode);
-        // NOTE: Check if origin exclude is true and flight origin is not in origins list
-        foundOrigin = foundOrigin || (!!commission.origin.exclude && !commission.origin.items.some(origin => origin.code === originCode));
+      // NOTE: Check if origin exclude is false and flight origin is in origins list
+      let foundOrigin = !commission.origin.exclude && commission.origin.items.some(origin => origin.code === originCode);
+      // NOTE: Check if origin exclude is true and flight origin is not in origins list
+      foundOrigin = foundOrigin || (!!commission.origin.exclude && !commission.origin.items.some(origin => origin.code === originCode));
 
-        // NOTE: Check if destination exclude is false and flight destination is in destinations list
-        let foundDestination = !commission.destination.exclude && commission.destination.items.some(destination => destination.code === destinationCode);
-        // NOTE: Check if destination exclude is true and flight destination is not in destinations list
-        foundDestination = foundDestination || (!!commission.destination.exclude && !commission.destination.items.some(destination => destination.code === destinationCode));
+      // NOTE: Check if destination exclude is false and flight destination is in destinations list
+      let foundDestination = !commission.destination.exclude && commission.destination.items.some(destination => destination.code === destinationCode);
+      // NOTE: Check if destination exclude is true and flight destination is not in destinations list
+      foundDestination = foundDestination || (!!commission.destination.exclude && !commission.destination.items.some(destination => destination.code === destinationCode));
 
-        // NOTE: Check if airline exclude is false and flight airline is in airlines list
-        let foundAirline = !commission.airline.exclude && commission.airline.items.some(airline => airline.code === airlineCode);
-        // NOTE: Check if airline exclude is true and flight airline is not in airlines list
-        foundAirline = foundAirline || (!!commission.airline.exclude && !commission.airline.items.some(airline => airline.code === airlineCode));
+      // NOTE: Check if airline exclude is false and flight airline is in airlines list
+      let foundAirline = !commission.airline.exclude && commission.airline.items.some(airline => airline.code === airlineCode);
+      // NOTE: Check if airline exclude is true and flight airline is not in airlines list
+      foundAirline = foundAirline || (!!commission.airline.exclude && !commission.airline.items.some(airline => airline.code === airlineCode));
 
-        if (!foundOrigin || !foundDestination || !foundAirline) {
-          found = true;
-        }
-        if (!commission.isRestricted && commission.providerNames.includes(providerName)) {
-          found = true;
-        }
-        if (!!commission.isRestricted && !commission.providerNames.includes(providerName)) {
-          found = true;
-        }
+      if (!!foundOrigin && !!foundDestination && !!foundAirline) {
+        found = true;
+      }
 
-        return found;
+      return found;
+    });
+
+    if (!!passConditions) {
+      let commissionPercent = flight.price.base;
+      commissionPercent *= commission.value.percent / 100;
+      commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+      flight.price.commissions.push({
+        percent: commission.value.percent,
+        constant: commission.value.constant,
       });
 
-      if (!!passConditions) {
-        let commissionValue = flight.price.base;
-        commissionValue *= commission.value.percent / 100;
-        // commissionValue += commission.value.constant;
-        commissionValue = Math.round(commissionValue * 100) / 100;
-
-        flight.price.fees.push({
-          amount: commissionValue,
-          type: "COMMISSION"
-        });
-
-        flight.price.fees.push({
-          amount: commission.value.constant,
-          type: "COMMISSION"
-        });
-        // const lastBase = flight.price.base;
-        // flight.price.base *= 1 + commission.value.percent / 100;
-        // flight.price.base += commission.value.constant;
-        // flight.price.base = Math.round(flight.price.base * 100) / 100;
-
-        // flight.price.total += flight.price.base - lastBase;
-        // flight.price.grandTotal += flight.price.base - lastBase;
-
-        flight.price.total += commissionValue + commission.value.constant;
-        flight.price.grandTotal += commissionValue + commission.value.constant;
-      }
-    });
+      flight.price.total += commissionPercent + commission.value.constant;
+      flight.price.grandTotal += commissionPercent + commission.value.constant;
+    }
   });
-
-  return flightDetails;
 };
 
 // NOTE: Search flights
@@ -333,7 +310,7 @@ module.exports.searchFlights = async (req, res) => {
         }
 
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
-        this.addCommissionToFlightDetails(commissions, EProvider.find(provider.name), flightDetails);
+        flightDetails.forEach(this.addCommissionToFlightDetails(commissions, EProvider.find(provider.name)));
 
         lastSearch.push(...flightDetails);
         appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
@@ -619,6 +596,8 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
+    let testMode = process.env.TEST_MODE;
+
     let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
     if (!flightInfo) {
@@ -643,16 +622,29 @@ module.exports.getFlight = async (req, res) => {
         return;
       }
       let oldPrice = flightInfo.flights.price.total;
+      let commissionValue = 0;
 
-      // const commissions = await commissionRepository.findCommission(flightInfo.origin.code, flightInfo.destination.code, decodedToken?.business);
-      newPrice.fees = flightInfo.flights.price.fees;
-      newPrice.total += newPrice.fees.reduce((res, cur) => res + cur.amount, 0);
+      newPrice.total += flightInfo.flights.price.commissions.reduce((res, cur) => {
+        let commissionPercent = newPrice.base;
+        commissionPercent *= cur.percent / 100;
+        commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+        commissionValue += commissionPercent + cur.constant;
+        res += commissionValue;
+
+        return res;
+      }, 0);
 
       let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
       if (!!priceChange) {
         await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
         flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
       }
+
+      flightInfo.flights.price.fees.push({
+        amount: commissionValue,
+        type: EFeeType.get("COMMISSION"),
+      })
     }
 
     response.success(res, {

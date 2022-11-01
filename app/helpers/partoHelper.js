@@ -1,9 +1,9 @@
 const dateTimeHelper = require("./dateTimeHelper");
 const flightHelper = require("./flightHelper");
-const {parto} = require("../services");
-const {flightInfoRepository, countryRepository, airlineRepository} = require("../repositories");
-const {accountManagement} = require("../services");
-const {EProvider} = require("../constants");
+const { parto } = require("../services");
+const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
+const { accountManagement } = require("../services");
+const { EProvider } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -97,6 +97,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.TotalFare),
   grandTotal: parseFloat(flightPrice.TotalFare),
   base: parseFloat(flightPrice.BaseFare),
+  commissions: [],
   fees: [{
     amount: parseFloat(flightPrice.TotalCommission),
     type: "COMMISSION",
@@ -260,7 +261,7 @@ module.exports.searchFlights = async params => {
  * @param {FlightInfo} params.flightDetails
  */
 module.exports.bookFlight = async params => {
-  const {data: user} = await accountManagement.getUserInfo(params.userCode);
+  const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
@@ -302,14 +303,14 @@ module.exports.bookFlight = async params => {
     }
   });
 
-  const flightInfo = await flightInfoRepository.findOne({code: params.flightDetails.code});
+  const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
   const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-  const {data: bookedFlight} = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
+  const { data: bookedFlight } = await parto.airBook(params.flightDetails.flights.providerData.fareSourceCode, params.contact, travelers);
   flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.UniqueId;
   await flightInfo.save();
 
-  return {...bookedFlight, bookedId: bookedFlight.UniqueId};
+  return { ...bookedFlight, bookedId: bookedFlight.UniqueId };
 };
 
 module.exports.cancelBookFlight = async bookedFlight => {

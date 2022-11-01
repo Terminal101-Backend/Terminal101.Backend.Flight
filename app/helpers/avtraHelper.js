@@ -101,6 +101,7 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   total: parseFloat(flightPrice.TotalFare.Amount),
   grandTotal: parseFloat(flightPrice.TotalFare.Amount),
   base: parseFloat(flightPrice.BaseFare.Amount),
+  commissions: [],
   fees: [],
   taxes: travelerPricings.reduce((res, cur) => {
     const result = res;
@@ -327,6 +328,9 @@ module.exports.issueBookedFlight = async bookedFlight => {
 };
 
 module.exports.airRevalidate = async flightInfo => {
-  flightInfo.flights.price.total -= flightInfo.flights.price.fees.reduce((res, cur) => res + cur.amount, 0);
-  return flightInfo.flights.price;
+  const result = JSON.parse(JSON.stringify(flightInfo.flights.price));
+  result.total = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
+  result.grandTotal = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
+
+  return result;
 };
