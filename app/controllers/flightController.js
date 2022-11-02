@@ -644,7 +644,7 @@ module.exports.getFlight = async (req, res) => {
       flightInfo.flights.price.fees.push({
         amount: commissionValue,
         type: EFeeType.get("COMMISSION"),
-      })
+      });
     }
 
     response.success(res, {

@@ -264,10 +264,28 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
 
+    let commissionValue = 0;
+
+    newPrice.total += flightInfo.flights.price.commissions.reduce((res, cur) => {
+      let commissionPercent = newPrice.base;
+      commissionPercent *= cur.percent / 100;
+      commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+      commissionValue += commissionPercent + cur.constant;
+      res += commissionValue;
+
+      return res;
+    }, 0);
+
     let priceChanged = (oldPrice - newPrice.total !== 0);
     if (!!priceChanged) {
       await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
       // flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
+
+      newPrice.fees.push({
+        amount: commissionValue,
+        type: EFeeType.get("COMMISSION"),
+      });
 
       response.success(res, {
         priceChanged,
@@ -617,7 +635,7 @@ module.exports.getBookedFlights = async (req, res) => {
           price: bookedFlight.flightInfo.flights.price.total,
           currencyCode: bookedFlight.flightInfo.flights.currencyCode,
           userType: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.userType,
-          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,    
+          testMode: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.flightInfo.testMode,
         };
       })
     });
