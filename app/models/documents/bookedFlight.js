@@ -67,6 +67,10 @@ const bookedFlight = new Schema({
     required: false,
   },
   providerName: EProvider.mongoField({ required: true }),
+  businessCode: {
+    type: String,
+    required: false
+  }
 }, {
   timestamps: true
 });

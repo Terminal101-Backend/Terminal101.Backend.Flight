@@ -47,7 +47,7 @@ const pay = async (bookedFlight) => {
     // }
 
     if (userWallet.credit >= flightInfo.flights.price.total) {
-      await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
+      await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, bookedFlight.businessCode, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
       bookedFlight.statuses.push({
         status: EBookedFlightStatus.get("PAID"),
         description: 'Payment is done.',
@@ -314,14 +314,14 @@ module.exports.bookFlight = async (req, res) => {
     if (amount > 0) {
       switch (paymentMethod.type) {
         case "STRIPE":
-          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, decodedToken.business, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           if (!userWalletResult) {
             throw "wallet_error";
           }
           break;
 
         case "CRYPTOCURRENCY":
-          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
+          userWalletResult = await wallet.chargeUserWallet(decodedToken.user, decodedToken.business, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
           if (!userWalletResult) {
             throw "wallet_error";
           }
@@ -335,7 +335,7 @@ module.exports.bookFlight = async (req, res) => {
       };
     }
 
-    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+    const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, decodedToken.business, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
 
     bookedFlight.statuses.push({
       status: EBookedFlightStatus.get("PAYING"),
@@ -588,15 +588,18 @@ module.exports.getBookedFlights = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
     let userCode;
+    let businessCode;
 
     if (EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type)) {
       userCode = decodedToken.user;
-    }
+      businessCode = decodedToken.business;
+    } else
+      businessCode = 'ADMIN';
     console.time("Get booked flights: Get booked flight");
     const {
       items: bookedFlights,
       ...result
-    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    } = await bookedFlightRepository.getBookedFlights(userCode, businessCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
     console.timeEnd("Get booked flights");
     console.time("Get booked flights: Get users");
     const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
