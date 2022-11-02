@@ -112,7 +112,6 @@ module.exports.book = async (req, res) => {
       return;
     }
 
-    const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
     const existsBookedFlight = await bookedFlightRepository.findOne({
       bookedBy: decodedToken.owner,
       searchedFlightCode: req.body.searchedFlightCode,
@@ -131,8 +130,9 @@ module.exports.book = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    await accountManagement.addEditPersons(decodedToken.owner, req.body.passengers);
-
+    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user,req.body.passengers);
+    const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
+    
     let passengers = req.body.passengers.map(passenger => ({
       documentCode: passenger.document.code,
       documentIssuedAt: passenger.document.issuedAt
@@ -214,6 +214,7 @@ module.exports.book = async (req, res) => {
         },
         passengers: bookedFlight.passengers.map(passenger => {
           const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
+          console.log('==> ', person)
           return {
             type: person.type,
             gender: person.gender,

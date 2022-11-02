@@ -87,8 +87,8 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   return response.data;
 };
 
-const addEditPersons = async (userCode, persons) => {
-  const { data: response } = await axiosApiInstance.patch(`/person/${userCode}`, { persons });
+const addEditPersons = async (userCode, businessCode, persons) => {
+  const { data: response } = await axiosApiInstance.patch(`/person/user/${userCode}/${businessCode}`, { persons });
 
   return response;
 };
