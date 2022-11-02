@@ -902,28 +902,18 @@ module.exports.getUserBookedFlight = async (req, res) => {
 module.exports.getBookedFlightsHistory = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
-    let userCode;
+    let userCode = decodedToken.user;
 
-    if (EUserType.check(["BUSINESS"], decodedToken.type)) {
-      userCode = decodedToken.user;
-    }
-
-    console.time("Get booked flights history: Get booked flight");
     const {
       items: bookedFlights,
       ...result
     } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
-    console.timeEnd("Get booked flights history");
-    console.time("Get booked flights history: Get users");
-    const { data: users } = await accountManagement.getUsersInfo(bookedFlights.map(flight => flight.bookedBy));
-    console.timeEnd("Get booked flights history: Get users");
 
-    console.time("Get booked flights history: Prepaire result");
+    const { data: user } = await accountManagement.getUserInfo(userCode);
 
     response.success(res, {
       ...result,
       items: bookedFlights.map(bookedFlight => {
-        const user = users.find(u => u.code === bookedFlight.bookedBy);
         return {
           email: user?.email,
           code: bookedFlight.code,
@@ -948,10 +938,10 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
           price: bookedFlight.flightInfo.flights.price.total,
           currencyCode: bookedFlight.flightInfo.flights.currencyCode,
         };
-      }).filter((bookedFlight => bookedFlight.status === 'BOOKED'))
+      })
     });
-    console.timeEnd("Get booked flights history: Prepaire result");
   } catch (e) {
+    console.log(e);
     response.exception(res, e);
   }
 };
