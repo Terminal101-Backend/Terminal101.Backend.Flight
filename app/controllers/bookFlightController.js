@@ -266,7 +266,7 @@ module.exports.bookFlight = async (req, res) => {
 
     let commissionValue = 0;
 
-    newPrice.total += flightInfo.flights.price.commissions.reduce((res, cur) => {
+    newPrice.total += flightDetails.flights.price.commissions.reduce((res, cur) => {
       let commissionPercent = newPrice.base;
       commissionPercent *= cur.percent / 100;
       commissionPercent = Math.round(commissionPercent * 100) / 100;
