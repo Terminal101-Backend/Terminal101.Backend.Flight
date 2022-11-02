@@ -8,7 +8,8 @@ const {
   airlineRepository,
   flightInfoRepository,
   flightConditionRepository,
-  bookedFlightRepository
+  bookedFlightRepository,
+  commissionRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
 const { amadeus, accountManagement } = require("../services");
@@ -144,19 +145,19 @@ const checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProvid
 };
 
 module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
-  let result = flightDetails;
+  let filteredFlights = flightDetails;
 
   // TODO: Check commission for each condition
   // TODO: Check additional commission for business
 
   flightConditions.forEach(flightCondition => {
-    result = result.filter(flightDetails =>
-      flightDetails.itineraries.every(itinerary => {
+    filteredFlights = filteredFlights.filter(flight =>
+      flight.itineraries.every(itinerary => {
         const first = 0, last = itinerary.segments.length - 1;
         const originCode = itinerary.segments[first].departure.airport.code;
         const destinationCode = itinerary.segments[last].arrival.airport.code;
         const airlineCode = itinerary.segments[first].airline.code;
-        let result = false;
+        let found = false;
 
         // NOTE: Check if origin exclude is false and flight origin is in origins list
         let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
@@ -174,40 +175,86 @@ module.exports.filterFlightDetailsByFlightConditions = (flightConditions, provid
         foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
 
         if (!foundOrigin || !foundDestination || !foundAirline) {
-          result = true;
+          found = true;
         }
         if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
-          result = true;
+          found = true;
         }
         if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
-          result = true;
+          found = true;
         }
 
-        if (!!result) {
-          if (flightCondition.commissions.length > 0) {
-            flightDetails.price.fees.push(...flightCondition.commissions.map(commission => ({
-              amount: Math.round(flightDetails.price.total * commission.value) / 100,
-              type: "COMMISSION"
-            })));
-          }
-        }
-
-        return result;
+        return found;
       })
     );
   });
 
-  return result;
+  return filteredFlights;
+};
+
+module.exports.addCommissionToFlightDetails = commissions => flight => {
+  commissions.forEach(commission => {
+    const passConditions = flight.itineraries.some(itinerary => {
+      const first = 0, last = itinerary.segments.length - 1;
+      const originCode = itinerary.segments[first].departure.airport.code;
+      const destinationCode = itinerary.segments[last].arrival.airport.code;
+      const airlineCode = itinerary.segments[first].airline.code;
+      let found = false;
+
+      // NOTE: Check if origin exclude is false and flight origin is in origins list
+      let foundOrigin = !commission.origin.exclude && commission.origin.items.some(origin => origin.code === originCode);
+      // NOTE: Check if origin exclude is true and flight origin is not in origins list
+      foundOrigin = foundOrigin || (!!commission.origin.exclude && !commission.origin.items.some(origin => origin.code === originCode));
+
+      // NOTE: Check if destination exclude is false and flight destination is in destinations list
+      let foundDestination = !commission.destination.exclude && commission.destination.items.some(destination => destination.code === destinationCode);
+      // NOTE: Check if destination exclude is true and flight destination is not in destinations list
+      foundDestination = foundDestination || (!!commission.destination.exclude && !commission.destination.items.some(destination => destination.code === destinationCode));
+
+      // NOTE: Check if airline exclude is false and flight airline is in airlines list
+      let foundAirline = !commission.airline.exclude && commission.airline.items.some(airline => airline.code === airlineCode);
+      // NOTE: Check if airline exclude is true and flight airline is not in airlines list
+      foundAirline = foundAirline || (!!commission.airline.exclude && !commission.airline.items.some(airline => airline.code === airlineCode));
+
+      if (!!foundOrigin && !!foundDestination && !!foundAirline) {
+        found = true;
+      }
+
+      return found;
+    });
+
+    if (!!passConditions) {
+      let commissionPercent = flight.price.base;
+      commissionPercent *= commission.value.percent / 100;
+      commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+      flight.price.commissions.push({
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      });
+
+      flight.price.total += commissionPercent + commission.value.constant;
+      flight.price.grandTotal += commissionPercent + commission.value.constant;
+    }
+  });
 };
 
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
     let decodedToken;
-    try {
-      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
-    } catch (e) {
-      console.trace(e);
+    if ((req?.header("BusinessMode") ?? "").toString().toLowerCase() == "true") {
+      try {
+        decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+        if (decodedToken.type !== "BUSINESS") {
+          response.error(res, "user_invalid", 400);
+          return;
+        }
+      } catch (e) {
+        console.trace(e);
+        response.error(res, "access_denied", 403);
+        return;
+      }
     }
     let testMode = process.env.TEST_MODE;
     /**
@@ -217,7 +264,7 @@ module.exports.searchFlights = async (req, res) => {
     if (!!decodedToken && (decodedToken.type === "BUSINESS")) {
       const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
       const business = user.businesses.find(b => decodedToken.business === b.code);
-      activeProviders = activeProviders.filter(provider => EProvider.check(business.thirdPartyAccount.availableProviders, provider.name));
+      activeProviders = activeProviders.filter(provider => EProvider.check(business?.thirdPartyAccount?.availableProviders ?? [], provider.name));
     }
 
     const activeProviderCount = activeProviders.length;
@@ -245,6 +292,8 @@ module.exports.searchFlights = async (req, res) => {
     }
 
     const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    // TODO: Check if user logged in as business user
+    const commissions = await commissionRepository.findCommission(req.query.origin, req.query.destination, decodedToken?.business);
     const providersResultCompleted = activeProviders.reduce((res, cur) => ({
       ...res,
       [cur.title]: false,
@@ -261,6 +310,7 @@ module.exports.searchFlights = async (req, res) => {
         }
 
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
+        flightDetails.forEach(this.addCommissionToFlightDetails(commissions, EProvider.find(provider.name)));
 
         lastSearch.push(...flightDetails);
         appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
@@ -546,6 +596,8 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
+    let testMode = process.env.TEST_MODE;
+
     let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
     if (!flightInfo) {
@@ -570,12 +622,29 @@ module.exports.getFlight = async (req, res) => {
         return;
       }
       let oldPrice = flightInfo.flights.price.total;
+      let commissionValue = 0;
+
+      newPrice.total += flightInfo.flights.price.commissions.reduce((res, cur) => {
+        let commissionPercent = newPrice.base;
+        commissionPercent *= cur.percent / 100;
+        commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+        commissionValue += commissionPercent + cur.constant;
+        res += commissionValue;
+
+        return res;
+      }, 0);
 
       let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
       if (!!priceChange) {
         await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
         flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
       }
+
+      flightInfo.flights.price.fees.push({
+        amount: commissionValue,
+        type: EFeeType.get("COMMISSION"),
+      })
     }
 
     response.success(res, {

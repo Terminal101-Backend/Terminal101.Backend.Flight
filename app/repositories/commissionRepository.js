@@ -11,16 +11,16 @@ const filterHelper = require("../helpers/filterHelper");
 
 class CommissionRepository extends BaseRepository {
   /**
-   * @param {Boolean} origin 
+   * @param {Boolean} waypoint 
    * @param {Boolean} returnArrays = false
    */
-  #getConditionCountryPipeline(origin, returnArrays = false) {
+  #getConditionCountryPipeline(waypoint, returnArrays = false) {
     return {
       $lookup: {
         from: "countries",
-        as: `condition.${!!origin ? "origin" : "destination"}.countries`,
+        as: `condition.${!!waypoint ? "origin" : "destination"}.countries`,
         let: {
-          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+          conditionItems: `$${!!waypoint ? "origin" : "destination"}.items`,
         },
         pipeline: [
           {
@@ -45,16 +45,16 @@ class CommissionRepository extends BaseRepository {
   }
 
   /**
-   * @param {Boolean} origin 
+   * @param {Boolean} waypoint 
    * @param {Boolean} returnArrays = false
    */
-  #getConditionCityPipeline(origin, returnArrays = false) {
+  #getConditionCityPipeline(waypoint, returnArrays = false) {
     return {
       $lookup: {
         from: "countries",
-        as: `condition.${!!origin ? "origin" : "destination"}.cities`,
+        as: `condition.${!!waypoint ? "origin" : "destination"}.cities`,
         let: {
-          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+          conditionItems: `$${!!waypoint ? "origin" : "destination"}.items`,
         },
         pipeline: [
           {
@@ -91,15 +91,15 @@ class CommissionRepository extends BaseRepository {
   }
 
   /**
-   * @param {Boolean} origin 
+   * @param {Boolean} waypoint 
    */
-  #getConditionAirportPipeline(origin) {
+  #getConditionAirportPipeline(waypoint) {
     return {
       $lookup: {
         from: "countries",
-        as: `condition.${!!origin ? "origin" : "destination"}.airports`,
+        as: `condition.${!!waypoint ? "origin" : "destination"}.airports`,
         let: {
-          conditionItems: `$${!!origin ? "origin" : "destination"}.items`,
+          conditionItems: `$${!!waypoint ? "origin" : "destination"}.items`,
         },
         pipeline: [
           {
@@ -329,7 +329,7 @@ class CommissionRepository extends BaseRepository {
       {
         $project: {
           code: 1,
-          commissions: 1,
+          value: 1,
           providerNames: 1,
           business: 1,
           member: 1,
@@ -485,7 +485,7 @@ class CommissionRepository extends BaseRepository {
    * @param {String} destination 
    * @returns {Promise<Commission>}
    */
-  async findCommission(origin, destination) {
+  async findCommission(origin, destination, businessCode) {
     const airports = {
       origin: [],
       destination: [],
@@ -524,6 +524,30 @@ class CommissionRepository extends BaseRepository {
         isActive: { $ne: false },
       }
     });
+
+    if (!businessCode) {
+      agrCommission.append({
+        $match: {
+          "business.items": [],
+          "business.exclude": false,
+        }
+      });
+    } else {
+      agrCommission.append({
+        $match: {
+          $or: [
+            {
+              "business.items": businessCode,
+              "business.exclude": false,
+            }, {
+              "business.items": { $ne: businessCode },
+              "business.exclude": true,
+            }
+          ]
+        }
+      });
+    }
+
     agrCommission.append(this.#getConditionCountryPipeline(true, true));
     agrCommission.append(this.#getConditionCityPipeline(true, true));
     agrCommission.append(this.#getConditionAirportPipeline(true));
