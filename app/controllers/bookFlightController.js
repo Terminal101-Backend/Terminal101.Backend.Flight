@@ -4,7 +4,7 @@ const { partoHelper, amadeusHelper, avtraHelper, stringHelper, arrayHelper, worl
 const token = require("../helpers/tokenHelper");
 const { flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { accountManagement, wallet, amadeus } = require("../services");
-const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
+const { EBookedFlightStatus, EProvider, EUserType, EFeeType } = require("../constants");
 const { common } = require("../services");
 const flightTicketController = require("./flightTicketController");
 
