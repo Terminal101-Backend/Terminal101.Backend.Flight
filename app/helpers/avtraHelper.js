@@ -253,6 +253,10 @@ module.exports.bookFlight = async params => {
 
   const travelers = params.passengers.map(passenger => {
     if (!!user.info && !!user.info.document && (user.info.document.code === passenger.documentCode) && (user.info.document.issuedAt === passenger.documentIssuedAt)) {
+      if (!user?.info?.birthDate) {
+        throw "birthDate_required";
+      }
+
       return {
         birthDate: new Date(user.info.birthDate).toISOString().replace(/Z.*$/, ""),
         gender: user.info.gender,
@@ -307,7 +311,7 @@ module.exports.bookFlight = async params => {
   });
 
   const price = {
-    total: params.flightDetails.flights.price.total,
+    total: params.flightDetails.flights.price.base + params.flightDetails.flights.price.fees.reduce((res, cur) => res + cur.amount, 0) + params.flightDetails.flights.price.taxes.reduce((res, cur) => res + cur.amount, 0),
     base: params.flightDetails.flights.price.base,
     currency: params.flightDetails.flights.currencyCode,
   };
@@ -330,7 +334,7 @@ module.exports.issueBookedFlight = async bookedFlight => {
 module.exports.airRevalidate = async flightInfo => {
   const result = JSON.parse(JSON.stringify(flightInfo.flights.price));
   result.total = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
-  result.grandTotal = result.base + result.fees.reduce((res, cur) => res + cur.amount, 0) + result.taxes.reduce((res, cur) => res + cur.amount, 0);
+  result.grandTotal = result.total;
 
   return result;
 };
