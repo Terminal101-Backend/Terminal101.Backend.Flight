@@ -277,7 +277,7 @@ module.exports.bookFlight = async (req, res) => {
       return res;
     }, 0);
 
-    let priceChanged = (oldPrice - newPrice.total !== 0);
+    let priceChanged = true || (oldPrice - newPrice.total !== 0);
     if (!!priceChanged) {
       await flightInfoRepository.updateFlightDetails(req.body.searchedFlightCode, req.body.flightDetailsCode, newPrice);
       // flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
