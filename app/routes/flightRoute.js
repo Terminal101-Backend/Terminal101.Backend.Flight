@@ -63,4 +63,15 @@ router
     flightValidator.filterFlights.check,
     flightController.filterFlights);
 
+// NOTE: History searched flight
+router
+  .get("/history",
+    (req, res, next) => {
+      console.log("History flights", req.params, req.body, req.query);
+      next();
+    },
+    // checkAccess.checkUserType("BUSINESS"),
+    flightValidator.getHistoryFlights.check,
+    flightController.getHistoryFlights);
+
 module.exports = router;

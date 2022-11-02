@@ -4,6 +4,8 @@ const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
 const pagination = require("../helpers/paginationHelper");
 const dateTime = require("../helpers/dateTimeHelper");
+const filterHelper = require("../helpers/filterHelper");
+const paginationHelper = require("../helpers/paginationHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -227,6 +229,22 @@ class FlightInfoRepository extends BaseRepository {
       .catch((err) => {
         console.log(err);
       });
+  }
+  /** 
+  * @param {Number} page
+  * @param {Number} pageSize
+  * @param {{field: value}[]} filters
+  * @param {String} sort
+  * @returns {Promise<FlightInfo>}
+  */
+  async getHistoryFlights(page, pageSize, filters, sort) {
+    const agrFlightInfo = FlightInfo.aggregate().allowDiskUse(true);
+    // agrFlightInfo.append({ $match: { userType: ['BUSINESS'] } });
+
+    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
+    return await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+
+    // return await agrBookedFlight.exec();
   }
 };
 

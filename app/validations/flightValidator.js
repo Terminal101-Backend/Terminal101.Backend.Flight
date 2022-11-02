@@ -133,3 +133,7 @@ module.exports.searchOriginDestinationAmadeus = baseValidator({
     keyword: Joi.string(),
   },
 });
+
+module.exports.getHistoryFlights = baseValidator({
+  body: {},
+}, true);

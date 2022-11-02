@@ -827,6 +827,19 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
 
 };
 
+// NOTE: Get history flights
+module.exports.getHistoryFlights = async (req, res) => {
+  try {
+    // const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    // if (!!decodedToken && (decodedToken.type === "BUSINESS")){}
+    const list = await flightInfoRepository.getHistoryFlights(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+
+    response.success(res, list);
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
 //Internal Function
 function transformDataAmadeus(data) {
   const newData = [];
