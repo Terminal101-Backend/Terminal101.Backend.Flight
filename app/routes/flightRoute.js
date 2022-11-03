@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {flightController} = require("../controllers");
 const {flightValidator} = require("../validations");
+const { checkAccess } = require("../middlewares");
 
 // NOTE: Get popular flights
 router
@@ -70,7 +71,7 @@ router
       console.log("History flights", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType("BUSINESS"),
+    checkAccess.checkUserType("BUSINESS"),
     flightValidator.getHistoryFlights.check,
     flightController.getHistoryFlights);
 

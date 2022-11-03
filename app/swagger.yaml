@@ -417,6 +417,20 @@ paths:
             items:
               $ref: "#/definitions/FlightPopular"
 
+  /flight/history:
+    # NOTE: Get history flights
+    get:
+      tags:
+        - Flight
+      description: Get history flights.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/HistoryFlight"
+
   /restriction/{countryCode}/{cityCode}:
     # NOTE: Restriction conditions
     get:
@@ -1288,6 +1302,20 @@ definitions:
       count:
         type: number
         example: 13
+  
+  HistoryFlight:
+    required:
+      - origin
+      - destination
+      - time
+    properties:
+      origin:
+        $ref: "#/definitions/Waypoint"
+      destination:
+        $ref: "#/definitions/Waypoint"
+      time:
+        type: string
+        example: "2022-01-13T12:15:00.000Z"
 
   WaypointCount:
     required:

@@ -239,12 +239,19 @@ class FlightInfoRepository extends BaseRepository {
   */
   async getHistoryFlights(page, pageSize, filters, sort) {
     const agrFlightInfo = FlightInfo.aggregate().allowDiskUse(true);
-    // agrFlightInfo.append({ $match: { userType: ['BUSINESS'] } });
+
+    agrFlightInfo.append({
+      $project: {
+        "origin": { "code": 1, "name": 1 },
+        "destination": { "code": 1, "name": 1 },
+        "time": 1,
+        "_id": 0,
+      }
+    });
 
     filterHelper.filterAndSort(agrFlightInfo, filters, sort);
     return await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
 
-    // return await agrBookedFlight.exec();
   }
 };
 
