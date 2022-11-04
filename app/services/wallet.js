@@ -119,6 +119,11 @@ const cancelCreditCardPayment = async transactionId => {
 
   return response.data;
 }
+const cancelCryptoCurrencyPayment = async transactionId => {
+  const { data: response } = await axiosApiInstance.get(`/wallet/crypto-currency/cancel-payment/${transactionId}`);
+
+  return response.data;
+}
 
 const cancelCryptoCurrencyPayment = async transactionId => {
   const { data: response } = await axiosApiInstance.get(`/wallet/crypto-currency/cancel-payment/${transactionId}`);
