@@ -24,7 +24,7 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} transactionId
    * @returns {Promise<BookedFlight>}
    */
-  async createBookedFlight(bookedBy, providerName, searchedFlightCode, flightDetailsCode, providerPnr, transactionId, contact, passengers, flightSegments, travelClass, status) {
+  async createBookedFlight(bookedBy, businessCode, providerName, searchedFlightCode, flightDetailsCode, providerPnr, transactionId, contact, passengers, flightSegments, travelClass, status) {
     let bookedFlight = !!transactionId ? await this.findOne({ transactionId }) : undefined;
 
     if (!bookedFlight) {
@@ -39,7 +39,8 @@ class BookedFlightRepository extends BaseRepository {
         passengers,
         statuses: { status, changedBy: bookedBy },
         flightSegments,
-        travelClass
+        travelClass,
+        businessCode
       });
       await bookedFlight.save();
     }
@@ -125,12 +126,20 @@ class BookedFlightRepository extends BaseRepository {
    * @param {String} sort
    * @returns {Promise<BookedFlight>}
    */
-  async getBookedFlights(bookedBy, page, pageSize, filters, sort) {
+  async getBookedFlights(bookedBy, businessCode, page, pageSize, filters, sort) {
     const agrBookedFlight = BookedFlight.aggregate().allowDiskUse(true);
-    if (!!bookedBy) {
+    if (!!bookedBy && businessCode !== 'ADMIN') {
       agrBookedFlight.append({
         $match: {
           bookedBy,
+          businessCode
+        }
+      });
+    }
+    else if(!!bookedBy){
+      agrBookedFlight.append({
+        $match: {
+          bookedBy
         }
       });
     }

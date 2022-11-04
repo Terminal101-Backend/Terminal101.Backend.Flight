@@ -38,14 +38,15 @@ axiosApiInstance.interceptors.response.use((response) => {
   return Promise.reject(error?.response?.data ?? error?.response ?? error);
 });
 
-const chargeUserWallet = async (userCode, paymentMethodName, amount, currencySource, currencyTarget) => {
+const chargeUserWallet = async (userCode, businessCode, paymentMethodName, amount, currencySource, currencyTarget) => {
   try {
     const { data: response } = await axiosApiInstance.post(`/wallet/charge/${userCode}`, {
       paymentMethodName,
       currencySource,
       currencyTarget,
       amount,
-      serviceName: "FLIGHT"
+      serviceName: "FLIGHT",
+      businessCode
     });
 
     return response.data;
@@ -103,12 +104,13 @@ const getUserTransaction = async (userCode, externalTransactionId) => {
  * @param {String} amount
  * @returns {Promise}
  */
-const addAndConfirmUserTransaction = async (userCode, amount, description) => {
-  const { data: response } = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
+const addAndConfirmUserTransaction = async (userCode, businessCode, amount, description) => {
+  const {data: response} = await axiosApiInstance.post(`/wallet/${userCode}/transaction`, {
     amount,
     description,
     serviceName: "FLIGHT",
-    type: "PAY"
+    type: "PAY",
+    businessCode
   });
 
   return response.data;
@@ -119,12 +121,6 @@ const cancelCreditCardPayment = async transactionId => {
 
   return response.data;
 }
-const cancelCryptoCurrencyPayment = async transactionId => {
-  const { data: response } = await axiosApiInstance.get(`/wallet/crypto-currency/cancel-payment/${transactionId}`);
-
-  return response.data;
-}
-
 const cancelCryptoCurrencyPayment = async transactionId => {
   const { data: response } = await axiosApiInstance.get(`/wallet/crypto-currency/cancel-payment/${transactionId}`);
 

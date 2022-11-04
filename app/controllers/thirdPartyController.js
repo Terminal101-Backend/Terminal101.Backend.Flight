@@ -130,9 +130,9 @@ module.exports.book = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user,req.body.passengers);
+    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user,decodedToken.user, req.body.passengers);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
-    
+
     let passengers = req.body.passengers.map(passenger => ({
       documentCode: passenger.document.code,
       documentIssuedAt: passenger.document.issuedAt
@@ -152,7 +152,7 @@ module.exports.book = async (req, res) => {
       return;
     }
 
-    let bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
+    let bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.owner, decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWallet?.externalTransactionId, req.body.contact, passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
     const flightInfo = await flightInfoRepository.getFlight(bookedFlight.searchedFlightCode, bookedFlight.flightDetailsCode);
 
     bookedFlight.statuses.push({
