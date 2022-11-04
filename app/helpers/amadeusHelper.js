@@ -380,7 +380,7 @@ module.exports.bookFlight = async params => {
   // flightInfo.flights[flightIndex].providerData.shoppingResponseId = bookedFlight.result.flight.shoppingResponseID;
   // await flightInfo.save();
 
-  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr };
+  return { ...bookedFlight.result, bookedId: bookedFlight.result.pnr, timeout: new Date().getTime() + process.env.PAYMENT_TIMEOUT_CREDIT };
 };
 
 /**

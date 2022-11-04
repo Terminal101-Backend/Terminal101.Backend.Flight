@@ -130,7 +130,7 @@ module.exports.book = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user, req.body.passengers);
+    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user,decodedToken.user, req.body.passengers);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
 
     let passengers = req.body.passengers.map(passenger => ({
@@ -160,7 +160,10 @@ module.exports.book = async (req, res) => {
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
-
+    //NOTE: Set Timer on Timeout
+    bookedFlight.providerTimeout = providerBookResult.timeout;
+    let timeout = providerBookResult.timeout - new Date().getTime();
+    setTimeout(paymentTimeout, timeout, {code: bookedFlight.code, mode: testMode});
     if (!testMode) {
       if (userWallet.credit >= flightInfo.flights.price.total) {
         await wallet.addAndConfirmUserTransaction(bookedFlight.bookedBy, -flightInfo.flights.price.total, "Book flight; code: " + bookedFlight.code + (!!bookedFlight.transactionId ? "; transaction id: " + bookedFlight.transactionId : ""));
@@ -175,17 +178,15 @@ module.exports.book = async (req, res) => {
           description: "Wait for booking by backoffice.",
           changedBy: bookedFlight.bookedBy,
         });
-
-        await bookedFlight.save();
       }
     } else {
       bookedFlight.statuses.push({
-        status: EBookedFlightStatus.get("BOOKED"),
+        status: EBookedFlightStatus.get("BOOK"),
         description: '--- Test API ---',
         changedBy: "SERVICE",
       });
     }
-
+    await bookedFlight.save();
     bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, bookedFlight.code);
 
     response.success(res, {
@@ -213,6 +214,7 @@ module.exports.book = async (req, res) => {
         },
         passengers: bookedFlight.passengers.map(passenger => {
           const person = user.persons.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user.info
+          console.log('==> ', person)
           return {
             type: person.type,
             gender: person.gender,
@@ -230,7 +232,8 @@ module.exports.book = async (req, res) => {
               postCode: person.document.postCode,
             }
           };
-        })
+        }),
+        ticketTimeLimit: new Date(providerBookResult.timeout),
       }
     });
   } catch (e) {
@@ -304,9 +307,11 @@ module.exports.readBook = async (req, res) => {
               issuedAt: person.document.issuedAt,
               expirationDate: person.document.expirationDate,
               postCode: person.document.postCode,
-            }
+            },
+            ticketNumber: passenger.ticketNumber
           };
-        })
+        }),
+        ticketTimeLimit: new Date(bookedFlight.providerTimeout),
       }
     });
 
@@ -508,22 +513,90 @@ module.exports.ticketDemand = async (req, res) => {
 
     const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
     let timestamp = new Date().toISOString();
-    const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.owner, req.params.bookedId);
-
+    const bookedFlight = await bookedFlightRepository.findOne({
+      bookedBy: decodedToken.owner,
+      code: req.params.bookedId
+    });
     let ticketInfo;
     for (const provider of availableProviders) {
       switch (provider) {
         case "WORLDTICKET":
-          ticketInfo = await worldticketHelper.ticketDemand(bookedFlight.providerPnr, testMode);
+          ticketInfo = await worldticketHelper.issueBookedFlight(bookedFlight, testMode);
       }
+    }
+    if (!ticketInfo) {
+      response.error(res, 'something_wrong', 400);
+      return;
     }
     if (!!ticketInfo.error) {
       response.error(res, ticketInfo.error, 400);
       return;
     }
+
+    let index = 0;
+    bookedFlight.passengers.map(passenger => {
+      passenger.ticketNumber = ticketInfo.tickets[index++].ticketNumber;
+    });
+    bookedFlight.statuses.push({
+      status: EBookedFlightStatus.get("BOOKED"),
+      description: '--- Issued bookFlight by API ---',
+      changedBy: decodedToken.owner,
+    });
+    bookedFlight.save();
+
     response.success(res, {
       timestamp,
       ticketInfo
+    })
+  } catch (e) {
+    console.trace(`Code: 500, Message: `, e);
+    response.error(res, 'provider_error', 500);
+  }
+}
+
+module.exports.cancelBook = async (req, res) => {
+  try {
+    let decodedToken;
+    try {
+      decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    } catch (e) {
+      console.error(e);
+    }
+    const testMode = req.params[0] === "/test";
+
+    if (decodedToken.type !== 'THIRD_PARTY') {
+      response.error(res, "Access denied", 403);
+      return;
+    }
+
+    const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.owner, decodedToken.user);
+    let timestamp = new Date().toISOString();
+    const bookedFlight = await bookedFlightRepository.findOne({
+      bookedBy: decodedToken.owner,
+      code: req.params.bookedId
+    });
+    let canceled;
+    for (const provider of availableProviders) {
+      switch (provider) {
+        case "WORLDTICKET":
+          canceled = await worldticketHelper.cancelBookFlight(bookedFlight, testMode);
+      }
+    }
+    if (!!canceled.error) {
+      response.error(res, canceled.error, 400);
+      return;
+    }
+
+    bookedFlight.statuses.push({
+      status: EBookedFlightStatus.get("CANCEL"),
+      description: '--- Cancel bookFlight by API ---',
+      changedBy: decodedToken.owner,
+    });
+    bookedFlight.save();
+
+    response.success(res, {
+      timestamp,
+      canceled
     })
   } catch (e) {
     console.trace(`Code: 500, Message: `, e);
@@ -577,3 +650,35 @@ const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, add
     }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
   };
 };
+
+const paymentTimeout = async args => {
+  let paid = await bookedFlightRepository.hasStatus(args.code, "PAID");
+  if (!!paid) {
+    return;
+  }
+  let expire = await bookedFlightRepository.hasStatus(args.code, "EXPIRED_PAYMENT");
+  if (!!expire) {
+    return;
+  }
+  const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
+  //TODO: cancel booked
+  const providerName = EProvider.find(bookedFlight.providerName);
+
+  try {
+    await providerHelpers[providerName].cancelBookFlight(bookedFlight, args.mode);
+    //TODO: change status
+    bookedFlight.statuses.push({
+      status: 'EXPIRED_PAYMENT',
+      description: 'Your reservation has been canceled by the provider, Please book again.',
+      changedBy: 'SERVICE',
+    });
+  } catch (e) {
+    console.log(e)
+    bookedFlight.statuses.push({
+      status: 'ERROR',
+      description: 'Did not cancel from provider, reason -> (Timeout Payment)',
+      changedBy: "SERVICE",
+    });
+  }
+  bookedFlight.save();
+}

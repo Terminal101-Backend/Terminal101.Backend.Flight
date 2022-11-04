@@ -97,13 +97,61 @@ const pay = async (bookedFlight) => {
   }
 };
 
+// NOTE: Timeout Payment
+const paymentTimeout = async (args) => {
+  let paid = await bookedFlightRepository.hasStatus(args.code, "PAID");
+  if (!!paid) {
+    return;
+  }
+  let expire = await bookedFlightRepository.hasStatus(args.code, "EXPIRED_PAYMENT");
+  if (!!expire) {
+    return;
+  }
+  const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
+  //TODO: cancel booked
+  const providerName = bookedFlight.providerName;
+  let providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
+  try {
+    await providerHelper.cancelBookFlight(bookedFlight);
+    //TODO: cancel stripe or crypto
+    let cancelStatus = args.method === 'STRIPE' ? await wallet.cancelCreditCardPayment(bookedFlight.transactionId) : await wallet.cancelCryptoCurrencyPayment(bookedFlight.transactionId);
+    if (cancelStatus !== 'canceled') {
+      console.error(`cancel ${args.method} payment failed. status: `, cancelStatus);
+      return;
+    }
+    //TODO: change status
+    bookedFlight.statuses.push({
+      status: 'EXPIRED_PAYMENT',
+      description: 'Your reservation has been canceled by the provider, Please try again.',
+      changedBy: 'SERVICE',
+    });
+  } catch (e) {
+    bookedFlight.statuses.push({
+      status: 'ERROR',
+      description: 'Did not cancel from provider, reason -> (Timeout Payment)',
+      changedBy: "SERVICE",
+    });
+  }
+  bookedFlight.save();
+}
+
 // NOTE: Success payment callback
 module.exports.payForFlight = async (req, res) => {
   try {
     const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
     // TODO: Get last flight price from our DB
-    await pay(bookedFlight);
 
+    if (!!req.body.confirmed)
+      await pay(bookedFlight);
+    else if (!await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")) {
+      //send SMS or Email to passenger
+      bookedFlight.statuses.push({
+        status: EBookedFlightStatus.get("PAYING"),
+        description: 'Your last payment failed, Please try again',
+        changedBy: "SERVICE",
+      });
+    }
+    bookedFlight.save();
     response.success(res, true);
   } catch (e) {
     response.exception(res, e);
@@ -342,6 +390,14 @@ module.exports.bookFlight = async (req, res) => {
       description: 'Payment is in progress',
       changedBy: "SERVICE",
     });
+
+    //NOTE: Set Timer on Timeout
+    let timeout = paymentMethod.type === 'STRIPE' ?
+      providerBookResult.timeout - new Date().getTime() - process.env.PAYMENT_TIMEOUT :
+      Math.min(providerBookResult.timeout - new Date().getTime() - process.env.PAYMENT_TIMEOUT, process.env.PAYMENT_TIMEOUT_CRYPTO);
+    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type });
+
+    bookedFlight.providerTimeout = providerBookResult.timeout;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
@@ -455,7 +511,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
-
+    let testMode = process.env.TEST_MODE;
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
     const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });
@@ -501,7 +557,11 @@ module.exports.editUserBookedFlight = async (req, res) => {
       case "BOOK":
         console.log(status);
         try {
-          await providerHelper.issueBookedFlight(bookedFlight);
+          let ticketInfo = await providerHelper.issueBookedFlight(bookedFlight, testMode);
+          let index = 0;
+          bookedFlight.passengers.map(passenger => {
+            passenger.ticketNumber = ticketInfo.tickets[index++].ticketNumber;
+          });
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get('BOOKED'),
             description: 'The Flight Booked by Provider.',
@@ -610,7 +670,6 @@ module.exports.getBookedFlights = async (req, res) => {
       ...result,
       items: bookedFlights.map(bookedFlight => {
         const user = users.find(u => u.code === bookedFlight.bookedBy);
-
         return {
           bookedBy: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
           provider: EUserType.check(["CLIENT", "BUSINESS"], decodedToken.type) ? undefined : bookedFlight.providerName,
@@ -689,7 +748,7 @@ module.exports.getBookedFlight = async (req, res) => {
 
     const bookedFlight = await bookedFlightRepository.getBookedFlight(decodedToken.user, req.params.bookedFlightCode);
     const transaction = bookedFlight.transactionId ? await wallet.getUserTransaction(decodedToken.user, bookedFlight.transactionId) : {};
-
+    //.filter((status => status.status !== 'ERROR'))
     response.success(res, {
       // bookedBy: bookedFlight.bookedBy,
       bookedBy: EUserType.check(["CLIENT"], decodedToken.type) ? undefined : bookedFlight.bookedBy,
@@ -856,6 +915,54 @@ module.exports.getUserBookedFlight = async (req, res) => {
       transaction,
     });
   } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get booked flights history
+module.exports.getBookedFlightsHistory = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    let userCode = decodedToken.user;
+
+    const {
+      items: bookedFlights,
+      ...result
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+
+    const { data: user } = await accountManagement.getUserInfo(userCode);
+
+    response.success(res, {
+      ...result,
+      items: bookedFlights.map(bookedFlight => {
+        return {
+          email: user?.email,
+          code: bookedFlight.code,
+          searchedFlightCode: bookedFlight.searchedFlightCode,
+          flightDetailsCode: bookedFlight.flightDetailsCode,
+          status: bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status,
+          time: bookedFlight.time,
+          passengers: bookedFlight.passengers.map(passenger => user?.persons?.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user?.info),
+          contact: {
+            email: bookedFlight.contact.email,
+            mobileNumber: bookedFlight.contact.mobileNumber,
+          },
+          origin: {
+            code: bookedFlight.flightInfo.origin.code,
+            name: bookedFlight.flightInfo.origin.name,
+          },
+          destination: {
+            code: bookedFlight.flightInfo.destination.code,
+            name: bookedFlight.flightInfo.destination.name,
+          },
+          travelClass: bookedFlight.flightInfo.travelClass,
+          price: bookedFlight.flightInfo.flights.price.total,
+          currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+        };
+      })
+    });
+  } catch (e) {
+    console.log(e);
     response.exception(res, e);
   }
 };

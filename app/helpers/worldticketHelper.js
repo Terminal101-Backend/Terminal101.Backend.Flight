@@ -227,11 +227,9 @@ const makeTicketInfo = (ticketInfo) => {
   let segments = !Array.isArray(ticketInfo.TicketItemInfo) ? [ticketInfo.TicketItemInfo] : ticketInfo.TicketItemInfo;
   return {
     tickets: segments.map(s => ({
-      type: s.PassengerName?.PassengerTypeCode === 'ADT' ? 'ADULT' : 'CHD' ? 'CHILD' : 'INFANT',
-      prefixName: s.PassengerName?.NamePrefix,
-      firstName: s.PassengerName?.GivenName,
-      lastName: s.PassengerName?.Surname,
-      price: s.NetAmount,
+      prefixName: s.PassengerName?.NamePrefix.$t,
+      firstName: s.PassengerName?.GivenName.$t,
+      lastName: s.PassengerName?.Surname.$t,
       ticketNumber: s.TicketNumber
     }))
   }
@@ -294,6 +292,9 @@ module.exports.searchFlights = async (params, testMode) => {
   let index = 0;
   for (flight of flightDetails) {
     let { data: info } = await worldticket.airPrice(flight, params.adults, params.children, params.infants, testMode);
+    if (!!info.error) {
+      throw info;
+    }
     flight['price'] = makePriceObject(worldticketSearchResult[index++].AirItineraryPricingInfo.ItinTotalFare, info.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown, params);
     createBaggage(flight, info.AirItinerary.OriginDestinationOptions.OriginDestinationOption)
     flight.providerData['FareRule'] = info.AirItinerary.OriginDestinationOptions.OriginDestinationOption.FlightSegment.TPA_Extensions.FareRule.$t.replace(/[\r\n]/gm, '')
@@ -380,16 +381,28 @@ module.exports.bookFlight = async (params, testMode) => {
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.BookingReferenceID.ID;
     await flightInfo.save();
 
-    return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID };
+    return { ...bookedFlight, bookedId: bookedFlight.BookingReferenceID.ID, timeout: new Date(bookedFlight.Ticketing.TicketTimeLimit).getTime() };
   }
 };
 
-module.exports.cancelBookFlight = async bookedFlight => {
-  throw "prvoider_unavailable";
+module.exports.cancelBookFlight = async (bookedFlight, testMode) => {
+  let { data: cancelInfo } = await worldticket.cancelBook(bookedFlight.providerPnr, testMode);
+  if (!!cancelInfo.error) {
+    return cancelInfo;
+  }
+  if (cancelInfo.pnr === bookedFlight.providerPnr)
+    return true;
+  else return false;
 }
 
-module.exports.issueBookedFlight = async bookedFlight => {
-  throw "prvoider_unavailable";
+module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
+  let { data: ticketInfo } = await worldticket.ticketDemand(bookedFlight.providerPnr, bookedFlight.passengers, testMode);
+  if (!!ticketInfo.error) {
+    return ticketInfo;
+  }
+  if (!!ticketInfo.TicketItemInfo)
+    return makeTicketInfo(ticketInfo);
+  else return undefined
 }
 
 module.exports.airRevalidate = async flightInfo => {
@@ -460,14 +473,4 @@ module.exports.airAvailable = async (params, testMode) => {
     destination,
     flightsInfo: makeAvailFlight(res.OriginDestinationOptions.OriginDestinationOption)
   }));
-}
-
-module.exports.ticketDemand = async (providerPnr, testMode) => {
-  let { data: ticketInfo } = await worldticket.ticketDemand(providerPnr, testMode);
-  if (!!ticketInfo.error) {
-    return ticketInfo;
-  }
-  if (!!ticketInfo.TicketItemInfo)
-    return makeTicketInfo(ticketInfo);
-  else return {}
 }

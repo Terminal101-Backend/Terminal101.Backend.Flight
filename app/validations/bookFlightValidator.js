@@ -126,3 +126,7 @@ module.exports.payForFlight = baseValidator({
     confirmed: Joi.boolean().required(),
   },
 });
+
+module.exports.getBookedFlightsHistory = baseValidator({
+  body: {},
+}, true);
