@@ -897,3 +897,51 @@ module.exports.getUserBookedFlight = async (req, res) => {
     response.exception(res, e);
   }
 };
+
+// NOTE: Get booked flights history
+module.exports.getBookedFlightsHistory = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    let userCode = decodedToken.user;
+
+    const {
+      items: bookedFlights,
+      ...result
+    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+
+    const { data: user } = await accountManagement.getUserInfo(userCode);
+
+    response.success(res, {
+      ...result,
+      items: bookedFlights.map(bookedFlight => {
+        return {
+          email: user?.email,
+          code: bookedFlight.code,
+          searchedFlightCode: bookedFlight.searchedFlightCode,
+          flightDetailsCode: bookedFlight.flightDetailsCode,
+          status: bookedFlight.statuses.filter((status => status.status !== 'ERROR')).pop()?.status,
+          time: bookedFlight.time,
+          passengers: bookedFlight.passengers.map(passenger => user?.persons?.find(p => (p.document.code === passenger.documentCode) && (p.document.issuedAt === passenger.documentIssuedAt)) ?? user?.info),
+          contact: {
+            email: bookedFlight.contact.email,
+            mobileNumber: bookedFlight.contact.mobileNumber,
+          },
+          origin: {
+            code: bookedFlight.flightInfo.origin.code,
+            name: bookedFlight.flightInfo.origin.name,
+          },
+          destination: {
+            code: bookedFlight.flightInfo.destination.code,
+            name: bookedFlight.flightInfo.destination.name,
+          },
+          travelClass: bookedFlight.flightInfo.travelClass,
+          price: bookedFlight.flightInfo.flights.price.total,
+          currencyCode: bookedFlight.flightInfo.flights.currencyCode,
+        };
+      })
+    });
+  } catch (e) {
+    console.log(e);
+    response.exception(res, e);
+  }
+};
