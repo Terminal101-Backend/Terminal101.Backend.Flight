@@ -60,11 +60,11 @@ const xmlParser = new xmljsonParser.XMLParser(option);
 axiosApiInstance.interceptors.request.use(
   async config => {
     const testMode = config?.testMode ?? false;
-    const pathPostFix = testMode ? "_TEST" : "";
+    const pathPostfix = testMode ? "_TEST" : "";
 
-    config.baseURL = process.env["AVTRA_BASE_URL" + pathPostFix];
+    config.baseURL = process.env["AVTRA_BASE_URL" + pathPostfix];
     config.headers = {
-      'Authorization': `${process.env["AVTRA_ACCESS_TOKEN" + pathPostFix]}`,
+      'Authorization': `${process.env["AVTRA_ACCESS_TOKEN" + pathPostfix]}`,
       'Accept': 'application/xml',
       // 'Content-Type': 'application/x-www-form-urlencoded',
       'Content-Type': 'application/xml',
@@ -128,7 +128,7 @@ const reformatSearchResponse = searchResponse => {
   return searchResponse;
 };
 
-module.exports.ping = async (message, testMode = false) => {
+module.exports.ping = async (message, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.post("/services/ping", `
@@ -156,7 +156,7 @@ module.exports.ping = async (message, testMode = false) => {
   return result;
 };
 
-module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = false) => {
+module.exports.lowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
   segments = flightHelper.makeSegmentsArray(segments);
   const originDestinations = [];
 
@@ -235,7 +235,7 @@ module.exports.lowFareSearch = async (originLocationCode, destinationLocationCod
   return result;
 };
 
-module.exports.book = async (segments, price, contact, travelers, testMode = false) => {
+module.exports.book = async (segments, price, contact, travelers, testMode = true) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`
@@ -351,7 +351,7 @@ module.exports.book = async (segments, price, contact, travelers, testMode = fal
   }
 };
 
-module.exports.getBooked = async (id, testMode = false) => {
+module.exports.getBooked = async (id, testMode = true) => {
   const query = `
     <OTA_ReadRQ xmlns="http://www.opentravel.org/OTA/2003/05" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
     OTA_ReadRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1" PrimaryLangID="En-us">
@@ -382,7 +382,7 @@ module.exports.getBooked = async (id, testMode = false) => {
   return result;
 };
 
-module.exports.getAvailableSeats = async (segments, testMode = false) => {
+module.exports.getAvailableSeats = async (segments, testMode = true) => {
   const originDestinations = [];
   segments.forEach(segment => {
     originDestinations.push(`

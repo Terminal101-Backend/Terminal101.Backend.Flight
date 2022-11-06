@@ -256,7 +256,7 @@ module.exports.searchFlights = async (req, res) => {
         return;
       }
     }
-    let testMode = process.env.TEST_MODE;
+    let testMode = process.env.TEST_MODE != "false";
     /**
      * @type {Promise<Array>}
      */
@@ -310,7 +310,7 @@ module.exports.searchFlights = async (req, res) => {
         }
 
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
-        flightDetails.forEach(this.addCommissionToFlightDetails(commissions, EProvider.find(provider.name)));
+        flightDetails.forEach(this.addCommissionToFlightDetails(commissions.filter(commission => commission.prividerNames.includes(EProvider.find(provider.name)))));
 
         lastSearch.push(...flightDetails);
         appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
@@ -596,7 +596,7 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    let testMode = process.env.TEST_MODE;
+    let testMode = process.env.TEST_MODE != false;
 
     let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 

@@ -5,12 +5,15 @@ let accessToken = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.AMADEUS_SERVICE_BASE_URL;
+    const testMode = config?.testMode ?? false;
+    const pathPostfix = testMode ? "_TEST" : "";
+
+    config.baseURL = process.env["AMADEUS_SERVICE_BASE_URL" + pathPostfix];
     config.headers = {
       // "Authorization": `Bearer ${accessToken}`,
       "Accept": "*/*",
-      "Client-Secret": process.env.AMADEUS_SERVICE_CLIENT_SECRET,
-      "Client-Key": process.env.AMADEUS_SERVICE_CLIENT_KEY,
+      "Client-Secret": process.env["AMADEUS_SERVICE_CLIENT_SECRET" + pathPostfix],
+      "Client-Key": process.env["AMADEUS_SERVICE_CLIENT_KEY" + pathPostfix],
       "Content-Type": "application/json-patch+json",
       // "Content-Type": "application/json",
     }
@@ -55,7 +58,7 @@ axiosApiInstance.interceptors.request.use(
 //   return response;
 // };
 
-const searchFlight = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+const searchFlight = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode) => {
   const originDestinations = [];
   originDestinations.push({
     departure: {
@@ -118,26 +121,28 @@ const searchFlight = async (originLocationCode, destinationLocationCode, departu
     },
   };
 
-  const {data: response} = await axiosApiInstance.post("/Flight/Search", requestData);
+  const { data: response } = await axiosApiInstance.post("/Flight/Search", requestData, { testMode });
 
   return response;
 };
 
-const bookFlight = async (flight, passengers) => {
-  const {data: response} = await axiosApiInstance.post("/Flight/AirBook",
-    {
-      passengers,
-      flight,
-    }
-  );
+const bookFlight = async (flight, passengers, testMode = true) => {
+  const { data: response } = await axiosApiInstance.post("/Flight/AirBook", {
+    passengers,
+    flight,
+  }, {
+    testMode
+  });
 
   return response;
 };
 
-const airRevalidate = async flightInfo => {
+const airRevalidate = async (flightInfo, testMode = true) => {
   try {
-    const {data: response} = await axiosApiInstance.post("/Flight/airRevalidate",
-      flightInfo
+    const { data: response } = await axiosApiInstance.post("/Flight/airRevalidate",
+      flightInfo, {
+      testMode
+    }
     );
 
     return response;

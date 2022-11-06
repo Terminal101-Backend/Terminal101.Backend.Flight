@@ -231,7 +231,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 // NOTE: Book a flight
 module.exports.bookFlight = async (req, res) => {
   try {
-    let testMode = process.env.TEST_MODE;
+    let testMode = process.env.TEST_MODE != false;
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
     let flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
@@ -511,7 +511,7 @@ module.exports.cancelBookedFlight = async (req, res) => {
 // NOTE: Edit user's booked flight
 module.exports.editUserBookedFlight = async (req, res) => {
   try {
-    let testMode = process.env.TEST_MODE;
+    let testMode = process.env.TEST_MODE != false;
     const decodedToken = token.decodeToken(req.header("Authorization"));
     const { data: user } = await accountManagement.getUserInfo(req.params.userCode);
     const bookedFlight = await bookedFlightRepository.findOne({ code: req.params.bookedFlightCode });

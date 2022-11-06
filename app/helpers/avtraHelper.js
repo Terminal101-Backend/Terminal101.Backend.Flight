@@ -183,7 +183,7 @@ const getBaggageInfo = priceInfo => {
   return `${baggage} ${priceInfo[0].PassengerFare.FareBaggageAllowance.UnitOfMeasure}`;
 }
 
-module.exports.searchFlights = async params => {
+module.exports.searchFlights = async (params, testMode) => {
   let segments = makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
@@ -192,7 +192,7 @@ module.exports.searchFlights = async params => {
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
-  let { data: avtraSearchResult } = await avtra.lowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+  let { data: avtraSearchResult } = await avtra.lowFareSearch(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
 
   if (!avtraSearchResult) {
     return {

@@ -38,34 +38,43 @@ let sessionId = "";
  */
 
 // Request interceptor for API calls
-// axiosApiInstance.interceptors.request.use(
-//   async config => {
-//     config.baseURL = process.env.PARTO_BASE_URL;
-//     config.headers = {
-//       'Authorization': `Bearer ${sessionId}`,
-//       'Accept': 'application/json',
-//       'Content-Type': 'application/json',
-//     }
-//     return config;
-//   },
-//   error => {
-//     Promise.reject(error)
-//   });
+axiosApiInstance.interceptors.request.use(
+  async config => {
+    const testMode = config?.testMode ?? false;
+    const pathPostfix = testMode ? "_TEST" : "";
+
+    if (!sessionId) {
+      await createSession(testMode);
+      config.data.SessionId = sessionId;
+    }
+    config.baseURL = process.env["PARTO_BASE_URL" + pathPostfix];
+    config.headers = {
+      // 'Authorization': `Bearer ${sessionId}`,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+    return config;
+  },
+  error => {
+    Promise.reject(error)
+  });
 
 // Response interceptor for API calls
 axiosApiInstance.interceptors.response.use(async response => {
   if (!!response.data.Success) {
-    return {data: response};
+    return { data: response };
   } else {
     const originalRequest = response.config;
+    // const testMode = originalRequest?.testMode ?? false;
 
     if (!!response.data.Error && response.data.Error.Message.toLowerCase().split(" ").some(word => ["session", "sessionid"].includes(word)) && !originalRequest._retry) {
       originalRequest._retry = true;
-      await createSession();
-      const requestData = JSON.parse(originalRequest.data);
-      requestData.SessionId = sessionId;
-      originalRequest.data = JSON.stringify(requestData);
-      originalRequest.headers["Content-Length"] = originalRequest.data.length;
+      sessionId = false;
+      // await createSession(testMode);
+      // const requestData = JSON.parse(originalRequest.data);
+      // requestData.SessionId = sessionId;
+      // originalRequest.data = JSON.stringify(requestData);
+      // originalRequest.headers["Content-Length"] = originalRequest.data.length;
       return axiosApiInstance(originalRequest);
       // return airLowFareSearch(requestData.OriginDestinationInformations[0].OriginLocationCode, requestData.OriginDestinationInformations[0].DestinationLocationCode, requestData.OriginDestinationInformations[0].DepartureDateTime);
     }
@@ -75,23 +84,25 @@ axiosApiInstance.interceptors.response.use(async response => {
   throw error;
 });
 
-const createSession = async () => {
+const createSession = async testMode => {
+  const pathPostfix = testMode ? "_TEST" : "";
+
   const params = {
-    OfficeId: process.env.PARTO_OFFICE_ID,
-    Username: process.env.PARTO_USERNAME,
-    Password: process.env.PARTO_PASSWORD,
+    OfficeId: process.env["PARTO_OFFICE_ID" + pathPostfix],
+    Username: process.env["PARTO_USERNAME" + pathPostfix],
+    Password: process.env["PARTO_PASSWORD" + pathPostfix],
   };
 
   const {
     data: response
-  } = await axios.post(process.env.PARTO_BASE_URL + "/Authenticate/CreateSession", params, {});
+  } = await axios.post(process.env["PARTO_BASE_URL" + pathPostfix] + "/Authenticate/CreateSession", params, {});
 
   sessionId = response.SessionId;
 
   return response;
 };
 
-const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass = "ECONOMY", includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD") => {
+const airLowFareSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass = "ECONOMY", includedAirlineCodes = [], excludedAirlineCodes = [], nonStop, currencyCode = "USD", testMode = true) => {
   let cabinType = 1;
   let airTripType = 1;
 
@@ -166,10 +177,10 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirLowFareSearch", {
+  } = await axiosApiInstance.post("/Air/AirLowFareSearch", {
     PricingSourceType: 0,
     RequestOption: 2,
-    SessionId: sessionId,
+    // SessionId: sessionId,
     AdultCount: adults,
     ChildCount: children,
     InfantCount: infants,
@@ -181,7 +192,7 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
       VendorPreferenceCodes: includedAirlineCodes,
     },
     OriginDestinationInformations: originDestinations,
-  });
+  }, { testMode });
 
   return response.data.PricedItineraries;
 };
@@ -193,10 +204,10 @@ const airLowFareSearch = async (originLocationCode, destinationLocationCode, dep
  * @param {TravelerInfo[]} travelers
  * @returns
  */
-const airBook = async (fareSourceCode, contact, travelers) => {
+const airBook = async (fareSourceCode, contact, travelers, testMode = true) => {
   const params = {
     FareSourceCode: fareSourceCode,
-    SessionId: sessionId,
+    // SessionId: sessionId,
     // ClientUniqueId: clientUniqueId,
     // MarkupForAdult: 0.0,
     // MarkupForChild: 0.0,
@@ -243,7 +254,7 @@ const airBook = async (fareSourceCode, contact, travelers) => {
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBook", params, {});
+  } = await axiosApiInstance.post("/Air/AirBook", params, { testMode });
 
   return response;
 };
@@ -253,15 +264,15 @@ const airBook = async (fareSourceCode, contact, travelers) => {
  * @param {String} bookId
  * @returns
  */
-const airBookData = async bookId => {
+const airBookData = async (bookId, testMode = true) => {
   const params = {
     UniqueId: bookId,
-    SessionId: sessionId,
+    // SessionId: sessionId,
   };
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirBookingData", params, {});
+  } = await axiosApiInstance.post("/Air/AirBookingData", params, { testMode });
 
   return response;
 };
@@ -271,15 +282,15 @@ const airBookData = async bookId => {
  * @param {String} bookId
  * @returns
  */
-const airBookCancel = async bookId => {
+const airBookCancel = async (bookId, testMode = true) => {
   const params = {
     UniqueId: bookId,
-    SessionId: sessionId,
+    // SessionId: sessionId,
   };
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirCancel", params, {});
+  } = await axiosApiInstance.post("/Air/AirCancel", params, { testMode });
 
   return response;
 };
@@ -289,16 +300,16 @@ const airBookCancel = async bookId => {
  * @param {String} bookId
  * @returns
  */
-const airBookRefund = async bookId => {
+const airBookRefund = async (bookId, testMode = true) => {
   const params = {
     UniqueId: bookId,
-    SessionId: sessionId,
+    // SessionId: sessionId,
     RefundType: 'Eticket'
   };
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirRefund", params, {});
+  } = await axiosApiInstance.post("/Air/AirRefund", params, { testMode });
 
   return response;
 };
@@ -308,15 +319,15 @@ const airBookRefund = async bookId => {
  * @param {String} bookId
  * @returns
  */
-const airBookIssuing = async bookId => {
+const airBookIssuing = async (bookId, testMode) => {
   const params = {
     UniqueId: bookId,
-    SessionId: sessionId,
+    // SessionId: sessionId,
   };
 
   const {
     data: response
-  } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/AirOrderTicket", params, {});
+  } = await axiosApiInstance.post("/Air/AirOrderTicket", params, { testMode });
 
   return response;
 };
@@ -326,16 +337,16 @@ const airBookIssuing = async bookId => {
  * @param {String} fareSourceCode
  * @returns
  */
-const airRevalidate = async fareSourceCode => {
+const airRevalidate = async (fareSourceCode, testMode = true) => {
   const params = {
     FareSourceCode: fareSourceCode,
-    SessionId: sessionId,
+    // SessionId: sessionId,
   };
 
   try {
     const {
       data: response
-    } = await axiosApiInstance.post(process.env.PARTO_BASE_URL + "/Air/airRevalidate", params, {});
+    } = await axiosApiInstance.post("/Air/airRevalidate", params, { testMode });
 
     return response.data;
   } catch (e) {

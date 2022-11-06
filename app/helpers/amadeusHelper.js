@@ -232,7 +232,7 @@ module.exports.searchFlights_____OLD = async params => {
   };
 };
 
-module.exports.searchFlights = async params => {
+module.exports.searchFlights = async (params, testMode) => {
   let segments = flightHelper.makeSegmentsArray(params.segments);
 
   params.departureDate = new Date(params.departureDate);
@@ -241,7 +241,7 @@ module.exports.searchFlights = async params => {
   const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
   const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
 
-  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass);
+  let { result: amadeusSearchResult } = await amadeusSoap.searchFlight(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
 
   if (!amadeusSearchResult?.flights) {
     return {
@@ -313,7 +313,7 @@ module.exports.searchFlights = async params => {
  * @param {Object} params
  * @param {FlightInfo} params.flightDetails
  */
-module.exports.bookFlight = async params => {
+module.exports.bookFlight = async (params, testMode) => {
   const { data: user } = await accountManagement.getUserInfo(params.userCode);
 
   const travelers = params.passengers.map(passenger => {
@@ -371,7 +371,7 @@ module.exports.bookFlight = async params => {
   // const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
   // const bookedFlight = await amadeusSoap.bookFlight(this.regenerateAmadeusSoapBookFlightObject(params.flightDetails), travelers);
-  const bookedFlight = await amadeusSoap.bookFlight(params.flightDetails.flights.providerData, travelers);
+  const bookedFlight = await amadeusSoap.bookFlight(params.flightDetails.flights.providerData, travelers, testMode);
   if (!bookedFlight.succeed) {
     throw bookedFlight.errorMessage;
   }
@@ -549,16 +549,16 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
   }
 }
 
-module.exports.cancelBookFlight = async bookedFlight => {
+module.exports.cancelBookFlight = async (bookedFlight, testMode) => {
 }
 
-module.exports.issueBookedFlight = async bookedFlight => {
+module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
 }
 
-module.exports.airRevalidate = async flightInfo => {
+module.exports.airRevalidate = async (flightInfo, testMode) => {
   try {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
-    let { result: airRevalidate } = await amadeusSoap.airRevalidate(flightInfoAmadeusObject);
+    let { result: airRevalidate } = await amadeusSoap.airRevalidate(flightInfoAmadeusObject, testMode);
     if (!airRevalidate) {
       return {
         error: 'Revalidation failed',
