@@ -263,23 +263,39 @@ class BookedFlightRepository extends BaseRepository {
     return;
   }
 
-  async getBookedFlightsHistory(businesCode) {
+  async getBookedFlightsHistory(businesCode, filters, sort) {
     const agrBookedFlight = BookedFlight.aggregate();
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
+    
     agrBookedFlight.append(
       {
         $group:
         {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-          count: { $sum: 1 }
+          count: { $count: { } }
         }
       },
-      { $sort: { _id: 1} },
+      { $sort: { _id: 1 } },
     );
-
-    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
-    return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
-    // const result = await agrBookedFlight.exec();
-    // return !!result && !!result[0] ? result : undefined;
+    agrBookedFlight.append(
+      {
+        $group:
+        {
+          _id: { $last: "$statuses.status" },
+          count: { $count: { } }
+        }
+      }
+    );
+    agrBookedFlight.append({
+      $project: {
+        "_id": 1,
+        "count": 1,
+        "passengerCount": 1,
+      }
+    });
+    // return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
+    const result = await agrBookedFlight.exec();
+    return !!result && !!result[0] ? result : undefined;
   }
 };
 
