@@ -45,8 +45,8 @@ axiosApiInstance.interceptors.request.use(
 
     if (!sessionId) {
       await createSession(testMode);
-      config.data.SessionId = sessionId;
     }
+    config.data.SessionId = sessionId;
     config.baseURL = process.env["PARTO_BASE_URL" + pathPostfix];
     config.headers = {
       // 'Authorization': `Bearer ${sessionId}`,

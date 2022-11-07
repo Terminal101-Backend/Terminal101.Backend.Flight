@@ -393,8 +393,8 @@ module.exports.bookFlight = async (req, res) => {
 
     //NOTE: Set Timer on Timeout
     let timeout = paymentMethod.type === 'STRIPE' ?
-      providerBookResult.timeout - new Date().getTime() - process.env.PAYMENT_TIMEOUT :
-      Math.min(providerBookResult.timeout - new Date().getTime() - process.env.PAYMENT_TIMEOUT, process.env.PAYMENT_TIMEOUT_CRYPTO);
+      providerBookResult.timeout - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT) :
+      Math.min(providerBookResult.timeout - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO));
     setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type });
 
     bookedFlight.providerTimeout = providerBookResult.timeout;
