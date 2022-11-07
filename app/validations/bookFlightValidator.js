@@ -130,3 +130,7 @@ module.exports.payForFlight = baseValidator({
 module.exports.getBookedFlightsHistory = baseValidator({
   body: {},
 }, true);
+
+module.exports.getChartHistory = baseValidator({
+  body: {},
+}, true);

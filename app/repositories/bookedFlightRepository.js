@@ -62,7 +62,7 @@ class BookedFlightRepository extends BaseRepository {
       throw "flight_not_found";
     }
 
-    bookedFlight.statuses.push({status, changedBy, description});
+    bookedFlight.statuses.push({ status, changedBy, description });
     await bookedFlight.save();
 
     return bookedFlight.status;
@@ -261,6 +261,25 @@ class BookedFlightRepository extends BaseRepository {
    */
   async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {
     return;
+  }
+
+  async getBookedFlightsHistory(businesCode) {
+    const agrBookedFlight = BookedFlight.aggregate();
+    agrBookedFlight.append(
+      {
+        $group:
+        {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1} },
+    );
+
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
+    return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
+    // const result = await agrBookedFlight.exec();
+    // return !!result && !!result[0] ? result : undefined;
   }
 };
 

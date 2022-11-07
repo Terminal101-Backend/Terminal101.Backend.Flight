@@ -366,7 +366,7 @@ module.exports.bookFlight = async (req, res) => {
     }
 
     const bookedFlight = await bookedFlightRepository.createBookedFlight(decodedToken.user, flightDetails.flights.provider, req.body.searchedFlightCode, req.body.flightDetailsCode, providerBookResult.bookedId, userWalletResult.externalTransactionId, req.body.contact, req.body.passengers, bookedFlightSegments, flightDetails.flights?.travelClass, "RESERVED");
-  
+
     bookedFlight.statuses.push({
       status: EBookedFlightStatus.get("PAYING"),
       description: 'Payment is in progress',
@@ -940,6 +940,21 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
         };
       })
     });
+  } catch (e) {
+    console.log(e);
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get chart history by busines
+module.exports.getChartHistory = async (req, res) => {
+  try {
+    // const decodedToken = token.decodeToken(req.header("Authorization"));
+    // let userCode = decodedToken.user;
+    //get bookedFlights
+    const result = await bookedFlightRepository.getBookedFlightsHistory();
+
+    response.success(res, result);
   } catch (e) {
     console.log(e);
     response.exception(res, e);
