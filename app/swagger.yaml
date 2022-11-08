@@ -493,6 +493,7 @@ paths:
           description: OK
           schema:
             $ref: "#/definitions/BookFlightResult"
+
   /flight/book/history:
     # NOTE: Get all booked flights history
     get:
@@ -512,6 +513,7 @@ paths:
             type: array
             items:
               $ref: "#/definitions/BookedFlightDetails"
+
   /flight/book/history/chart:
     # NOTE: Get details for chart history
     get:
@@ -1323,18 +1325,21 @@ definitions:
         example: 13
   
   HistoryFlight:
-    required:
-      - origin
-      - destination
-      - time
     properties:
-      origin:
-        $ref: "#/definitions/Waypoint"
-      destination:
-        $ref: "#/definitions/Waypoint"
       time:
         type: string
-        example: "2022-01-13T12:15:00.000Z"
+        example: "2022-11-15"
+      travelClass:
+        type: string
+        example: "ECONOMY"
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/Passenger"
+      segments:
+        type: array
+        items:
+          $ref: "#/definitions/Segment"
 
   WaypointCount:
     required:
@@ -1930,6 +1935,7 @@ definitions:
             type: number
           currency:
             type: string
+
   ChartHistory:
     properties:
       date:
@@ -1977,6 +1983,36 @@ definitions:
         type: number
         description: If not exists means equal 0
         example: 2
+
+  Passenger:
+    properties:
+      count:
+        type: number
+        example: 1
+      travelerType:
+        enum:
+          [
+            ADULT,
+            CHILD,
+            INFANTS,
+          ]
+        type: string
+        example: ADULT
+
+  Segment:
+    properties:
+      origin:
+        type: string
+        example: FRA
+      departure:
+        type: string
+        example: "2022-11-15T12:00:00.000Z"
+      destination:
+        type: string
+        example: PAR
+      arrival:
+        type: string
+        example: "2022-11-15T16:45:00.000Z"
 
 schemes:
   - https

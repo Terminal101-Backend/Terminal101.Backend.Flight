@@ -907,7 +907,7 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
     const {
       items: bookedFlights,
       ...result
-    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    } = await bookedFlightRepository.getBookedFlightsHistory(userCode, decodedToken.business, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     const { data: user } = await accountManagement.getUserInfo(userCode);
 
@@ -951,7 +951,7 @@ module.exports.getChartHistory = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const result = await bookedFlightRepository.getBookedFlightsHistory(decodedToken.business);
+    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business);
 
     result.forEach(r => {
       let counts = {};

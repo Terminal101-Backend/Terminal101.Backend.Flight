@@ -237,20 +237,32 @@ class FlightInfoRepository extends BaseRepository {
   * @param {String} sort
   * @returns {Promise<FlightInfo>}
   */
-  async getHistoryFlights(page, pageSize, filters, sort) {
+  async getHistoryFlights(count = 10) {
     const agrFlightInfo = FlightInfo.aggregate().allowDiskUse(true);
 
     agrFlightInfo.append({
       $project: {
-        "origin": { "code": 1, "name": 1 },
-        "destination": { "code": 1, "name": 1 },
-        "time": 1,
+        "origin": { "code": 1 },
+        "destination": { "code": 1 },
+        "time": { $dateToString: { format: "%Y-%m-%d", date: "$time" } },
         "_id": 0,
+        "flights": {
+          "travelClass": 1,
+          "itineraries": {
+            "segments.departure.at": 1,
+            "segments.departure.city.code": 1,
+            "segments.arrival.at": 1,
+            "segments.arrival.city.code": 1
+          },
+          "price": { "travelerPrices.count": 1, "travelerPrices.travelerType": 1 }
+        }
       }
     });
+    agrFlightInfo.append({ $sort: { time: -1 } });
+    agrFlightInfo.append({ $limit: count });
 
-    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
-    return await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+    const result = await agrFlightInfo.exec();
+    return !!result && !!result[0] ? result : undefined;
 
   }
 };
