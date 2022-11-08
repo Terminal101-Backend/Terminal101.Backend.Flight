@@ -108,18 +108,19 @@ const paymentTimeout = async (args) => {
     return;
   }
   const bookedFlight = await bookedFlightRepository.findOne({ code: args.code });
-  //TODO: cancel booked
+  // NOTE: cancel booked
   const providerName = bookedFlight.providerName;
   let providerHelper = eval(EProvider.find(providerName).toLowerCase() + "Helper");
   try {
     await providerHelper.cancelBookFlight(bookedFlight);
-    //TODO: cancel stripe or crypto
-    let cancelStatus = args.method === 'STRIPE' ? await wallet.cancelCreditCardPayment(bookedFlight.transactionId) : await wallet.cancelCryptoCurrencyPayment(bookedFlight.transactionId);
+    // NOTE: cancel stripe or crypto
+    let cancelStatus = await wallet.cancelPayment(bookedFlight.transactionId, args.method, args.timeout);
+
     if (cancelStatus !== 'canceled') {
       console.error(`cancel ${args.method} payment failed. status: `, cancelStatus);
       return;
     }
-    //TODO: change status
+    // NOTE: change status
     bookedFlight.statuses.push({
       status: 'EXPIRED_PAYMENT',
       description: 'Your reservation has been canceled by the provider, Please try again.',
@@ -392,12 +393,13 @@ module.exports.bookFlight = async (req, res) => {
     });
 
     //NOTE: Set Timer on Timeout
+    let timeoutProvider = providerBookResult.timeout > 0 ? providerBookResult.timeout : new Date().getTime() + parseInt(process.env.PAYMENT_TIMEOUT_CREDIT);
     let timeout = paymentMethod.type === 'STRIPE' ?
-      providerBookResult.timeout - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT) :
-      Math.min(providerBookResult.timeout - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO));
-    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type });
+      timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT) :
+      Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO));
+    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type, timeout: timeoutProvider });
 
-    bookedFlight.providerTimeout = providerBookResult.timeout;
+    bookedFlight.providerTimeout = timeoutProvider;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
