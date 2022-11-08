@@ -88,7 +88,7 @@ router
       console.log("Get chart history by business", req.params, req.body, req.query);
       next();
     },
-    // checkAccess.checkUserType("BUSINESS"),
+    checkAccess.checkUserType("BUSINESS"),
     bookFlightValidator.getChartHistory.check,
     bookFlightController.getChartHistory);
 

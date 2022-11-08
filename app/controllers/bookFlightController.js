@@ -949,11 +949,10 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
 // NOTE: Get chart history by busines
 module.exports.getChartHistory = async (req, res) => {
   try {
-    // const decodedToken = token.decodeToken(req.header("Authorization"));
-    // let userCode = decodedToken.user;
-    //get bookedFlights
-    const result = await bookedFlightRepository.getBookedFlightsHistory();
-  
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+
+    const result = await bookedFlightRepository.getBookedFlightsHistory(decodedToken.business);
+
     result.forEach(r => {
       let counts = {};
       r["date"] = r._id

@@ -263,8 +263,13 @@ class BookedFlightRepository extends BaseRepository {
     return;
   }
 
-  async getBookedFlightsHistory(businesCode, filters, sort) {
+  async getBookedFlightsHistory(businessCode, filters, sort) {
     const agrBookedFlight = BookedFlight.aggregate();
+    agrBookedFlight.append({
+      $match: {
+        businessCode,
+      }
+    })
     filterHelper.filterAndSort(agrBookedFlight, filters, sort);
 
     agrBookedFlight.append(
