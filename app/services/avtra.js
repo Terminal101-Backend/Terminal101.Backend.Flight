@@ -431,3 +431,73 @@ module.exports.getAvailableSeats = async (segments, testMode = true) => {
 
   return result;
 };
+
+module.exports.issue = async (providerPnr, passengers, testMode = false) => {
+
+
+  const query = `<OTA_AirBookModifyRQ xmlns="http://www.opentravel.org/OTA/2003/05"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.opentravel.org/OTA/2003/05 
+  OTA_AirBookModifyRQ.xsd" EchoToken="50987" TimeStamp="${new Date().toISOString()}" Target="Test" Version="2.001" SequenceNmbr="1"  PrimaryLangID="En-us">
+    <AirBookModifyRQ ModificationType="15">
+        <Fulfillment>
+            <PaymentDetails>
+            <PaymentDetail PaymentType="2">
+                <DirectBill DirectBill_ID="${process.env.AVTRA_OFFICE_ID}">
+                    <CompanyName CompanyShortName="${process.env.AVTRA_OFFICE_ID}" Code="${process.env.AVTRA_OFFICE_ID}"/>
+                </DirectBill>
+            </PaymentDetail>
+        </PaymentDetails>
+        </Fulfillment>
+    </AirBookModifyRQ>
+    <AirReservation>
+      <TravelerInfo>
+         <AirTraveler BirthDate="1974-04-16" PassengerTypeCode="ADT" AccompaniedByInfantInd="false" TravelerNationality="IQ" Gender="M">
+            <PersonName>
+               <NamePrefix>Mr</NamePrefix>
+               <GivenName>AHMED</GivenName>
+               <Surname>MOHAMMED</Surname>
+            </PersonName>
+            <Document DocID="E123675422" DocType="2" DocIssueCountry="IQ" DocHolderNationality="IQ" EffectiveDate="2019-10-15" ExpireDate="2029-09-15"/>
+            <TravelerRefNumber RPH="1"/>
+         </AirTraveler>
+      </TravelerInfo>
+      <ContactPerson>
+         <PersonName>
+            <GivenName>AHMED</GivenName>
+            <Surname>MOHAMMED</Surname>
+         </PersonName>
+         <Telephone PhoneNumber="(964)7633223445"/>
+         <HomeTelephone PhoneNumber="(964)2232257434"/>
+         <Email>tba@tba.com</Email>
+      </ContactPerson>
+        <Fulfillment>
+            <PaymentDetails/> 
+        </Fulfillment>
+      <Ticketing TicketTimeLimit="2020-12-15T21:34:46.813Z" TicketingStatus="1"/>
+      <BookingReferenceID Status="1" Instance="0" ID="STIRHP" ID_Context="BookingRef"/>
+    </AirReservation>
+</OTA_AirBookModifyRQ>
+  `;
+
+  const {
+    data: response
+  } = await axiosApiInstance.post("/booking/create", query, { testMode });
+
+  const responseJson = xmlParser.parse(response, option);
+
+  const result = {
+    success: !!responseJson?.OTA_AirBookRS?.Success,
+    data: responseJson?.OTA_AirBookRS?.AirReservation,
+    error: {
+      code: responseJson?.OTA_AirBookRS?.Errors?.Error?.Code,
+      message: responseJson?.OTA_AirBookRS?.Errors?.Error?.ShortText,
+    }
+  };
+
+  if (!!result.success) {
+    return result;
+  } else {
+    throw result.error;
+  }
+};
