@@ -63,7 +63,7 @@ class BookedFlightRepository extends BaseRepository {
       throw "flight_not_found";
     }
 
-    bookedFlight.statuses.push({status, changedBy, description});
+    bookedFlight.statuses.push({ status, changedBy, description });
     await bookedFlight.save();
 
     return bookedFlight.status;
@@ -201,6 +201,79 @@ class BookedFlightRepository extends BaseRepository {
 
   /**
    *
+   * @param {String} bookedBy
+   * @param {String} businessCode
+   * @param {Number} page
+   * @param {Number} pageSize
+   * @param {{field: value}[]} filters
+   * @param {String} sort
+   * @returns {Promise<BookedFlight>}
+   */
+  async getBookedFlightsHistory(bookedBy, businessCode, page, pageSize, filters, sort) {
+    const agrBookedFlight = BookedFlight.aggregate().allowDiskUse(true);
+
+    agrBookedFlight.append({
+      $match: {
+        bookedBy,
+        businessCode,
+      }
+    });
+    agrBookedFlight.append({
+      $lookup: {
+        from: 'flightinfos',
+        localField: 'searchedFlightCode',
+        foreignField: 'code',
+        as: 'flightInfo'
+      }
+    });
+    agrBookedFlight.append({ $unwind: "$flightInfo" });
+    agrBookedFlight.append({ $unwind: "$flightInfo.flights" });
+    agrBookedFlight.append({
+      $match: {
+        $expr: {
+          $eq: ["$flightDetailsCode", "$flightInfo.flights.code"],
+        }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        lastStatus: { $last: "$statuses" }
+      }
+    });
+    agrBookedFlight.append({
+      $addFields: {
+        status: "$lastStatus.status"
+      }
+    });
+    agrBookedFlight.append({
+      $project: {
+        "bookedBy": 1,
+        "providerName": 1,
+        "providerPnr": 1,
+        "code": 1,
+        "searchedFlightCode": 1,
+        "flightDetailsCode": 1,
+        "statuses": 1,
+        "status": 1,
+        "time": 1,
+        "passengers": 1,
+        "contact": 1,
+        "flightInfo.origin": 1,
+        "flightInfo.destination": 1,
+        "flightInfo.travelClass": 1,
+        "flightInfo.flights.price.total": 1,
+        "flightInfo.flights.currencyCode": 1,
+        "flightInfo.userType": 1,
+        "flightInfo.testMode": 1,
+      }
+    });
+
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
+    return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
+  }
+
+  /**
+   *
    * @param {String} code
    * @returns {Promise<BookedFlight>}
    */
@@ -270,6 +343,41 @@ class BookedFlightRepository extends BaseRepository {
    */
   async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {
     return;
+  }
+
+  async getBookedFlightsChartHistory(businessCode, filters, sort) {
+    const agrBookedFlight = BookedFlight.aggregate();
+    agrBookedFlight.append({
+      $match: {
+        businessCode,
+      }
+    })
+    filterHelper.filterAndSort(agrBookedFlight, filters, sort);
+
+    agrBookedFlight.append(
+      {
+        $group:
+        {
+          _id: { $dateToString: { format: "%m", date: "$createdAt" } },
+          statuses: { $push: { $last: ["$statuses.status"] } },
+          count: { $count: {} },
+          passengersCount: { $sum: { $size: "$passengers" } }
+        }
+      },
+      { $sort: { _id: 1 } },
+    );
+
+    agrBookedFlight.append({
+      $project: {
+        "_id": 1,
+        "count": 1,
+        "statuses": 1,
+        "passengersCount": 1,
+      }
+    });
+    // return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
+    const result = await agrBookedFlight.exec();
+    return !!result && !!result[0] ? result : undefined;
   }
 };
 

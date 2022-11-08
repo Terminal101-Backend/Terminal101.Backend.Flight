@@ -81,6 +81,17 @@ router
     bookFlightValidator.getBookedFlightsHistory.check,
     bookFlightController.getBookedFlightsHistory);
 
+// NOTE: Get chart history by business
+router
+  .get("/history/chart",
+    (req, res, next) => {
+      console.log("Get chart history by business", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType("BUSINESS"),
+    bookFlightValidator.getChartHistory.check,
+    bookFlightController.getChartHistory);
+
 // NOTE: Get specific booked flight's details by user
 router
   .get("/:bookedFlightCode",

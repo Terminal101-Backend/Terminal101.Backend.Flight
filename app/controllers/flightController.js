@@ -899,10 +899,28 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
 // NOTE: Get history flights
 module.exports.getHistoryFlights = async (req, res) => {
   try {
-    const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
-    const list = await flightInfoRepository.getHistoryFlights(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    // const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    const list = await flightInfoRepository.getHistoryFlights(req.header("PageSize"));
+    let params = [];
 
-    response.success(res, list);
+    list.forEach(l => {
+      if (l.flights.length > 0) {
+        params.push({
+          time: l.time,
+          travelClass: l.flights[0].travelClass,
+          passengers: l.flights[0].price.travelerPrices,
+          segments: l.flights[0].itineraries.map(i => {
+            return {
+              origin: i.segments[0].departure.city.code,
+              departure: i.segments[0].departure.at,
+              destination: i.segments[i.segments.length - 1].arrival.city.code,
+              arrival: i.segments[i.segments.length - 1].arrival.at
+            }
+          })
+        })
+      }
+    })
+    response.success(res, params);
 
   } catch (e) {
     response.exception(res, e);

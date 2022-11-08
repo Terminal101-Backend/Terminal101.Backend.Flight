@@ -928,7 +928,7 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
     const {
       items: bookedFlights,
       ...result
-    } = await bookedFlightRepository.getBookedFlights(userCode, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    } = await bookedFlightRepository.getBookedFlightsHistory(userCode, decodedToken.business, req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     const { data: user } = await accountManagement.getUserInfo(userCode);
 
@@ -961,6 +961,32 @@ module.exports.getBookedFlightsHistory = async (req, res) => {
         };
       })
     });
+  } catch (e) {
+    console.log(e);
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get chart history by busines
+module.exports.getChartHistory = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+
+    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business);
+
+    result.forEach(r => {
+      let counts = {};
+      r["date"] = r._id
+      r.statuses.forEach(function (x) {
+        counts[x] = (counts[x] || 0) + 1;
+        r[x.toLowerCase()] = counts[x];
+      });
+      delete r.statuses
+      delete r._id
+      delete r.count
+    })
+
+    response.success(res, result);
   } catch (e) {
     console.log(e);
     response.exception(res, e);

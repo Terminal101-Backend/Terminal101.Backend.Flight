@@ -71,7 +71,7 @@ router
       console.log("History flights", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("BUSINESS"),
+    // checkAccess.checkUserType("BUSINESS"),
     flightValidator.getHistoryFlights.check,
     flightController.getHistoryFlights);
 
