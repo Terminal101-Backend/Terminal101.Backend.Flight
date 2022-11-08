@@ -953,6 +953,18 @@ module.exports.getChartHistory = async (req, res) => {
     // let userCode = decodedToken.user;
     //get bookedFlights
     const result = await bookedFlightRepository.getBookedFlightsHistory();
+  
+    result.forEach(r => {
+      let counts = {};
+      r["date"] = r._id
+      r.statuses.forEach(function (x) {
+        counts[x] = (counts[x] || 0) + 1;
+        r[x.toLowerCase()] = counts[x];
+      });
+      delete r.statuses
+      delete r._id
+      delete r.count
+    })
 
     response.success(res, result);
   } catch (e) {

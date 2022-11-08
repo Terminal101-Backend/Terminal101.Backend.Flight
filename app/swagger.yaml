@@ -512,6 +512,25 @@ paths:
             type: array
             items:
               $ref: "#/definitions/BookedFlightDetails"
+  /flight/book/history/chart:
+    # NOTE: Get details for chart history
+    get:
+      tags:
+        - Book
+      description: Get details for chart history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ChartHistory"
 
   /flight/book/{bookedFlightCode}:
     # NOTE: Get booked flight
@@ -1911,6 +1930,53 @@ definitions:
             type: number
           currency:
             type: string
+  ChartHistory:
+    properties:
+      date:
+        type: string
+        example: "10"
+      passengersCount:
+        type: number
+        example: 74
+      reserved:
+        type: number
+        example: 2
+      inprogress:
+        type: number
+        description: If not exists means equal 0
+        example: 1
+      paying:
+        type: number
+        description: If not exists means equal 0
+        example: 2
+      book:
+        type: number
+        description: If not exists means equal 0
+        example: 5
+      booked:
+        type: number
+        description: If not exists means equal 0
+        example: 12
+      error:
+        type: number
+        description: If not exists means equal 0
+        example: 1
+      expired_payment:
+        type: number
+        description: If not exists means equal 0
+        example: 2
+      cancel:
+        type: number
+        description: If not exists means equal 0
+        example: 6
+      rejected:
+        type: number
+        description: If not exists means equal 0
+        example: 4
+      paid:
+        type: number
+        description: If not exists means equal 0
+        example: 2
 
 schemes:
   - https
