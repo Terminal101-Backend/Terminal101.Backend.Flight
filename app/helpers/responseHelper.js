@@ -1,5 +1,5 @@
-const {ValidationException} = require("./validationExceptionHelper");
-const {common} = require("../services");
+const { ValidationException } = require("./validationExceptionHelper");
+const { common } = require("../services");
 
 //making response for successfully situation
 exports.success = (res, data) => {
@@ -14,7 +14,7 @@ exports.success = (res, data) => {
 
 //making response for error by status code (default is 404)
 exports.error = (res, message, statusCode = 404, data = []) => {
-  console.trace(`Code: ${statusCode}, Message: ${message}`);
+  console.trace("Code: ${statusCode}, Message: ", JSON.stringify(message));
   return res.status(statusCode).send(
     {
       status: false,
@@ -34,7 +34,7 @@ exports.exception = (res, error) => {
     message = error.message
   }
   if (message === `Passenger's passport number is not valid.`) {
-    console.error(`Code: 400, Message: ${message}`);
+    console.error("Code: 400, Message: ", JSON.stringify(message));
     return res.status(400).send({
       status: false,
       message: 'passport_not_valid',
@@ -42,14 +42,14 @@ exports.exception = (res, error) => {
     });
   }
   if (message === 'Revalidation failed') {
-    console.error(`Code: 404, Message: ${message}`);
+    console.error("Code: 404, Message: ", JSON.stringify(message));
     return res.status(404).send({
       status: false,
       message: 'flight_not_available',
       data,
     });
   }
-  console.trace(`Code: 500, Message: ${message}`);
+  console.trace("Code: 500, Message: ", JSON.stringify(message));
   return res.status(500).send({
     status: false,
     message: `{{${message}}}`,
