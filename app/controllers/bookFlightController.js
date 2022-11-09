@@ -308,7 +308,7 @@ module.exports.bookFlight = async (req, res) => {
     const oldPrice = flightDetails.flights.price.total;
 
     if (!!newPrice.error) {
-      response.exception(res, newPrice);
+      response.exception(res, newPrice.error);
       return;
     }
 
