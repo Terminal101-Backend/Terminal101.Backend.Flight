@@ -231,7 +231,7 @@ module.exports.generateNewPaymentInfo = async (req, res) => {
 // NOTE: Book a flight
 module.exports.bookFlight = async (req, res) => {
   try {
-    let testMode = process.env.TEST_MODE != false;
+    let testMode = process.env.TEST_MODE != "false";
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
     let flightDetails = await flightInfoRepository.getFlight(req.body.searchedFlightCode, req.body.flightDetailsCode);
@@ -304,7 +304,7 @@ module.exports.bookFlight = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    const newPrice = await providerHelper.airRevalidate(flightDetails);
+    const newPrice = await providerHelper.airRevalidate(flightDetails, testMode);
     const oldPrice = flightDetails.flights.price.total;
 
     if (!!newPrice.error) {
