@@ -310,7 +310,7 @@ module.exports.searchFlights = async (req, res) => {
         }
 
         const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
-        flightDetails.forEach(this.addCommissionToFlightDetails(commissions.filter(commission => commission.prividerNames.includes(EProvider.find(provider.name)))));
+        flightDetails.forEach(this.addCommissionToFlightDetails(commissions.filter(commission => (commission?.providerNames ?? []).includes(EProvider.find(provider.name)))));
 
         lastSearch.push(...flightDetails);
         appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {

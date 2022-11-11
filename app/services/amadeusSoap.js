@@ -139,7 +139,7 @@ const bookFlight = async (flight, passengers, testMode = true) => {
 
 const airRevalidate = async (flightInfo, testMode = true) => {
   try {
-    const { data: response } = await axiosApiInstance.post("/Flight/airRevalidate",
+    const { data: response } = await axiosApiInstance.post("/Flight/AirRevalidate",
       flightInfo, {
       testMode
     }

@@ -69,7 +69,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
           name: "UNKNOWN"
         },
         terminal: segment.originDestination.departure.terminalName,
-        at: segment.originDestination.departure.date + "T" + segment.originDestination.departure.time,
+        at: new Date(segment.originDestination.departure.date + "T" + segment.originDestination.departure.time),
       },
       arrival: {
         airport: !!airports[segment.originDestination.arrival.airportCode] ? airports[segment.originDestination.arrival.airportCode].airport : {
@@ -91,7 +91,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
           name: "UNKNOWN"
         },
         terminal: segment.originDestination.arrival.terminalName,
-        at: segment.originDestination.arrival.date + "T" + segment.originDestination.arrival.time,
+        at: new Date(segment.originDestination.arrival.date + "T" + segment.originDestination.arrival.time),
       },
       baggage: segment.baggage
     };
@@ -501,7 +501,7 @@ module.exports.regenerateAmadeusSoapBookFlightObject = flightInfo => {
   }
 
   return {
-    offerID: flightInfo.flights.providerData.offerId,
+    offerID: flightInfo.flights.providerData.offerID,
     price: {
       offerPrices: flightInfo.flights.price.travelerPrices.map(price => ({
         baseAmount: 0,
