@@ -558,7 +558,10 @@ module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
 module.exports.airRevalidate = async (flightInfo, testMode) => {
   try {
     const flightInfoAmadeusObject = await this.regenerateAmadeusSoapBookFlightObject(flightInfo);
-    let { result: airRevalidate } = await amadeusSoap.airRevalidate(flightInfoAmadeusObject, testMode);
+    const response = await amadeusSoap.airRevalidate(flightInfoAmadeusObject, testMode);
+    const airRevalidate = response?.result;
+    console.error(JSON.stringify(response));
+
     if (!airRevalidate) {
       return {
         error: 'Revalidation failed',
