@@ -183,6 +183,16 @@ const getBaggageInfo = priceInfo => {
   return `${baggage} ${priceInfo[0].PassengerFare.FareBaggageAllowance.UnitOfMeasure}`;
 }
 
+const makeTicketInfo = (ticketInfo) => {
+  let segments = !Array.isArray(ticketInfo.Ticketing) ? [ticketInfo.Ticketing] : ticketInfo.Ticketing;
+
+  return {
+    tickets: segments.map(s => ({
+      ticketNumber: s.TicketDocumentNbr
+    }))
+  }
+}
+
 module.exports.searchFlights = async (params, testMode) => {
   let segments = makeSegmentsArray(params.segments);
 
@@ -327,8 +337,14 @@ module.exports.cancelBookFlight = async bookedFlight => {
   throw "prvoider_unavailable";
 };
 
-module.exports.issueBookedFlight = async bookedFlight => {
-  throw "prvoider_unavailable";
+module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
+  let { data: ticketInfo } = await avtra.issue(bookedFlight.providerPnr, bookedFlight.flightSegments, bookedFlight.passengers, bookedFlight.contact, bookedFlight.providerTimeout, testMode);
+  if (!!ticketInfo.error) {
+    return ticketInfo;
+  }
+  if (!!ticketInfo.Ticketing)
+    return makeTicketInfo(ticketInfo);
+  else return undefined
 };
 
 module.exports.airRevalidate = async flightInfo => {

@@ -2,6 +2,7 @@ const axios = require("axios");
 const axiosApiInstance = axios.create();
 const xmljsonParser = require("fast-xml-parser");
 const { dateTimeHelper, flightHelper, stringHelper, parserHelper } = require("../helpers");
+const bookedFlight = require("../models/documents/bookedFlight");
 
 const reformatToArray = path => {
   const root = path.split(".")[0];
@@ -432,8 +433,55 @@ module.exports.getAvailableSeats = async (segments, testMode = true) => {
   return result;
 };
 
-module.exports.issue = async (providerPnr, passengers, testMode = false) => {
+module.exports.issue = async (providerPnr, segments, travelers, contact, timelimit, testMode = false) => {
+  const originDestinations = [];
+  segments.forEach(segment => {
+    originDestinations.push(`
+      <OriginDestinationOption>
+        <FlightSegment FlightNumber="${segment.flightNumber}" DepartureDateTime="${new Date(segment.date).toISOString().replace(/(\.\d{3})?Z$/, "+00:00")}">
+          <DepartureAirport LocationCode="${segment.originCode}" />
+          <ArrivalAirport LocationCode="${segment.destinationCode}" />
+          <OperatingAirline Code="${segment.airlineCode}"/>
+        </FlightSegment>
+      </OriginDestinationOption>
+      `);
+  });
 
+  const travelersInfo = [];
+  travelers.forEach(traveler => {
+    let namePrefix;
+    const infant = 2 * 365 * 24 * 3600 * 1000;
+    const child = 12 * 365 * 24 * 3600 * 1000
+    const age = new Date() - new Date(traveler.birthDate);
+    if ((traveler.gender === "MALE") || (traveler.gender === "TRANS") || (traveler.gender === "OTHER")) {
+      traveler.gender = "M";
+    } else {
+      traveler.gender = "F";
+    }
+
+    const type = (age < infant) ? "INF" : (age < child) ? "CHD" : "ADT";
+    switch (traveler.gender) {
+      case "M":
+        namePrefix = (type === "ADT") ? "Mr" : "Master";
+        break;
+
+      case "F":
+        namePrefix = (type === "ADT") ? "Mrs" : "Miss";
+        break;
+    }
+
+    travelersInfo.push(`
+      <AirTraveler BirthDate="${new Date(traveler.birthDate).toISOString().replace(/(\.\d{3})Z.*$/, "")}" PassengerTypeCode="${type}" AccompaniedByInfantInd="false" Gender="${traveler.gender}" TravelerNationality="${traveler.document.issuedAt}">
+        <PersonName>
+          <NamePrefix>${namePrefix}</NamePrefix>
+          <GivenName>${traveler.firstName}</GivenName>
+          <Surname>${traveler.lastName}</Surname>
+        </PersonName>
+        <Document DocID="${traveler.document.code}" DocType="2" ExpireDate="${new Date(traveler.document.expirationDate).toISOString().replace(/(\.\d{3})?Z.*$/, "")}" DocIssueCountry="${traveler.document.issuedAt}" DocHolderNationality="${traveler.document.issuedAt}"/>
+        <TravelerRefNumber RPH="1"/>
+        </AirTraveler>
+    `);
+  });
 
   const query = `<OTA_AirBookModifyRQ xmlns="http://www.opentravel.org/OTA/2003/05"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -451,38 +499,34 @@ module.exports.issue = async (providerPnr, passengers, testMode = false) => {
         </Fulfillment>
     </AirBookModifyRQ>
     <AirReservation>
+      <AirItinerary>
+         <OriginDestinationOptions>
+         ${originDestinations.join("\n")}
+         </OriginDestinationOptions>
+      </AirItinerary>
       <TravelerInfo>
-         <AirTraveler BirthDate="1974-04-16" PassengerTypeCode="ADT" AccompaniedByInfantInd="false" TravelerNationality="IQ" Gender="M">
-            <PersonName>
-               <NamePrefix>Mr</NamePrefix>
-               <GivenName>AHMED</GivenName>
-               <Surname>MOHAMMED</Surname>
-            </PersonName>
-            <Document DocID="E123675422" DocType="2" DocIssueCountry="IQ" DocHolderNationality="IQ" EffectiveDate="2019-10-15" ExpireDate="2029-09-15"/>
-            <TravelerRefNumber RPH="1"/>
-         </AirTraveler>
+      ${travelersInfo.join("\n")}
       </TravelerInfo>
       <ContactPerson>
          <PersonName>
-            <GivenName>AHMED</GivenName>
-            <Surname>MOHAMMED</Surname>
+            <GivenName>${travelers[0].firstName}</GivenName>
+            <Surname>${travelers[0].lastName}</Surname>
          </PersonName>
-         <Telephone PhoneNumber="(964)7633223445"/>
-         <HomeTelephone PhoneNumber="(964)2232257434"/>
-         <Email>tba@tba.com</Email>
+         <Telephone PhoneNumber="${contact.mobileNumber}"/>
+         <HomeTelephone PhoneNumber="${contact.mobileNumber}"/>
+         <Email>${contact.email}</Email>
       </ContactPerson>
         <Fulfillment>
             <PaymentDetails/> 
         </Fulfillment>
-      <Ticketing TicketTimeLimit="2020-12-15T21:34:46.813Z" TicketingStatus="1"/>
-      <BookingReferenceID Status="1" Instance="0" ID="STIRHP" ID_Context="BookingRef"/>
+      <Ticketing TicketTimeLimit="${new Date(timelimit).toISOString()}" TicketingStatus="1"/>
+      <BookingReferenceID Status="1" Instance="0" ID="${providerPnr}" ID_Context="BookingRef"/>
     </AirReservation>
-</OTA_AirBookModifyRQ>
-  `;
+</OTA_AirBookModifyRQ>`;
 
   const {
     data: response
-  } = await axiosApiInstance.post("/booking/create", query, { testMode });
+  } = await axiosApiInstance.post("/modifyancillary", query, { testMode });
 
   const responseJson = xmlParser.parse(response, option);
 
