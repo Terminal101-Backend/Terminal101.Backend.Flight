@@ -596,7 +596,7 @@ module.exports.getFlightPrice = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    let testMode = process.env.TEST_MODE != false;
+    let testMode = process.env.TEST_MODE != "false";
 
     let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
 
