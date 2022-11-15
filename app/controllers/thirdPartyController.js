@@ -130,7 +130,7 @@ module.exports.book = async (req, res) => {
       bookedFlightSegments.push(flightDetails.flights?.itineraries?.[0].segments[lastIndex]);
     }
 
-    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user,decodedToken.user, req.body.passengers);
+    await accountManagement.addEditPersons(decodedToken.owner, decodedToken.user, req.body.passengers);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.owner);
 
     let passengers = req.body.passengers.map(passenger => ({
