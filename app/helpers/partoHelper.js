@@ -3,7 +3,7 @@ const flightHelper = require("./flightHelper");
 const { parto } = require("../services");
 const { flightInfoRepository, countryRepository, airlineRepository } = require("../repositories");
 const { accountManagement } = require("../services");
-const { EProvider } = require("../constants");
+const { EProvider, EBadgeType } = require("../constants");
 
 const makeSegmentsArray = segments => {
   segments = segments ?? [];
@@ -87,7 +87,7 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
         at: segment.ArrivalDateTime,
       },
       baggage: segment.Baggage,
-      badge: segment.IsCharter ? "Charter" : "Instant purchase"
+      badge: segment.IsCharter ? "CHARTER" : "INSTANT_PURCHASE"
     };
 
     return result;
