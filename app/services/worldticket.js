@@ -558,6 +558,14 @@ const ticketDemand = async (providerPnr, passengers, testMode = false) => {
     for (let index = 0; index < passengers?.length ?? 0; index++) {
         PassengerRPH += `${index + 1} `
     }
+    let PaymentInfo = testMode ? 
+    `<PaymentInfo PaymentType="1" PassengerRPH="${PassengerRPH}" CurrencyCode="USD"></PaymentInfo>` :
+    `<PaymentInfo PaymentType="4" PassengerRPH="${PassengerRPH}" CurrencyCode="USD">
+    <CreditCardInfo>
+        <CardHolderName>${process.env.FLYERBIL_DEBIT_CARD_NAME}</CardHolderName>
+    </CreditCardInfo>
+    </PaymentInfo>`
+    
     const query = `<OTA_AirDemandTicketRQ 
     xmlns="http://www.opentravel.org/OTA/2003/05" 
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -567,7 +575,7 @@ const ticketDemand = async (providerPnr, passengers, testMode = false) => {
         <MessageFunction Function="ET" />
         <BookingReferenceID Type="14" ID="${providerPnr}">
         </BookingReferenceID>
-        <PaymentInfo PaymentType="1" PassengerRPH="${PassengerRPH}" CurrencyCode="USD"></PaymentInfo>
+        ${PaymentInfo}
     </DemandTicketDetail>
 </OTA_AirDemandTicketRQ>`
 
