@@ -86,7 +86,8 @@ const makeFlightSegmentsArray = (aircrafts, airlines, airports) => {
         },
         at: segment.ArrivalDateTime,
       },
-      baggage: segment.Baggage
+      baggage: segment.Baggage,
+      badge: segment.IsCharter ? "Charter" : "Instant purchase"
     };
 
     return result;
