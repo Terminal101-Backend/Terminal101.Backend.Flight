@@ -83,7 +83,7 @@ router
 
 // NOTE: Get chart history by business
 router
-  .get("/history/chart",
+  .get("/history/chart/:category",
     (req, res, next) => {
       console.log("Get chart history by business", req.params, req.body, req.query);
       next();
