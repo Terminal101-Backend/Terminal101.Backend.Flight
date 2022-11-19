@@ -336,7 +336,8 @@ class BookedFlightRepository extends BaseRepository {
     return;
   }
 
-  async getBookedFlightsChartHistory(businessCode, filters, sort) {
+  async getBookedFlightsChartHistory(category, businessCode, filters, sort) {
+    let format = category === 'YEAR' ? "%Y" : category === 'MONTH' ? "%m" : "%Y-%m-%d"
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
       $match: {
@@ -349,7 +350,7 @@ class BookedFlightRepository extends BaseRepository {
       {
         $group:
         {
-          _id: { $dateToString: { format: "%m", date: "$createdAt" } },
+          _id: { $dateToString: { format, date: "$createdAt" } },
           statuses: { $push: { $last: ["$statuses.status"] } },
           count: { $count: {} },
           passengersCount: { $sum: { $size: "$passengers" } }

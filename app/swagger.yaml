@@ -514,7 +514,7 @@ paths:
             items:
               $ref: "#/definitions/BookedFlightDetails"
 
-  /flight/book/history/chart:
+  /flight/book/history/chart/{category}:
     # NOTE: Get details for chart history
     get:
       tags:
@@ -525,6 +525,12 @@ paths:
           in: header
           type: string
           value: Bearer
+          required: true
+        - name: category
+          in: path
+          type: string
+          enum: [YEAR, MONTH, DAY]
+          value: MONTH
           required: true
       responses:
         "200":

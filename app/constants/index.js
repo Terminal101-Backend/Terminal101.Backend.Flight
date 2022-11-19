@@ -7,3 +7,4 @@ module.exports.EFeeType = require("./EFeeType");
 module.exports.EBookedFlightStatus = require("./EBookedFlightStatus");
 module.exports.EProvider = require("./EProvider");
 module.exports.ERefund = require("./ERefund");
+module.exports.ECategory = require("./ECategory");

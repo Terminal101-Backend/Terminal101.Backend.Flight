@@ -1,6 +1,6 @@
 const Joi = require("joi");
 const { baseValidator } = require("../core");
-const { EBookedFlightStatus } = require("../constants");
+const { EBookedFlightStatus, ECategory } = require("../constants");
 
 module.exports.bookFlight = baseValidator({
   body: {
@@ -133,4 +133,7 @@ module.exports.getBookedFlightsHistory = baseValidator({
 
 module.exports.getChartHistory = baseValidator({
   body: {},
+  params: {
+    category: ECategory.validator({ required: true }),
+  },
 }, true);
