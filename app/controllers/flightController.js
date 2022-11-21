@@ -670,10 +670,10 @@ module.exports.getFlight = async (req, res) => {
           total: flightInfo.flights.price.total,
           grandTotal: flightInfo.flights.price.grandTotal,
           base: flightInfo.flights.price.base,
-          commissions: {
-            percent: flightInfo.flights.price.commissions,
-            constant: flightInfo.flights.price.commissions,
-          },
+          commissions: flightInfo.flights.price.commissions.map(commission => ({
+            percent: commission.percent,
+            constant: commission.constant,
+          })),
           travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
             type: travelerPrice.travelerType,
             total: travelerPrice.total,
