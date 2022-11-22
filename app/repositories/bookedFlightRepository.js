@@ -345,11 +345,11 @@ class BookedFlightRepository extends BaseRepository {
     let duplicate = false;
 
     for (const segment of itineraries.segments) {
-      let agr = BookedFlight.aggregate();
-      agr.append({
+      let agrBookedFlight = BookedFlight.aggregate();
+      agrBookedFlight.append({
         $unwind: "$flightSegments"
       });
-      agr.append({
+      agrBookedFlight.append({
         $match: {
           "flightSegments.departure.city.code": segment.departure.city.code,
           "flightSegments.departure.at": segment.departure.at,
@@ -357,18 +357,18 @@ class BookedFlightRepository extends BaseRepository {
           "flightSegments.arrival.at": segment.arrival.at
         }
       });
-      agr.append({
+      agrBookedFlight.append({
         $unwind: "$passengers"
       });
       for (const passenger of passengers) {
-        agr.append({
+        agrBookedFlight.append({
           $match: {
             "passengers.documentCode": passenger.documentCode,
             "passengers.documentIssuedAt": passenger.documentIssuedAt
           }
         })
       }
-      bookedFlight = await agr.exec();
+      bookedFlight = await agrBookedFlight.exec();
       if (!!bookedFlight && bookedFlight.length !== 0) {
         duplicate = true;
         break;
