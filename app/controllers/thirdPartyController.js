@@ -111,6 +111,12 @@ module.exports.book = async (req, res) => {
       response.error(res, "passenger_not_found", 404);
       return;
     }
+    
+    const duplicateBook = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itineraries[0]);
+    if (!!duplicateBook) {
+      response.error(res, "already_booked_flight", 406);
+      return;
+    }
 
     const existsBookedFlight = await bookedFlightRepository.findOne({
       bookedBy: decodedToken.owner,
