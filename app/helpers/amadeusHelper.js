@@ -273,7 +273,7 @@ module.exports.searchFlights = async (params, testMode) => {
   });
 
   const airports = await countryRepository.getAirportsByCode(Object.keys(airportCodes));
-  const aircrafts = Object.keys(aircraftCodes);
+  const aircrafts = aircraftCodes;
   const carriers = await airlineRepository.getAirlinesByCode(Object.keys(carrierCodes));
 
   const flightDetails = amadeusSearchResult.flights.map(makeFlightDetailsArray(aircrafts, carriers, airports, params.travelClass));
