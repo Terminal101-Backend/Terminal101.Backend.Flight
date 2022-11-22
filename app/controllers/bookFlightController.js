@@ -794,7 +794,7 @@ module.exports.getBookedFlight = async (req, res) => {
         code: bookedFlight.flightInfo.destination.code,
         name: bookedFlight.flightInfo.destination.name,
       },
-      travelClass: bookedFlight.flightInfo.travelClass,
+      travelClass: bookedFlight.flightInfo.flights.travelClass,
       price: bookedFlight.flightInfo.flights.price.total,
       currencyCode: bookedFlight.flightInfo.flights.currencyCode,
       transaction,

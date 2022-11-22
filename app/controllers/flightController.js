@@ -665,7 +665,8 @@ module.exports.getFlight = async (req, res) => {
         availableSeats: flightInfo.flights.availableSeats,
         currencyCode: flightInfo.flights.currencyCode,
         fare: flightInfo.flights.providerData.fare,
-        // price: flightInfo.flights.price,
+        duration: flightInfo.flights.duration,
+        travelClass: flightInfo.flights.travelClass,
         price: {
           total: flightInfo.flights.price.total,
           grandTotal: flightInfo.flights.price.grandTotal,
