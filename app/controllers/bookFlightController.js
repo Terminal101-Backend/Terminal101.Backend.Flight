@@ -243,8 +243,11 @@ module.exports.bookFlight = async (req, res) => {
     const paymentMethod = decodedToken.type === 'CLIENT' ? await wallet.getPaymentMethod(req.body.paymentMethodName) : undefined;
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
-    // TODO: Check if the user has not booked similar flight
-    // const existsBookedFlight = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itinerarry);
+    const duplicateBook = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itineraries[0]);
+    if (!!duplicateBook) {
+      response.error(res, "already_booked_flight", 406);
+      return;
+    }
     const existsBookedFlight = await bookedFlightRepository.findOne({
       bookedBy: decodedToken.user,
       searchedFlightCode: req.body.searchedFlightCode,
