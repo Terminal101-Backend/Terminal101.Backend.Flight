@@ -37,6 +37,10 @@ const segment = new Schema({
   baggage: {
     type: String,
     default: ""
+  },
+  badge: {
+    type: String,
+    default: ""
   }
 }, {
   timestamps: true
