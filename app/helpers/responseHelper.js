@@ -14,7 +14,7 @@ exports.success = (res, data) => {
 
 //making response for error by status code (default is 404)
 exports.error = (res, message, statusCode = 404, data = []) => {
-  console.trace("Code: ${statusCode}, Message: ", JSON.stringify(message));
+  console.trace(`Code: ${statusCode}, Message: `, JSON.stringify(message));
   return res.status(statusCode).send(
     {
       status: false,

@@ -495,7 +495,7 @@ paths:
             $ref: "#/definitions/BookFlightResult"
 
   /flight/book/history:
-    # NOTE: Get all booked flights history
+    # NOTE: Get all booked flights history for business
     get:
       tags:
         - Book
@@ -514,8 +514,8 @@ paths:
             items:
               $ref: "#/definitions/BookedFlightDetails"
 
-  /flight/book/history/chart:
-    # NOTE: Get details for chart history
+  /flight/book/history/chart/{category}:
+    # NOTE: Get details for chart history for business
     get:
       tags:
         - Book
@@ -525,6 +525,12 @@ paths:
           in: header
           type: string
           value: Bearer
+          required: true
+        - name: category
+          in: path
+          type: string
+          enum: [YEAR, MONTH, DAY]
+          value: MONTH
           required: true
       responses:
         "200":
@@ -722,6 +728,29 @@ paths:
             type: array
             items:
               $ref: "#/definitions/BookFlightStatus"
+
+  /flight/book/order/{bookedFlightCode}:
+      # NOTE: Order bookedFlight by business
+    post:
+      tags:
+        - Book
+      description: Pay bookedFlight by business
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+            value: true
 
   /flight/ticket/{bookedFlightCode}:
     # NOTE: Get booked flight's tickets

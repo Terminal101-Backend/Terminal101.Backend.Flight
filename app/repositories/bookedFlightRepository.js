@@ -136,7 +136,7 @@ class BookedFlightRepository extends BaseRepository {
         }
       });
     }
-    else if(!!bookedBy){
+    else if (!!bookedBy) {
       agrBookedFlight.append({
         $match: {
           bookedBy
@@ -338,14 +338,48 @@ class BookedFlightRepository extends BaseRepository {
    *
    * @param {PassengerInfo[]} passengers
    * @param {FlightSegmentInfo[]} flightSegments
-   * @param {String} travelClass
    * @returns {Promise}
    */
-  async getDuplicatedBookedFlight(passengers, flightSegments, travelClass) {
-    return;
+  async getDuplicatedBookedFlight(passengers, itineraries) {
+    let bookedFlight;
+    let duplicate = false;
+
+    for (const segment of itineraries.segments) {
+      let agrBookedFlight = BookedFlight.aggregate();
+      agrBookedFlight.append({
+        $unwind: "$flightSegments"
+      });
+      agrBookedFlight.append({
+        $match: {
+          "flightSegments.departure.city.code": segment.departure.city.code,
+          "flightSegments.departure.at": segment.departure.at,
+          "flightSegments.arrival.city.code": segment.arrival.city.code,
+          "flightSegments.arrival.at": segment.arrival.at
+        }
+      });
+      agrBookedFlight.append({
+        $unwind: "$passengers"
+      });
+      for (const passenger of passengers) {
+        agrBookedFlight.append({
+          $match: {
+            "passengers.documentCode": passenger.documentCode,
+            "passengers.documentIssuedAt": passenger.documentIssuedAt
+          }
+        })
+      }
+      bookedFlight = await agrBookedFlight.exec();
+      if (!!bookedFlight && bookedFlight.length !== 0) {
+        duplicate = true;
+        break;
+      }
+    }
+
+    return duplicate;
   }
 
-  async getBookedFlightsChartHistory(businessCode, filters, sort) {
+  async getBookedFlightsChartHistory(category, businessCode, filters, sort) {
+    let format = category === 'YEAR' ? "%Y" : category === 'MONTH' ? "%m" : "%Y-%m-%d"
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
       $match: {
@@ -358,7 +392,7 @@ class BookedFlightRepository extends BaseRepository {
       {
         $group:
         {
-          _id: { $dateToString: { format: "%m", date: "$createdAt" } },
+          _id: { $dateToString: { format, date: "$createdAt" } },
           statuses: { $push: { $last: ["$statuses.status"] } },
           count: { $count: {} },
           passengersCount: { $sum: { $size: "$passengers" } }
