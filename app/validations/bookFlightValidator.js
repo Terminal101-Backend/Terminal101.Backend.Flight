@@ -6,7 +6,7 @@ module.exports.bookFlight = baseValidator({
   body: {
     searchedFlightCode: Joi.string().required(),
     flightDetailsCode: Joi.string().required(),
-    paymentMethodName: Joi.string().required(),
+    paymentMethodName: Joi.string(),
     currencySource: Joi.string(),
     currencyTarget: Joi.string(),
     // payWay: Joi.string().pattern(/^WALLET|PAY$/).default("PAY"),
@@ -135,5 +135,12 @@ module.exports.getChartHistory = baseValidator({
   body: {},
   params: {
     category: ECategory.validator({ required: true }),
+  },
+}, true);
+
+module.exports.payBookedFlight = baseValidator({
+  body: {},
+  params: {
+    bookedFlightCode: Joi.string().required(),
   },
 }, true);

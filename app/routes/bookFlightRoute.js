@@ -147,4 +147,15 @@ router
     bookFlightValidator.bookFlight.check,
     bookFlightController.bookFlight);
 
+// NOTE: Pay for Booked flight by userBusiness
+router
+  .post("/order/:bookedFlightCode",
+    (req, res, next) => {
+      console.log("Pay for Booked flight by userBusiness", req.params, req.body, req.query);
+      next();
+    },
+    checkAccess.checkUserType("BUSINESS"),
+    bookFlightValidator.payBookedFlight.check,
+    bookFlightController.payBookedFlight);
+
 module.exports = router;
