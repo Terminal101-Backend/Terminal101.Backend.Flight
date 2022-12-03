@@ -9,9 +9,10 @@ axiosApiInstance.interceptors.request.use(
 
         config.baseURL = process.env["TEQUILA_BASE_URL" + pathPostfix];
         config.headers = {
-            'Accept': 'application/json',
+            // 'Accept': '*/*',
             'apikey': process.env['TEQUILA_API_KEY' + pathPostfix],
-            'Content-Type': 'application/json',
+            // 'Content-Type': 'application/json',
+            // 'Accept-Encoding': 'gzip, deflate, br',
         }
 
         return config;
@@ -44,26 +45,25 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
             throw "travel_class_invalid";
     }
 
-
     const {
         data: response
     } = await axiosApiInstance.get("/search", {
-        params: {
-            fly_from: originLocationCode,
-            fly_to: destinationLocationCode,
-            dateFrom: departureDate,
-            dateTo: returnDate,
-            adults,
-            children,
-            infants,
-            curr: currencyCode,
-            selected_cabins
-        }
+        fly_from: originLocationCode,
+        fly_to: destinationLocationCode,
+        dateFrom: departureDate,
+        dateTo: returnDate,
+        adults,
+        children,
+        infants,
+        curr: currencyCode,
+        selected_cabins
     }, { testMode });
     console.log('====> ', response)
     const result = {
         success: !!response,
-        data: response
+        data: response.data,
+        search_id: response.search_id,
+        fx_rate: response.fx_rate
     };
 
     return result;
@@ -92,94 +92,83 @@ module.exports.checkFlights = async (bToken, sessionId, baggageNumber, adults, c
     return result;
 }
 
-module.exports.saveBook = async (passengers, bookingToken, sessionId, baggage, testMode = true) => {
+module.exports.saveBook = async (passengers, booking_token, session_id, baggage, testMode = true) => {
+    const travelersInfo = [];
+    const infant = 2 * 365 * 24 * 3600 * 1000;
+    const child = 12 * 365 * 24 * 3600 * 1000;
+
+    for (let index = 0; index < passengers?.length ?? 0; index++) {
+        let namePrefix;
+        const age = new Date() - new Date(passengers[index].birthDate);
+
+        const type = (age < infant) ? "infant" : (age < child) ? "child" : "adult";
+
+        switch (passengers[index].gender) {
+            case "MALE":
+                namePrefix = "mr";
+                break;
+
+            case "FEMALE":
+                namePrefix = "ms";
+                break;
+        }
+        travelersInfo.push({
+            birthday: passengers[index].birthDate,
+            cardno: passengers[index].document.code,
+            category: type,
+            email: 'info@terminal101.co',
+            expiration: passengers[index].document.expirationDate,
+            title: namePrefix,
+            name: passengers[index].firstName,
+            surname: passengers[index].lastName,
+            nationality: passengers[index].document.issuedAt,
+            phone: '+98123456789'
+        })
+
+    }
+    let holdBag, handBag = [];
+    handBag = baggage.filter(item.combination.category === 'hand_bag');
+    holdBag = baggage.filter(item.combination.category === 'hold_bag');
+    let temp;
+
+    holdBag.forEach(bag => {
+        temp = [];
+        for (let index = 0; index < passengers?.length ?? 0; index++) {
+            const age = new Date() - new Date(passengers[index].birthDate);
+            const type = (age < infant) ? "infant" : (age < child) ? "child" : "adult";
+
+            if (!!bag.combination.conditions.passenger_groups.includes(type)
+                && bag.combination.price.amount === 0) {
+                temp.push(index)
+            }
+        }
+
+        bag['passengers'] = temp;
+    });
+
+    handBag.forEach(bag => {
+        temp = [];
+        for (let index = 0; index < passengers?.length ?? 0; index++) {
+            const age = new Date() - new Date(passengers[index].birthDate);
+            const type = (age < infant) ? "infant" : (age < child) ? "child" : "adult";
+
+            if (!!bag.combination.conditions.passenger_groups.includes(type)
+                && bag.combination.price.amount === 0) {
+                temp.push(index)
+            }
+        }
+
+        bag['passengers'] = temp;
+    });
+
     let query = {
         health_declaration_checked: true,
         lang: "en",
-        passengers: [
-            {
-                "birthday": "1990-01-01",
-                "cardno": "D25845822",
-                "category": "adult",
-                "email": "yourdepositemail@test.com",
-                "expiration": "2030-12-10",
-                "title": "ms",
-                "name": "test",
-                "surname": "test",
-                "nationality": "CZ",
-                "phone": "+44857282842"
-            },
-            {
-                "birthday": "2019-05-04",
-                "cardno": "D25845222",
-                "category": "child",
-                "email": "yourdepositemail@test.com",
-                "expiration": "2030-12-10",
-                "title": "mr",
-                "name": "John",
-                "surname": "Doe",
-                "nationality": "CZ",
-                "phone": "+44857282842"
-            }
-        ],
+        passengers: travelersInfo,
         locale: "en",
-        booking_token: "EAYQ_Iw0T4WcTCX0aCMtNtVd3JAhqynlm0zxrGn7TaSXJvpt-1JxfspLegAsePWx1pfWGoRUXCZs0jaMOxbxCX0uIs8lwnI8wUqw-Chjo2LmyMZv1Ca8F0WNI84VYq2fo9BGxApRAY7KXX7J5Zjeoyl3cRDGREXlrrLBSWVXQkQg-E3240j9GUrMQDvVs0SNxxUwaJnn0Z1NATret45A2BkBh0hn1j0evJXcBuTbpAQV7jkeTfxZJvg_B4PUp-lPRnVb5bHNcqKNCB6_HbrdHMvUP_8HoQCWHsB9laz7qQOQ--5c5kBq2mAI-A6cmg1prkNQcb-pl5cJAQtDcIYhlA6z4ftztd4s1mgPpnStpWp1pUAKlM_89QqE9fKSLQgQT-9TAM7lqIiYHT8llS_vpCGrt0PuzPqIOpyDsm4ByyGEv-oWEV56u85XrdUT5Re7dTn2v4bUQNL7N40D6xIi0mshk3a99DUT40vjGhXrRGQuGScbQzTaL2NKFvqU_IV3InKg6VdCksojpeyJor2xJvuijgLPWAUHKko-dBGoLavY=",
-        session_id: "c6f1949d-fcbd-181e-8265-88a206f301ba",
-        baggage: [
-            {
-                combination: {
-                    indices: [
-                        1
-                    ],
-                    category: "hold_bag",
-                    conditions: {
-                        passenger_groups: [
-                            "adult",
-                            "child"
-                        ]
-                    },
-                    price: {
-                        currency: "EUR",
-                        amount: 0.0,
-                        base: 0.0,
-                        service: 0.0,
-                        service_flat: 0.0,
-                        merchant: 0.0
-                    }
-                },
-                passengers: [
-                    0,
-                    1
-                ]
-            },
-            {
-                combination: {
-                    indices: [
-                        0,
-                        1
-                    ],
-                    category: "hand_bag",
-                    conditions: {
-                        passenger_groups: [
-                            "adult",
-                            "child"
-                        ]
-                    },
-                    price: {
-                        currency: "EUR",
-                        amount: 0,
-                        base: 0,
-                        service: 0,
-                        service_flat: 0,
-                        merchant: 0
-                    }
-                },
-                passengers: [
-                    0,
-                    1
-                ]
-            }
-        ]
+        booking_token,
+        session_id,
+        baggage: handBag.concat(holdBag),
     };
 
     const {
@@ -196,8 +185,8 @@ module.exports.saveBook = async (passengers, bookingToken, sessionId, baggage, t
 
 module.exports.issue = async (bookingId, transactionId, testMode = true) => {
     let query = {
-        booking_id: "308827948",
-        transaction_id: "sandbox_308827948"
+        booking_id: bookingId,
+        transaction_id: transactionId
     }
     const {
         data: response
@@ -215,21 +204,21 @@ module.exports.cancel = async (bookingId, transactionId, testMode = true) => {
     const {
         data: authToken
     } = await axiosApiInstance.post("/manage/create_auth_token", { testMode });
-
-    const options = {
+    const config = {
         headers: {
-            "KW-Auth-Token": authToken.authorization_token
-        }
+            "KW-Auth-Token": authToken.authorization_token,
+        },
+        testMode
     };
 
     const {
         data: response
     } = await axiosApiInstance.post("/manage/refunds", {
         params: {
-            booking_id: "308827948",
-            transaction_id: "sandbox_308827948"
+            booking_id: bookingId,
+            transaction_id: transactionId
         }
-    }, options, { testMode });
+    }, config);
 
     console.log('====> ', response)
     const result = {

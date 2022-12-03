@@ -403,6 +403,7 @@ module.exports.bookFlight = async (req, res) => {
     setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type, timeout: timeoutProvider });
 
     bookedFlight.providerTimeout = timeoutProvider;
+    bookedFlight.extraData = providerBookResult.extraData;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
