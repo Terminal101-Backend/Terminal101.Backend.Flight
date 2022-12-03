@@ -241,14 +241,11 @@ module.exports.bookFlight = async (req, res) => {
       response.error(res, "flight_not_found", 404);
       return;
     }
-    const paymentMethod = decodedToken.type === 'CLIENT' ? await wallet.getPaymentMethod(req.body.paymentMethodName) : undefined;
+    const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
-    const duplicateBook = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itineraries[0]);
-    if (!!duplicateBook) {
-      response.error(res, "already_booked_flight", 406);
-      return;
-    }
+    // TODO: Check if the user has not booked similar flight
+    // const existsBookedFlight = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itinerarry);
     const existsBookedFlight = await bookedFlightRepository.findOne({
       bookedBy: decodedToken.user,
       searchedFlightCode: req.body.searchedFlightCode,
@@ -259,7 +256,7 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
 
-    if (decodedToken.type === 'CLIENT' && !paymentMethod?.isActive) {
+    if (!paymentMethod?.isActive) {
       throw "payment_method_inactive";
     }
 
@@ -364,7 +361,7 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    if (decodedToken.type === 'CLIENT' && amount > 0) {
+    if (amount > 0) {
       switch (paymentMethod.type) {
         case "STRIPE":
           userWalletResult = await wallet.chargeUserWallet(decodedToken.user, decodedToken.business, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
@@ -399,21 +396,15 @@ module.exports.bookFlight = async (req, res) => {
     //NOTE: Set Timer on Timeout
     let timeoutProvider = providerBookResult.timeout > 0 ? providerBookResult.timeout : new Date().getTime() + parseInt(process.env.PAYMENT_TIMEOUT_CREDIT);
     let timeout = paymentMethod.type === 'STRIPE' ?
-<<<<<<< HEAD
-      timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT) :
-      Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO));
-    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type, timeout: timeoutProvider });
-=======
       Math.max(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.MIN_TIMEOUT)) :
       Math.max(Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO)), parseInt(process.env.MIN_TIMEOUT));
     setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type });
->>>>>>> feature/timeout-bug
 
     bookedFlight.providerTimeout = timeoutProvider;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
-    if (decodedToken.type === 'CLIENT' && amount <= 0) {
+    if (amount <= 0) {
       await pay(bookedFlight);
     }
 
@@ -804,7 +795,7 @@ module.exports.getBookedFlight = async (req, res) => {
         code: bookedFlight.flightInfo.destination.code,
         name: bookedFlight.flightInfo.destination.name,
       },
-      travelClass: bookedFlight.flightInfo.flights.travelClass,
+      travelClass: bookedFlight.flightInfo.travelClass,
       price: bookedFlight.flightInfo.flights.price.total,
       currencyCode: bookedFlight.flightInfo.flights.currencyCode,
       transaction,
@@ -984,7 +975,7 @@ module.exports.getChartHistory = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business, req.params.category);
+    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business);
 
     result.forEach(r => {
       let counts = {};
@@ -1001,24 +992,6 @@ module.exports.getChartHistory = async (req, res) => {
     response.success(res, result);
   } catch (e) {
     console.log(e);
-    response.exception(res, e);
-  }
-};
-
-// NOTE: Pay for Booked flight by userBusiness
-module.exports.payBookedFlight = async (req, res) => {
-  try {
-    const decodedToken = token.decodeToken(req.header("Authorization"));
-    const bookedFlight = await bookedFlightRepository.findOne({
-      code: req.params.bookedFlightCode,
-      bookedBy: decodedToken.user
-    });
-    if (!await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") && !await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")) {
-      await pay(bookedFlight);
-    }
-
-    response.success(res, true);
-  } catch (e) {
     response.exception(res, e);
   }
 };
