@@ -241,11 +241,14 @@ module.exports.bookFlight = async (req, res) => {
       response.error(res, "flight_not_found", 404);
       return;
     }
-    const paymentMethod = await wallet.getPaymentMethod(req.body.paymentMethodName);
+    const paymentMethod = decodedToken.type === 'CLIENT' ? await wallet.getPaymentMethod(req.body.paymentMethodName) : undefined;
     const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
 
-    // TODO: Check if the user has not booked similar flight
-    // const existsBookedFlight = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itinerarry);
+    const duplicateBook = await bookedFlightRepository.getDuplicatedBookedFlight(req.body.passengers, flightDetails.flights.itineraries[0]);
+    if (!!duplicateBook) {
+      response.error(res, "already_booked_flight", 406);
+      return;
+    }
     const existsBookedFlight = await bookedFlightRepository.findOne({
       bookedBy: decodedToken.user,
       searchedFlightCode: req.body.searchedFlightCode,
@@ -256,7 +259,7 @@ module.exports.bookFlight = async (req, res) => {
       return;
     }
 
-    if (!paymentMethod?.isActive) {
+    if (decodedToken.type === 'CLIENT' && !paymentMethod?.isActive) {
       throw "payment_method_inactive";
     }
 
@@ -361,7 +364,7 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    if (amount > 0) {
+    if (decodedToken.type === 'CLIENT' && amount > 0) {
       switch (paymentMethod.type) {
         case "STRIPE":
           userWalletResult = await wallet.chargeUserWallet(decodedToken.user, decodedToken.business, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
@@ -404,7 +407,7 @@ module.exports.bookFlight = async (req, res) => {
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
-    if (amount <= 0) {
+    if (decodedToken.type === 'CLIENT' && amount <= 0) {
       await pay(bookedFlight);
     }
 
@@ -795,7 +798,7 @@ module.exports.getBookedFlight = async (req, res) => {
         code: bookedFlight.flightInfo.destination.code,
         name: bookedFlight.flightInfo.destination.name,
       },
-      travelClass: bookedFlight.flightInfo.travelClass,
+      travelClass: bookedFlight.flightInfo.flights.travelClass,
       price: bookedFlight.flightInfo.flights.price.total,
       currencyCode: bookedFlight.flightInfo.flights.currencyCode,
       transaction,
@@ -975,7 +978,7 @@ module.exports.getChartHistory = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business);
+    const result = await bookedFlightRepository.getBookedFlightsChartHistory(decodedToken.business, req.params.category);
 
     result.forEach(r => {
       let counts = {};
@@ -992,6 +995,24 @@ module.exports.getChartHistory = async (req, res) => {
     response.success(res, result);
   } catch (e) {
     console.log(e);
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Pay for Booked flight by userBusiness
+module.exports.payBookedFlight = async (req, res) => {
+  try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const bookedFlight = await bookedFlightRepository.findOne({
+      code: req.params.bookedFlightCode,
+      bookedBy: decodedToken.user
+    });
+    if (!await bookedFlightRepository.hasStatus(bookedFlight.code, "PAID") && !await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")) {
+      await pay(bookedFlight);
+    }
+
+    response.success(res, true);
+  } catch (e) {
     response.exception(res, e);
   }
 };
