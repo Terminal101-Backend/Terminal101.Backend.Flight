@@ -907,8 +907,8 @@ module.exports.getHistoryFlights = async (req, res) => {
     // const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const list = await flightInfoRepository.getHistoryFlights(req.header("PageSize"));
     let params = [];
-
-    list.forEach(l => {
+   
+    list.items.forEach(l => {
       if (l.flights.length > 0) {
         params.push({
           time: l.time,
@@ -924,8 +924,10 @@ module.exports.getHistoryFlights = async (req, res) => {
           })
         })
       }
-    })
-    response.success(res, params);
+    });
+  
+    list.items = params;
+    response.success(res, list);
 
   } catch (e) {
     response.exception(res, e);

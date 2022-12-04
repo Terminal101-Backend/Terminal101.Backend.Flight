@@ -40,7 +40,7 @@ class FlightInfoRepository extends BaseRepository {
 
   }
 
-  async getCachedPopularWaypoints(waypointType, count = 10) {
+  async getCachedPopularWaypoints(waypointType, count = 10, page, pageSize, filters, sort) {
     let result = [];
 
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
@@ -77,22 +77,25 @@ class FlightInfoRepository extends BaseRepository {
           _id: 0,
         }
       });
-      result = await agrFlightInfo.exec();
+      filterHelper.filterAndSort(agrFlightInfo, filters, sort);
+      result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+      // result = await agrFlightInfo.exec();
     }
 
-    return result.map(flight => ({
+    result.items.map(flight => ({
       code: flight.airport.code,
       name: flight.airport.name,
       description: flight.airport.description,
       count: flight.count,
     }));
+    return result;
   }
 
   async cachePopularFlights() {
 
   }
 
-  async getCachedPopularFlights(count = 10) {
+  async getCachedPopularFlights(count = 10, page, pageSize, filters, sort) {
     let result = [];
 
     const agrFlightInfo = FlightInfo.aggregate();
@@ -120,9 +123,11 @@ class FlightInfoRepository extends BaseRepository {
       }
     });
     agrFlightInfo.append({ $project: { origin: 1, destination: 1, time: 1, count: 1, _id: 0 } });
-    result = await agrFlightInfo.exec();
+    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
 
-    return result.map(flight => ({
+    result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+
+    result.items.map(flight => ({
       origin: {
         code: flight.origin.code,
         name: flight.origin.name,
@@ -135,6 +140,8 @@ class FlightInfoRepository extends BaseRepository {
       },
       time: flight.time,
     }));
+
+    return result;
   }
 
   /**
@@ -237,7 +244,7 @@ class FlightInfoRepository extends BaseRepository {
   * @param {String} sort
   * @returns {Promise<FlightInfo>}
   */
-  async getHistoryFlights(count = 10) {
+  async getHistoryFlights(count = 20, page, pageSize, filters, sort) {
     const agrFlightInfo = FlightInfo.aggregate().allowDiskUse(true);
 
     agrFlightInfo.append({
@@ -261,8 +268,10 @@ class FlightInfoRepository extends BaseRepository {
     agrFlightInfo.append({ $sort: { time: -1 } });
     agrFlightInfo.append({ $limit: count });
 
-    const result = await agrFlightInfo.exec();
-    return !!result && !!result[0] ? result : undefined;
+    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
+    const result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+    // const result = await agrFlightInfo.exec();
+    return result;
 
   }
 };
