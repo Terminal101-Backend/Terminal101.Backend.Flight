@@ -114,12 +114,15 @@ const paymentTimeout = async (args) => {
   try {
     await providerHelper.cancelBookFlight(bookedFlight);
     // NOTE: cancel stripe or crypto
-    let cancelStatus = await wallet.cancelPayment(bookedFlight.transactionId, args.method, args.timeout);
+    if (!args.method) {
+      let cancelStatus = await wallet.cancelPayment(bookedFlight.transactionId, args.method, args.timeout);
 
-    if (cancelStatus !== 'canceled') {
-      console.error(`cancel ${args.method} payment failed. status: `, cancelStatus);
-      return;
+      if (cancelStatus !== 'canceled') {
+        console.error(`cancel ${args.method} payment failed. status: `, cancelStatus);
+        return;
+      }
     }
+
     // NOTE: change status
     bookedFlight.statuses.push({
       status: 'EXPIRED_PAYMENT',
@@ -398,10 +401,10 @@ module.exports.bookFlight = async (req, res) => {
 
     //NOTE: Set Timer on Timeout
     let timeoutProvider = providerBookResult.timeout > 0 ? providerBookResult.timeout : new Date().getTime() + parseInt(process.env.PAYMENT_TIMEOUT_CREDIT);
-    let timeout = paymentMethod.type === 'STRIPE' ?
+    let timeout = (!paymentMethod || (paymentMethod.type === 'STRIPE')) ?
       Math.max(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.MIN_TIMEOUT)) :
       Math.max(Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO)), parseInt(process.env.MIN_TIMEOUT));
-    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type, timeout: timeoutProvider });
+    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod?.type, timeout: timeoutProvider });
 
     bookedFlight.providerTimeout = timeoutProvider;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
