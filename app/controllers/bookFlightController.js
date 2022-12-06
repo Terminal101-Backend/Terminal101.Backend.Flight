@@ -367,7 +367,7 @@ module.exports.bookFlight = async (req, res) => {
       }
     }
 
-    if (decodedToken.type === 'CLIENT' && amount > 0) {
+    if ((decodedToken.type === 'CLIENT') && (amount > 0)) {
       switch (paymentMethod.type) {
         case "STRIPE":
           userWalletResult = await wallet.chargeUserWallet(decodedToken.user, decodedToken.business, paymentMethod.name, amount, req.body.currencySource, req.body.currencyTarget);
