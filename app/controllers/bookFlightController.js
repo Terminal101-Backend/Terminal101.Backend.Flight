@@ -410,7 +410,7 @@ module.exports.bookFlight = async (req, res) => {
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
     await bookedFlight.save();
 
-    if (decodedToken.type === 'CLIENT' && amount <= 0) {
+    if ((decodedToken.type === 'CLIENT') && (amount <= 0)) {
       await pay(bookedFlight);
     }
 
