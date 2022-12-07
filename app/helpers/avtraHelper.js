@@ -152,6 +152,17 @@ const makePriceObject = (flightPrice, travelerPricings) => ({
   }),
 });
 
+const makeFareRules = (rules) => {
+  let rulesString = '';
+  rules.map(rule => {
+    rulesString += rule.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty.PenaltyType + '  Amount: ' +
+      rule.FareInfo.RuleInfo.ChargesRules.VoluntaryChanges.Penalty.Amount + '\n ' +
+      rule.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty.PenaltyType + '  Amount: ' +
+      rule.FareInfo.RuleInfo.ChargesRules.VoluntaryRefunds.Penalty.Amount + ' \n'
+  })
+  return rulesString.toString();
+}
+
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY") => {
   return (flight, index) => {
     result = {
@@ -171,6 +182,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
         duration: dateTimeHelper.convertAvtraTimeToMinutes(itinerary.FlightSegment.Duration),
         segments: [itinerary.FlightSegment].map(makeFlightSegmentsArray(aircrafts, airlines, airports, getBaggageInfo(flight.AirItineraryPricingInfo.PTC_FareBreakdowns.PTC_FareBreakdown))),
       })),
+      fareRules: makeFareRules(flight.AirItineraryPricingInfo.FareInfos),
     };
 
     return result;
