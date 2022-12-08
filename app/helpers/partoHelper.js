@@ -172,6 +172,15 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   };
 };
 
+const makeTicketInfo = (bookedFlight) => {
+  let segments = bookedFlight.passengers;
+  return {
+    tickets: segments.map(s => ({
+      ticketNumber: bookedFlight.providerPnr
+    }))
+  }
+}
+
 const makeFareRules = (rules) => {
   if(!rules || !Array.isArray(rules))
     return rules;
@@ -340,7 +349,12 @@ module.exports.cancelBookFlight = async bookedFlight => {
 }
 
 module.exports.issueBookedFlight = async bookedFlight => {
-  return await parto.airBookIssuing(bookedFlight.providerPnr);
+  let status = await parto.airBookIssuing(bookedFlight.providerPnr);
+  let ticketInfo;
+  if(!!status.Success){
+    ticketInfo = makeTicketInfo(bookedFlight);
+  }
+  return ticketInfo;
 }
 
 module.exports.airRevalidate = async flightInfo => {
