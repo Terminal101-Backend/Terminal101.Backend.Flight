@@ -19,20 +19,20 @@ jobs:
     steps:
     - name: Deploy using ssh
       uses: appleboy/ssh-action@master
-      # with:
-      #   host: ${{ secrets.HOST }}
-      #   username: ${{ secrets.USERNAME }}
-      #   key: ${{ secrets.PRIVATE_KEY }}
-      #   port: 22
-      #   script: |
-      #     cd /var/www/app/terminal101/terminal101_backend/Terminal101.Backend.Flight
-      #     git checkout stage
-      #     git pull origin stage
-      #     npm ci
-      #     pm2 status
-      #     pm2 stop Flight
-      #     pm2 start Flight
-      #     pm2 save
-      #     sudo service nginx restart
-      #     echo "Finish"
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.PRIVATE_KEY }}
+        port: 22
+        script: |
+          cd /var/www/app/terminal101/terminal101_backend/Terminal101.Backend.Flight
+          git checkout stage
+          git pull origin stage
+          npm ci
+          pm2 status
+          pm2 stop Flight
+          pm2 start Flight
+          pm2 save
+          sudo service nginx restart
+          echo "Finish"
        
