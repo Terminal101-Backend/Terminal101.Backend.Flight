@@ -4,6 +4,7 @@ require("../..");
 
 module.exports = {
   ...require("./country"),
+  ...require("./flightCondition"),
 };
 
 module.exports.startDbConnection = async done => {

@@ -7,21 +7,33 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 
-host: test-terminal101-flight.herokuapp.com
+host:
 # host: localhost:8005
 basePath: /
 
 tags:
+  - name: Airline
+    description: Airline routes
   - name: Airport
     description: Airport routes
+  - name: Book
+    description: Book flight and booked flights routes
   - name: City
     description: City routes
   - name: Country
     description: Country routes
   - name: Flight
     description: Flight routes
+  - name: FlightCondition
+    description: Flight's conditions routes
+  - name: Provider
+    description: Provider routes
   - name: Restriction
-    description: Country/City Restriction Conditions
+    description: Country/City restriction conditions
+  - name: Ticket
+    description: Flight's tickets
+  - name: ThirdParty_Test
+    description: Third party apis
   - name: Waypoint
     description: Flight origin/destination points
 
@@ -76,6 +88,21 @@ paths:
             items:
               $ref: "#/definitions/City"
 
+  # NOTE: Airline
+  /airline:
+    # NOTE: Get all airlines
+    get:
+      tags:
+        - Airline
+      description: Get all airlines.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/Airline"
+
   # NOTE: Country
   /country:
     # NOTE: Get all countries
@@ -108,7 +135,6 @@ paths:
         - name: keyword
           in: query
           type: string
-          required: true
           value: MUC
           description: Keyword for search.
       responses:
@@ -141,6 +167,33 @@ paths:
               type: object
               $ref: "#/definitions/WaypointCount"
 
+  /waypoint/{waypointType}/flight-waypoint:
+    # NOTE: Get waypoints for origin/destination by Amadeus API
+    get:
+      tags:
+        - Waypoint
+      description: Get waypoints for origin/destination by Amadeus API.
+      parameters:
+        - name: waypointType
+          in: path
+          type: string
+          enums: [ORIGIN, DESTINATION]
+          required: true
+          value: ORIGIN
+        - name: keyword
+          in: query
+          type: string
+          value: FRA
+          description: Keyword for search.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              type: object
+              $ref: "#/definitions/WaypointAmadeus"
+
   # NOTE: Flight
   /flight/search:
     # NOTE: Search a fligh
@@ -159,7 +212,7 @@ paths:
           in: query
           type: string
           required: true
-          value: WDC
+          value: IST
           description: Flight destination code.
         - name: departureDate
           in: query
@@ -238,6 +291,13 @@ paths:
       tags:
         - Flight
       parameters:
+        - name: Page
+          in: header
+          type: number
+          default: 0
+        - name: PageSize
+          in: header
+          type: number
         - name: searchId
           in: path
           required: true
@@ -301,7 +361,7 @@ paths:
             items:
               $ref: "#/definitions/Flight"
 
-  /flight/search/{searchId}/details/{flightIndex}:
+  /flight/search/{searchId}/details/{flightCode}:
     # NOTE: Get popular flights
     get:
       tags:
@@ -311,7 +371,28 @@ paths:
           in: path
           required: true
           type: string
-        - name: flightIndex
+        - name: flightCode
+          in: path
+          required: true
+          type: string
+      description: Get specific flight.
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/Flight"
+
+  /flight/search/{searchId}/details/{flightCode}/price:
+    # NOTE: Get popular flights
+    get:
+      tags:
+        - Flight
+      parameters:
+        - name: searchId
+          in: path
+          required: true
+          type: string
+        - name: flightCode
           in: path
           required: true
           type: string
@@ -336,6 +417,20 @@ paths:
             items:
               $ref: "#/definitions/FlightPopular"
 
+  /flight/history:
+    # NOTE: Get history flights
+    get:
+      tags:
+        - Flight
+      description: Get history flights.
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/HistoryFlight"
+
   /restriction/{countryCode}/{cityCode}:
     # NOTE: Restriction conditions
     get:
@@ -356,6 +451,845 @@ paths:
       responses:
         "200":
           description: OK
+
+  /flight/book:
+    # NOTE: Get all booked flights list
+    get:
+      tags:
+        - Book
+      description: Get all booked flights list
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
+
+    # NOTE: Book flight
+    post:
+      tags:
+        - Book
+      description: Book flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Flight Info
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/BookFlightInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+  /flight/book/history:
+    # NOTE: Get all booked flights history for business
+    get:
+      tags:
+        - Book
+      description: Get all booked flights history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
+
+  /flight/book/history/chart/{category}:
+    # NOTE: Get details for chart history for business
+    get:
+      tags:
+        - Book
+      description: Get details for chart history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: category
+          in: path
+          type: string
+          enum: [YEAR, MONTH, DAY]
+          value: MONTH
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/ChartHistory"
+
+  /flight/book/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+  /flight/book/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight
+    get:
+      tags:
+        - Book
+      description: Get booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          required: true
+          type: string
+          example: 23rwf4rf4fr34
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+    # NOTE: Cancel/refund booked flight
+    delete:
+      tags:
+        - Book
+      description: Cancel/refund booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          in: path
+          required: true
+          type: string
+          example: dg27te82ed2
+        - name: refundInfo
+          in: body
+          required: true
+          schema:
+            type: object
+            $ref: "#/definitions/RefundInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+    # NOTE: Edit user's booked flight
+    patch:
+      tags:
+        - Book
+      description: Edit user's booked flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: userCode
+          in: path
+          type: string
+          value: 12345zxdhds1234
+          required: true
+        - name: bookedFlightCode
+          in: path
+          type: string
+          value: dsgiqw4378rfh234iyf3
+          required: true
+        - name: Booked Flight Details
+          in: body
+          required: true
+          schema:
+            type: object
+            $ref: "#/definitions/EditBookedFlight"
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookedFlightDetails"
+
+  /flight/book/pay/{bookedFlightCode}:
+    # NOTE: Generate new payment info for selected flight
+    patch:
+      tags:
+        - Book
+      description: Generate new payment info for selected flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+        - name: Payment Info
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/BookFlightPaymenInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/BookFlightResult"
+
+  /flight/book/status/{bookedFlightCode}:
+    # NOTE: Get booked flight's status history
+    get:
+      tags:
+        - Book
+      description: Get booked flight's status history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookFlightStatus"
+
+  /flight/book/status/{userCode}/{bookedFlightCode}:
+    # NOTE: Get other user's booked flight's status history
+    get:
+      tags:
+        - Book
+      description: Get other user's booked flight's status history
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/BookFlightStatus"
+
+  /flight/book/order/{bookedFlightCode}:
+      # NOTE: Order bookedFlight by business
+    post:
+      tags:
+        - Book
+      description: Pay bookedFlight by business
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: boolean
+            value: true
+
+  /flight/ticket/{bookedFlightCode}:
+    # NOTE: Get booked flight's tickets
+    get:
+      tags:
+        - Ticket
+      description: Get booked flight's tickets
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          in: path
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
+  /flight/ticket/{userCode}/{bookedFlightCode}:
+    # NOTE: Get booked flight's tickets for other users by admins
+    get:
+      tags:
+        - Ticket
+      description: Get booked flight's tickets for other users by admins
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: bookedFlightCode
+          in: path
+          type: string
+          required: true
+          value: ge234f42g42r2
+        - name: userCode
+          in: path
+          type: string
+          required: true
+          value: 342ryhf3hui34rf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
+  /flight/ticket/view/{token}/{bookedFlightCode}:
+    # NOTE: View booked flight's tickets
+    get:
+      tags:
+        - Ticket
+      description: View booked flight's tickets
+      parameters:
+        - name: token
+          in: path
+          type: string
+          required: true
+          value: Bearer
+        - name: bookedFlightCode
+          in: path
+          type: string
+          required: true
+          value: ge234f42g42r2
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+            description: "A pdf file contains flight's tickets"
+
+  /provider:
+    get:
+      tags:
+        - Provider
+      description: Get all providers
+      responses:
+        "200":
+          description: OK
+          schema:
+            description: Provider's info
+            type: array
+            items:
+              $ref: "#/definitions/ProviderInfo"
+
+    post:
+      tags:
+        - Provider
+      description: Add provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: providerInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
+
+  /provider/{name}:
+    patch:
+      tags:
+        - Provider
+      description: Edit provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: name
+          in: path
+          type: string
+          enum: [AMADEUS, PARTO]
+          value: AMADEUS
+          required: true
+        - name: providerInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditProviderInfo"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
+    delete:
+      tags:
+        - Provider
+      description: Delete provider
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: name
+          in: path
+          type: string
+          enum: [AMADEUS, PARTO]
+          value: AMADEUS
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ProviderInfo"
+            description: Provider's info
+
+  /condition:
+    # NOTE: Get all flight conditions
+    get:
+      tags:
+        - FlightCondition
+      description: Get all flight conditions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/FlightConditionInfo"
+              description: Flight condition info
+
+    # NOTE: Add new flight conditions
+    post:
+      tags:
+        - FlightCondition
+      description: Add new flight conditions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: condition
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/FlightCondition"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+  /condition/{code}:
+    # NOTE: Get one flight condition
+    get:
+      tags:
+        - FlightCondition
+      description: Get one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+    # NOTE: Delete one flight condition
+    delete:
+      tags:
+        - FlightCondition
+      description: Delete one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+    # NOTE: Edit one flight condition
+    patch:
+      tags:
+        - FlightCondition
+      description: Edit one flight condition
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+        - name: flightConditionInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditFlightCondition"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/FlightConditionInfo"
+            description: Flight condition info
+
+  /commission:
+    # NOTE: Get all commissions
+    get:
+      tags:
+        - Commission
+      description: Get all commissions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/CommissionInfo"
+              description: Flight commission info
+
+    # NOTE: Add new commissions
+    post:
+      tags:
+        - Commission
+      description: Add new commissions
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: commission
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Commission"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+  /commission/{code}:
+    # NOTE: Get one commission
+    get:
+      tags:
+        - Commission
+      description: Get one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+    # NOTE: Delete one commission
+    delete:
+      tags:
+        - Commission
+      description: Delete one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+    # NOTE: Edit one commission
+    patch:
+      tags:
+        - Commission
+      description: Edit one commission
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: code
+          in: path
+          type: number
+          value: 1
+          required: true
+        - name: flightConditionInfo
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/EditCommission"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/CommissionInfo"
+            description: Flight commission info
+
+  /api/test/low-fare-search:
+    # NOTE: Search low fare flights
+    get:
+      tags:
+        - ThirdParty_Test
+      description: Search low fare flights
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        - name: originLocationCode
+          in: query
+          type: string
+          value: BGW
+          required: true
+        - name: destinationLocationCode
+          in: query
+          type: string
+          value: SAW
+          required: true
+        - name: departureDate
+          in: query
+          type: string
+          value: 2022-09-10
+          required: true
+        - name: returnDate
+          in: query
+          type: string
+          value: 2022-09-20
+          required: false
+        - name: adults
+          in: query
+          type: number
+          value: 1
+          required: true
+          default: 1
+        - name: children
+          in: query
+          type: number
+          value: 0
+          required: false
+          default: 0
+        - name: infants
+          in: query
+          type: number
+          value: 0
+          required: false
+          default: 0
+        - name: travelClass
+          in: query
+          type: string
+          enums: [ECONOMY, PREMIUM_ECONOMY, BUSINESS, FIRST]
+          value: ECONOMY
+          required: false
+          default: ECONOMY
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
+
+  /api/test/book:
+    # NOTE: Book flight
+    post:
+      tags:
+        - ThirdParty_Test
+      description: Book flight
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
+        - name: Book Flight
+          in: body
+          required: true
+          type: object
+          schema:
+            $ref: "#/definitions/ThirdPartyBookFlightData"
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
+
+  /api/test/book/{bookedId}:
+    # NOTE: Get booked flight info
+    get:
+      tags:
+        - ThirdParty_Test
+      description: Get booked flight info
+      parameters:
+        - name: Authorization
+          in: header
+          type: string
+          value: Bearer
+          required: true
+        - name: Username
+          in: header
+          type: string
+          value: 124dgwug4dd2gufg2ufg
+          required: true
+        #        - name: providerTitle
+        #          in: path
+        #          type: string
+        #          value: Avtra
+        #          required: true
+        - name: bookedId
+          in: path
+          required: true
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ThirdPartyResult"
+            description: Low fare search result
 
 definitions:
   Flight:
@@ -418,6 +1352,23 @@ definitions:
       count:
         type: number
         example: 13
+  
+  HistoryFlight:
+    properties:
+      time:
+        type: string
+        example: "2022-11-15"
+      travelClass:
+        type: string
+        example: "ECONOMY"
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/Passenger"
+      segments:
+        type: array
+        items:
+          $ref: "#/definitions/Segment"
 
   WaypointCount:
     required:
@@ -454,6 +1405,44 @@ definitions:
       description:
         type: string
         example: Munchen airport
+
+  WaypointAmadeus:
+    required:
+      - subType
+      - name
+      - iataCode
+      - geoCode
+      - address
+    properties:
+      subType:
+        type: string
+        enum: [CITY, AIRPORT]
+        example: AIRPORT
+      name:
+        type: string
+        example: FRANKFURT INTL
+      iataCode:
+        type: string
+        example: FRANKFURT INTL
+      geoCode:
+        $ref: "#/definitions/GeoCode"
+      address:
+        $ref: "#/definitions/Address"
+
+  Airline:
+    required:
+      - code
+      - name
+    properties:
+      code:
+        type: string
+        example: MUC
+      name:
+        type: string
+        example: Munchen
+      description:
+        type: string
+        example: Munchen
 
   Airport:
     required:
@@ -503,9 +1492,560 @@ definitions:
         type: number
         example: 1000
 
+  BookedFlightDetails:
+    properties:
+      code:
+        type: string
+        example: fw3r879fyh24ry7yf
+      bookedBy:
+        type: string
+        example: 231f234rfh34yhf32y
+      status:
+        type: string
+        enum: [PAYING, INPROGRESS, REFUND, CANCEL, REMOVE, BOOKED, REJECTED]
+        example: PAYING
+      time:
+        type: string
+        example: 2022-02-05
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+      origin:
+        $ref: "#/definitions/Waypoint"
+      destination:
+        $ref: "#/definitions/Waypoint"
+      travelClass:
+        type: string
+        enum: [ECONOMY, PERMIUM_ECONOMY, BUSINESS, FIRST]
+        example: ECONOMY
+      price:
+        type: number
+        example: 234
+      testMode:
+        type: boolean
+        example: true
+      userType:
+        enum: [SERVICE, SUPER_ADMIN, ADMIN, BUSINESS, CLIENT, THIRD_PARTY]
+        example: ["CLIENT"]
+
+  BookFlightInfo:
+    required:
+      - searchedFlightCode
+      - flightDetailsCode
+      - paymentMethodName
+    properties:
+      searchedFlightCode:
+        type: string
+        example: asdfhkadfhdksaa
+      flightDetailsCode:
+        type: string
+        example: 2
+      currencySource:
+        type: string
+        example: USD
+      currencyTarget:
+        type: string
+        example: BTC
+      paymentMethodName:
+        type: string
+        example: credit-card
+      useWallet:
+        type: boolean
+        example: false
+      contact:
+        $ref: "#/definitions/ContactInfo"
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+
+  EditBookedFlight:
+    required:
+      - passengers
+    properties:
+      contact:
+        $ref: "#/definitions/ContactInfo"
+      passengers:
+        type: array
+        items:
+          $ref: "#/definitions/BookFlightPassenger"
+      status:
+        type: string
+        enum:
+          [
+            PAYING,
+            INPROGRESS,
+            BOOKED,
+            CANCEL,
+            REJECT,
+            REFUND,
+            REFUND_ACCEPTED,
+            REFUND_REJECTED,
+            REFUND_CANCEL,
+          ]
+
+  ContactInfo:
+    required:
+      - email
+      - mobileNumber
+    properties:
+      email:
+        type: string
+        example: a@a.com
+      mobileNumber:
+        type: string
+        example: +1987654321
+
+  BookFlightResult:
+    properties:
+      code:
+        type: string
+        example: asdfhkadfhdksaa
+      type:
+        type: string
+        enum: [PAY, TRANSFER_TO, TRANSFER_FROM, DEPOSIT]
+        example: DEPOSIT
+      value:
+        type: number
+        example: 100
+      credit:
+        type: number
+        example: 1000
+      time:
+        type: string
+        example: 2022-02-25
+      description:
+        type: string
+        example: Pay for book flight's ticket
+      externalTransactionId:
+        type: string
+        example: askjfh23h31i2uyuf93h4ifyh78934y3i
+
+  BookFlightPaymenInfo:
+    properties:
+      currencySource:
+        type: string
+        example: USD
+      currencyTarget:
+        type: string
+        example: BTC
+      paymentMethodName:
+        type: string
+        example: credit-card
+      payWay:
+        type: string
+        enum: [PAY, WALLET]
+        example: WALLET
+
+  BookFlightPassenger:
+    required:
+      - documentCode
+      - documentIssuedAt
+    properties:
+      documentCode:
+        type: string
+        example: 231aweiW2
+      documentIssuedAt:
+        type: string
+        example: DE
+
+  ProviderInfo:
+    required:
+      - name
+      - title
+    properties:
+      name:
+        type: string
+        enum: [AMADEUS, PARTO]
+        example: AMADEUS
+      title:
+        type: string
+        example: Amadeus
+      isActive:
+        type: boolean
+        example: true
+
+  EditProviderInfo:
+    required:
+      - title
+    properties:
+      title:
+        type: string
+        example: Amadeus
+      isActive:
+        type: boolean
+        example: true
+
+  Condition:
+    required:
+      - items
+      - exclude
+    properties:
+      items:
+        type: array
+        items:
+          type: string
+      exclude:
+        type: boolean
+        example: false
+
+  FlightCondition:
+    required:
+      - origin
+      - destination
+      - airline
+      - providerNames
+      - isRestricted
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isRestricted:
+        type: boolean
+        example: false
+
+  FlightConditionInfo:
+    properties:
+      code:
+        type: number
+        example: 1
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+      isRestricted:
+        type: boolean
+        example: false
+
+  EditFlightCondition:
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+      isRestricted:
+        type: boolean
+        example: false
+
+  CommissionValue:
+    properties:
+      percent:
+        type: number
+        value: 0
+      constant:
+        type: number
+        value: 0
+
+  Commission:
+    required:
+      - origin
+      - destination
+      - airline
+      - providerNames
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+
+  CommissionInfo:
+    properties:
+      code:
+        type: number
+        example: 1
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+
+  EditCommission:
+    properties:
+      origin:
+        $ref: "#/definitions/Condition"
+      destination:
+        $ref: "#/definitions/Condition"
+      airline:
+        $ref: "#/definitions/Condition"
+      business:
+        $ref: "#/definitions/Condition"
+      member:
+        $ref: "#/definitions/Condition"
+      value:
+        $ref: "#/definitions/CommissionValue"
+      providerNames:
+        type: array
+        items:
+          type: string
+      isActive:
+        type: boolean
+        example: true
+
+  GeoCode:
+    properties:
+      latitude:
+        type: number
+        example: 50.0406
+      longitude:
+        type: number
+        example: 8.55603
+
+  Address:
+    properties:
+      cityName:
+        type: string
+        example: FRANKFURT
+      cityCode:
+        type: string
+        example: FRA
+      countryName:
+        type: string
+        example: GERMANY
+      countryCode:
+        type: string
+        example: DE
+      regionCode:
+        type: string
+        example: EUROP
+
+  RefundInfo:
+    properties:
+      description:
+        type: string
+      refundTo:
+        type: string
+        enum: [WALLET, CREDIT_CARD, CRYPTO_CURRENCY]
+        example: WALLET
+      refundInfo:
+        type: string
+        example: Credit card number
+
+  BookFlightStatus:
+    properties:
+      status:
+        enum:
+          [
+            PAYING,
+            INPROGRESS,
+            BOOKED,
+            CANCEL,
+            REJECT,
+            REFUND,
+            REFUND_ACCEPTED,
+            REFUND_REJECTED,
+            REFUND_CANCEL,
+          ]
+        type: string
+        example: INPROGRESS
+      description:
+        type: string
+      time:
+        type: string
+        example: 2022-02-05
+      changedBy:
+        type: string
+        description: User's code
+        example: 3rfyd83y42eey823
+
+  ThirdPartyResult:
+    properties:
+      data:
+        type: object
+        description: Low fare search result
+
+  ThirdPartyBookFlightData:
+    properties:
+      segments:
+        type: array
+        items:
+          type: object
+          properties:
+            flightNumber:
+              type: string
+            airlineCode:
+              type: string
+            originCode:
+              type: string
+            destinationCode:
+              type: string
+            date:
+              type: date
+      travelers:
+        type: array
+        items:
+          type: object
+          properties:
+            firstName:
+              type: string
+            lastName:
+              type: string
+            birthDate:
+              type: date
+            type:
+              type: string
+              enums: [ADT, CHD, INF]
+            genderCode:
+              type: string
+              enums: [M, F]
+            document:
+              type: object
+              properties:
+                issuedAt:
+                  type: string
+                expirationDate:
+                  type: string
+                code:
+                  type: string
+      contact:
+        type: object
+        properties:
+          email:
+            type: string
+          mobileNumber:
+            type: string
+      price:
+        type: object
+        properties:
+          base:
+            type: number
+          total:
+            type: number
+          currency:
+            type: string
+
+  ChartHistory:
+    properties:
+      date:
+        type: string
+        example: "10"
+      passengersCount:
+        type: number
+        example: 74
+      reserved:
+        type: number
+        example: 2
+      inprogress:
+        type: number
+        description: If not exists means equal 0
+        example: 1
+      paying:
+        type: number
+        description: If not exists means equal 0
+        example: 2
+      book:
+        type: number
+        description: If not exists means equal 0
+        example: 5
+      booked:
+        type: number
+        description: If not exists means equal 0
+        example: 12
+      error:
+        type: number
+        description: If not exists means equal 0
+        example: 1
+      expired_payment:
+        type: number
+        description: If not exists means equal 0
+        example: 2
+      cancel:
+        type: number
+        description: If not exists means equal 0
+        example: 6
+      rejected:
+        type: number
+        description: If not exists means equal 0
+        example: 4
+      paid:
+        type: number
+        description: If not exists means equal 0
+        example: 2
+
+  Passenger:
+    properties:
+      count:
+        type: number
+        example: 1
+      travelerType:
+        enum:
+          [
+            ADULT,
+            CHILD,
+            INFANTS,
+          ]
+        type: string
+        example: ADULT
+
+  Segment:
+    properties:
+      origin:
+        type: string
+        example: FRA
+      departure:
+        type: string
+        example: "2022-11-15T12:00:00.000Z"
+      destination:
+        type: string
+        example: PAR
+      arrival:
+        type: string
+        example: "2022-11-15T16:45:00.000Z"
+
 schemes:
-  # - http
   - https
+  - http
 consumes:
   - application/json
 produces:

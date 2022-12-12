@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { flightController } = require("../controllers");
-const { flightValidator } = require("../validations");
+const {flightController} = require("../controllers");
+const {flightValidator} = require("../validations");
 
 // NOTE: Get cities of country
 router
@@ -10,7 +10,7 @@ router
       console.log("Get country/city restriction data", req.params, req.body, req.query);
       next();
     },
-    flightValidator.restrictionCovid19.check(),
+    flightValidator.restrictionCovid19.check,
     flightController.restrictionCovid19);
 
 module.exports = router;

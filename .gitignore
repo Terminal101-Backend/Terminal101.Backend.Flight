@@ -3,3 +3,8 @@ node_modules/
 package-lock.json
 .env
 .vscode
+.idea
+app/static/tickets/*
+init.sh
+*.mongodb
+/app/services/amadeus-soap-wsdl-pack/

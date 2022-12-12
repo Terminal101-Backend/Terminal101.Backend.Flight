@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const Point = require("./point");
 
 const airport = new Schema({
+
 	name: {
 		type: String,
 		required: true,

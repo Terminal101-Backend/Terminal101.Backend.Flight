@@ -1,4 +1,6 @@
-const { check } = require("../helpers/testHelper");
+const {
+  check
+} = require("../helpers/testHelper");
 const enumTests = require("./enum");
 const modelTests = require("./models");
 const routeTests = require("./routes");
@@ -29,8 +31,7 @@ describe("Random String", () => {
   });
 });
 
-describe("Redis", () => {
-});
+describe("Redis", () => { });
 
 describe("Enum", () => {
   it("Test symbolic enumerators", done => {
@@ -49,24 +50,58 @@ describe("Model", () => {
     vars.country = {};
 
     it("Add new Country", done => {
-      check(done, { test: modelTests.addCountry, params: [vars.country] });
+      check(done, {
+        test: modelTests.addCountry,
+        params: [vars.country]
+      });
     });
 
     it("Add new City", done => {
-      check(done, { test: modelTests.addCity, params: [vars.country] });
+      check(done, {
+        test: modelTests.addCity,
+        params: [vars.country]
+      });
     });
 
     it("Add new Airport", done => {
-      check(done, { test: modelTests.addAirport, params: [vars.country] });
+      check(done, {
+        test: modelTests.addAirport,
+        params: [vars.country]
+      });
     });
 
-    it("Add new Airline", done => {
-      check(done, { test: modelTests.addAirline, params: [vars.country] });
+    // it("Add new Airline", done => {
+    //   check(done, { test: modelTests.addAirline, params: [vars.country] });
+    // });
+  });
+
+  describe("Flight Condition Model", () => {
+    vars.flightCondition = {};
+
+    it("Add new flight condition", done => {
+      check(done, {
+        test: modelTests.addFlightCondition,
+        params: [vars.flightCondition]
+      });
+    });
+
+    it("Get flight condition", done => {
+      check(done, {
+        test: modelTests.getFlightCondition,
+        params: [vars.flightCondition]
+      });
     });
   });
 
   it("Remove test documents", done => {
-    check(done, { test: modelTests.cleanCountry, params: [vars.country] });
+    check(done, {
+      test: modelTests.cleanCountry,
+      params: [vars.country]
+    },
+      {
+        test: modelTests.cleanFlightCondition,
+        params: [vars.flightCondition]
+      });
   });
 });
 
@@ -77,23 +112,71 @@ describe("Service", () => {
     vars.amadeus = {};
 
     it("Get access token", done => {
-      check(done, serviceTests.getAccessToken);
+      check(done, serviceTests.amadeus.getAccessToken);
     });
 
     it("Airline code lookup", done => {
-      check(done, serviceTests.airlineCodeLookup);
+      check(done, serviceTests.amadeus.airlineCodeLookup);
     });
 
     it("Search airport and city", done => {
-      check(done, serviceTests.searchAirportAndCity);
+      check(done, serviceTests.amadeus.searchAirportAndCity);
     });
 
     it("Search flight", done => {
-      check(done, serviceTests.flightOffersSearch);
+      check(done, serviceTests.amadeus.flightOffersSearch);
     });
 
     it("Covid 19", done => {
-      check(done, serviceTests.covid19AreaReport);
+      check(done, serviceTests.amadeus.covid19AreaReport);
+    });
+  });
+
+  describe("Parto", () => {
+    vars.parto = {};
+
+    it("Create session", done => {
+      check(done, serviceTests.parto.createSession);
+    });
+
+    it("Search flight", done => {
+      check(done, {
+        params: [vars.parto],
+        test: serviceTests.parto.airLowFareSearch
+      });
+    });
+
+    it("Book flight", done => {
+      check(done, {
+        params: [vars.parto],
+        test: serviceTests.parto.airBook
+      });
+    });
+
+    it("Book data", done => {
+      check(done, {
+        params: [vars.parto],
+        test: serviceTests.parto.airBookData
+      });
+    });
+
+    it("Book cancel", done => {
+      check(done, {
+        params: [vars.parto],
+        test: serviceTests.parto.airBookCancel
+      });
+    });
+  });
+
+  describe("Avtra", () => {
+    vars.avtra = {};
+
+    it("Ping", done => {
+      check(done, serviceTests.avtra.ping);
+    });
+
+    it("Low fare search", done => {
+      check(done, serviceTests.avtra.lowFareSearch);
     });
   });
 
@@ -101,7 +184,7 @@ describe("Service", () => {
     vars.ip = {};
 
     it("Get IP info", done => {
-      check(done, serviceTests.getIpInfo);
+      check(done, serviceTests.ip.getIpInfo);
     });
   });
 });
@@ -133,15 +216,24 @@ describe("Router", () => {
     });
 
     it("Search oneway flights", done => {
-      check(done, { test: routeTests.searchOnewayFlight, params: [vars.flight] });
+      check(done, {
+        test: routeTests.searchOnewayFlight,
+        params: [vars.flight]
+      });
     });
 
     it("Search round trip flights", done => {
-      check(done, { test: routeTests.searchRoundTripFlight, params: [vars.flight] });
+      check(done, {
+        test: routeTests.searchRoundTripFlight,
+        params: [vars.flight]
+      });
     });
 
     it("Search multi city flights", done => {
-      check(done, { test: routeTests.searchMultiCityFlight, params: [vars.flight] });
+      check(done, {
+        test: routeTests.searchMultiCityFlight,
+        params: [vars.flight]
+      });
     });
   });
 

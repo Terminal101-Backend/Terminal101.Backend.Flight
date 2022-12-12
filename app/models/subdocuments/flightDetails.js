@@ -2,16 +2,21 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const Itinerary = require("./itinerary");
-const { ETravelClass } = require("../../constants");
+const { ETravelClass, EProvider } = require("../../constants");
+const Location = require("./location");
 const Price = require("./price");
 
 const flightDetails = new Schema({
-  _id: {
-    type: mongoose.Types.ObjectId,
-    select: false,
-  },
   code: {
-    type: Number,
+    type: String,
+    required: true,
+  },
+  providerData: {
+    type: Schema.Types.Mixed,
+    default: {},
+  },
+  owner: {
+    type: Location,
     required: true,
   },
   itineraries: {
@@ -31,6 +36,7 @@ const flightDetails = new Schema({
     required: true,
   },
   travelClass: ETravelClass.mongoField({ required: true }),
+  provider: EProvider.mongoField({ required: true }),
 }, {
   timestamps: true
 });

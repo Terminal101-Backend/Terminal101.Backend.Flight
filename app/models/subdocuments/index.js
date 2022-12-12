@@ -1,6 +1,5 @@
 module.exports.City = require("./city");
-module.exports.Airport = require("./airport");
-module.exports.Airline = require("./airline");
+// module.exports.Airport = require("./airport");
 module.exports.SearchedFlight = require("./searchedFlight");
 module.exports.FilterLimit = require("./filterLimit");
 module.exports.FlightDetails = require("./flightDetails");
@@ -15,3 +14,8 @@ module.exports.Fee = require("./fee");
 module.exports.Tax = require("./tax");
 module.exports.PriceDetails = require("./priceDetails");
 module.exports.Price = require("./price");
+module.exports.Person = require("./person");
+module.exports.Contact = require("./contact");
+module.exports.Condition = require("./condition");
+module.exports.Status = require("./status");
+module.exports.CommissionValue = require("./commissionValue");

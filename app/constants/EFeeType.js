@@ -8,6 +8,7 @@ class EFlightWaypoint extends Enum {
     this.add("SUPPLIER");
     this.add("TICKETING");
     this.add("FORM_OF_PAYMENT");
+    this.add("COMMISSION");
 
     this.freeze();
   }

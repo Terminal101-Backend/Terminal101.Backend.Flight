@@ -7,13 +7,9 @@ exports.newToken = json => {
       expiresIn: process.env.TOKEN_EXPIRE
     }
   );
-}
+};
 
 exports.decodeToken = token => {
-  if (!!token && /^Bearer [\.\w]+/.test(token)) {
-    token = token.substr("Bearer ".length);
-    return jwt.verify(token, process.env.JWT_SECRET);
-  }
-}
-
-
+  token = (token ?? "").replace(/^bearer\s*/i, "");
+  return !!token ? jwt.verify(token, process.env.JWT_SECRET) : undefined;
+};

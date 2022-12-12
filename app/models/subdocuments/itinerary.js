@@ -4,6 +4,7 @@ const Schema = mongoose.Schema;
 const Segment = require("./segment");
 
 const itinerary = new Schema({
+
   segments: {
     type: [Segment],
     default: [],

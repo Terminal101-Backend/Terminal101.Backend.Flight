@@ -18,8 +18,8 @@ class BaseRepository {
    * @param {Object} query 
    * @returns {Promise<Query>}
    */
-  async findMany(query = {}) {
-    return await this.#model.find(query);
+  async findMany(query = {}, ...sort) {
+    return await this.#model.find(query, undefined, { sort });
   }
 
   /**

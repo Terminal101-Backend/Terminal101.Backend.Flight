@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const tax = new Schema({
+
 	amount: {
 		type: Number,
 		required: true,

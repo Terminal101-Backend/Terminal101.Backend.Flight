@@ -1,7 +1,22 @@
+module.exports.convertAvtraTimeToMinutes = time => {
+  let timeArray = time.split(":").map(t => parseInt(t));
+  while (timeArray.length < 3) {
+    timeArray = [0, ...timeArray];
+  }
+  return timeArray[0] * 60 + timeArray[1];
+};
+
 module.exports.convertAmadeusTime = time => {
   const reH = /^PT(?:(\d+)H)?/.exec(time);
   const reM = /(?:(\d+)M)?$/.exec(time);
   return parseInt(reH[1] ?? 0) * 60 + parseInt(reM[1] ?? 0);
+};
+
+module.exports.calculateWorldticketDurationTime = (depTime, arivTime) => {
+  let timeOne = new Date(depTime);
+  let timeTwo = new Date(arivTime);
+  let diff = timeOne - timeTwo;
+  return diff / (1000 * 60);
 };
 
 module.exports.excludeDateFromIsoString = isoString => {

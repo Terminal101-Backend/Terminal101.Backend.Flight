@@ -5,6 +5,7 @@ const Tax = require("./tax");
 const Schema = mongoose.Schema;
 
 const priceDetails = new Schema({
+
 	total: {
 		type: Number,
 		required: true,
@@ -19,6 +20,10 @@ const priceDetails = new Schema({
 	travelerType: ETravelerType.mongoField({
 		required: true,
 	}),
+	count: {
+		type: Number,
+		default: 1,
+	},
 	fees: {
 		type: [Fee],
 		default: [],

@@ -17,6 +17,7 @@ class EUserType extends Enum {
     this.add("ADMIN");
     this.add("BUSINESS");
     this.add("CLIENT");
+    this.add("THIRD_PARTY");
 
     this.freeze();
   }

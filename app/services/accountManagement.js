@@ -5,7 +5,7 @@ let token = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.ACCOUNT_MANAGEMENT_SERVICE;
+    config.baseURL = process.env.ACCOUNT_MANAGEMENT_SERVICE_URL;
     config.headers = {
       'Authorization': `Bearer ${token}`,
       'Accept': 'application/json',
@@ -24,13 +24,13 @@ axiosApiInstance.interceptors.response.use((response) => {
 }, async function (error) {
   const originalRequest = error.config;
 
-  if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
+  if (!!error.response && [401, 403, 500].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
     await loginAsService();
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
     return axiosApiInstance(originalRequest);
   }
-  return Promise.reject(error);
+  return Promise.reject(error?.response?.data ?? error?.response ?? error);
 });
 
 const loginAsService = async () => {
@@ -45,7 +45,7 @@ const loginAsService = async () => {
   };
   delete axios.defaults.headers.common['Authorization'];
 
-  const { data: response } = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE + "/user/login/email", params, {
+  const { data: response } = await axios.post(process.env.ACCOUNT_MANAGEMENT_SERVICE_URL + "/user/login/email", params, {
     headers: {
       "Service-Name": "wallet",
       "User-Type": "SERVICE",
@@ -63,6 +63,18 @@ const getUserInfo = async userCode => {
   return response;
 };
 
+const getUsersInfo = async userCodes => {
+  const { data: response } = await axiosApiInstance.put(`/user`, { userCodes });
+
+  return response;
+};
+
+const getThirdPartyUserAvailableProviders = async (userCode, businessCode) => {
+  const { data: response } = await axiosApiInstance.get(`/business/provider/${userCode}/${businessCode}`);
+
+  return response;
+};
+
 const checkUserAccess = async (userCode, userType, serviceName, method, path) => {
   const params = new URLSearchParams();
   params.append("userType", userType);
@@ -70,7 +82,13 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
   params.append("path", path);
   params.append("serviceName", serviceName);
 
-  const { data: response } = await axiosApiInstance.get(`/user/${userCode}`, params);
+  const { data: response } = await axiosApiInstance.get(`/user/${userCode}/access`, { params });
+
+  return response.data;
+};
+
+const addEditPersons = async (userCode, businessCode, persons) => {
+  const { data: response } = await axiosApiInstance.patch(`/person/user/${userCode}/${businessCode}`, { persons });
 
   return response;
 };
@@ -78,5 +96,8 @@ const checkUserAccess = async (userCode, userType, serviceName, method, path) =>
 module.exports = {
   loginAsService,
   getUserInfo,
+  getUsersInfo,
   checkUserAccess,
+  getThirdPartyUserAvailableProviders,
+  addEditPersons,
 };

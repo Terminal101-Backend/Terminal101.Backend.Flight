@@ -5,18 +5,18 @@ let accessToken = "";
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-      config.baseURL = process.env.AMADEUS_BASE_URL;
-      config.headers = {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
-        // 'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Type': 'application/json',
-      }
-      return config;
-    },
-    error => {
-      Promise.reject(error)
-    });
+    config.baseURL = process.env.AMADEUS_BASE_URL;
+    config.headers = {
+      'Authorization': `Bearer ${accessToken}`,
+      'Accept': 'application/json',
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+      'Content-Type': 'application/json',
+    }
+    return config;
+  },
+  error => {
+    Promise.reject(error)
+  });
 
 // Response interceptor for API calls
 axiosApiInstance.interceptors.response.use((response) => {
@@ -182,21 +182,28 @@ const covid19AreaReport = async (countryCode, cityCode) => {
   return response;
 };
 
-const updateFlightPrice = async flightDetails => {
+const updateFlightPrice = async flightOffer => {
   const {
     data: response
-  } = await axiosApiInstance.post("/v1//shopping/flight-offers/pricing", {
-    flightDetails
+  } = await axiosApiInstance.post("/v1/shopping/flight-offers/pricing", {
+    data: {
+      type: "flight-offers-pricing",
+      flightOffers: [flightOffer]
+    }
   });
 
   return response;
 };
 
-const flightCreateOrder = async flightDetails => {
+const flightCreateOrder = async (flightOffer, travelers) => {
   const {
     data: response
   } = await axiosApiInstance.post("/v1/booking/flight-orders", {
-    flightDetails
+    data: {
+      type: "flight-order",
+      flightOffers: [flightOffer],
+      travelers,
+    }
   });
 
   return response;
@@ -218,6 +225,34 @@ const deleteFlightOrder = async (orderId) => {
   return response;
 };
 
+const searchAirportAndCityWithAccessToken = async keyword => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations", {
+    params: {
+      subType: "AIRPORT,CITY",
+      keyword
+    },
+  });
+  return response;
+};
+
+const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) => {
+  const accessToken = await getAccessToken();
+
+  axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
+  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations/airports", {
+    params: {
+      latitude,
+      longitude,
+      sort: "distance"
+
+    },
+  });
+  return response;
+};
+
 module.exports = {
   getAccessToken,
   airlineCodeLookup,
@@ -228,5 +263,7 @@ module.exports = {
   covid19AreaReport,
   flightCreateOrder,
   getFlightOrder,
-  deleteFlightOrder
+  deleteFlightOrder,
+  searchAirportAndCityWithAccessToken,
+  searchAirportAndCityNearestWithAccessToken
 };

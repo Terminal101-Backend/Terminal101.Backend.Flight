@@ -31,6 +31,45 @@ module.exports.generateRandomString = (minLength = 3, maxLength = 10, useNumbers
   return result;
 };
 
+/**
+ * 
+ * @param {String} str 
+ * @param {Number} count 
+ * @returns {String}
+ */
+module.exports.repeat = (str, count) => {
+  let result = (count > 0) ? str : "";
+
+  for (let i = 1; i < count; i++) {
+    result += str;
+  }
+
+  return result;
+}
+
+/**
+ * 
+ * @param {Number} number 
+ * @param {Number} leftPad 
+ * @param {Number} rightPad 
+ * @returns {String}
+ */
+module.exports.padNumbers = (number, leftPad = 0, rightPad = 2, round = true) => {
+  if (!!round) {
+    number = Math.round(number * Math.pow(10, rightPad)) / Math.pow(10, rightPad);
+  }
+
+  const splitedNumber = number.toString().split(".");
+  let [leftPart, rightPart] = [splitedNumber?.[0] ?? "", splitedNumber?.[1] ?? ""]
+
+  // const pointPosition = number.toString().indexOf(".") ?? number.toString().length;
+  // const result = (number * 10 ^ rightPad).toString();
+  leftPart = this.repeat("0", leftPad - leftPart.length) + leftPart;
+  rightPart = rightPart + this.repeat("0", rightPad - rightPart.length);
+
+  return leftPart + "." + rightPart;
+}
+
 module.exports.emailRegex = emailRegex;
 module.exports.mobileRegex = mobileRegex;
 

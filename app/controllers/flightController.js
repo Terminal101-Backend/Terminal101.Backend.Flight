@@ -1,232 +1,37 @@
-const { EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
+const { EProvider, EFlightWaypoint, ETravelClass, EFeeType } = require("../constants");
 const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
-const dateTime = require("../helpers/dateTimeHelper");
 const { getIpInfo } = require("../services/ip");
-const { countryRepository, flightInfoRepository } = require("../repositories");
-const { FlightInfo } = require("../models/documents");
-const { amadeus } = require("../services");
+const {
+  providerRepository,
+  countryRepository,
+  airlineRepository,
+  flightInfoRepository,
+  flightConditionRepository,
+  bookedFlightRepository,
+  commissionRepository
+} = require("../repositories");
+// const { FlightInfo } = require("../models/documents");
+const { amadeus, accountManagement } = require("../services");
+const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
+const socketClients = {};
 
 // NOTE: Flight
-const makeSegmentsArray = segments => {
-  segments = segments ?? [];
-  if (!Array.isArray(segments)) {
-    try {
-      segments = segments.split(",");
-    } catch (e) {
-      segments = [segments];
-    }
-  };
-  segments = segments.map(segment => {
-    const segment_date = segment.trim().split(":");
-    return {
-      originCode: segment_date[0],
-      destinationCode: segment_date[1],
-      date: segment_date[2],
-    };
-  });
-
-  return segments;
-};
-
-const makeSegmentStopsArray = airports => {
-  return stop => ({
-    description: stop.description,
-    duration: dateTime.convertAmadeusTime(stop.duration),
-    arrivalAt: stop.arrivalAt,
-    departureAt: stop.departureAt,
-    airport: !!airports[stop.iataCode] ? airports[stop.iataCode].airport : { code: stop.iataCode, name: "UNKNOWN" },
-    city: !!airports[stop.iataCode] ? airports[stop.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-    country: !!airports[stop.iataCode] ? airports[stop.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
-  });
-};
-
-const makeFlightSegmentsArray = (aircrafts, airlines, airports, filter) => {
-  return segment => {
-    let result = {
-      duration: dateTime.convertAmadeusTime(segment.duration),
-      flightNumber: segment.number,
-      aircraft: aircrafts[segment.aircraft.code],
-      airline: {
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode],
-      },
-      stops: (segment.stops ?? []).map(makeSegmentStopsArray(airports)),
-      departure: {
-        airport: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].airport : { code: segment.departure.iataCode, name: "UNKNOWN" },
-        city: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].city : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.departure.iataCode] ? airports[segment.departure.iataCode].country : { code: "UNKNOWN", name: "UNKNOWN" },
-        terminal: segment.departure.terminal,
-        at: segment.departure.at,
-      },
-      arrival: {
-        airport: !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].airport : { code: segment.arrival.iataCode, name: "UNKNOWN" },
-        city: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].city : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
-        country: !!airports[segment.arrival.iataCode] ? !!airports[segment.arrival.iataCode] ? airports[segment.arrival.iataCode].country : { code: segment.arrival.iataCode, name: "UNKNOWN" } : { code: "UNKNOWN", name: "UNKNOWN" },
-        terminal: segment.arrival.terminal,
-        at: segment.arrival.at,
-      },
-    };
-
-    if (!filter.airlines.some(airline => airline.code === segment.carrierCode)) {
-      filter.airlines.push({
-        code: segment.carrierCode,
-        name: airlines[segment.carrierCode]
-      });
-    }
-
-    if (!filter.airports.some(airport => airport.code === segment.departure.iataCode)) {
-      filter.airports.push(
-        !!airports[segment.departure.iataCode]
-          ? airports[segment.departure.iataCode].airport
-          : {
-            code: segment.departure.iataCode,
-            name: "UNKNOWN"
-          });
-    }
-
-    if (!filter.airports.some(airport => airport.code === segment.arrival.iataCode)) {
-      filter.airports.push(
-        !!airports[segment.arrival.iataCode]
-          ? airports[segment.arrival.iataCode].airport
-          : {
-            code: segment.arrival.iataCode,
-            name: "UNKNOWN"
-          });
-    }
-
-    if (!filter.aircrafts.includes(aircrafts[segment.aircraft.code])) {
-      filter.aircrafts.push(aircrafts[segment.aircraft.code]);
-    }
-
-    if (!filter.stops.includes(result.stops.length)) {
-      filter.stops.push(result.stops.length);
-    }
-
-    // if (new Date(result.departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : new Date(filter.departureTime.min))) {
-    //   filter.departureTime.min = result.departure.at;
-    // }
-    // if (new Date(result.departure.at) > (!filter.departureTime.max ? 0 : new Date(filter.departureTime.max))) {
-    //   filter.departureTime.max = result.departure.at;
-    // }
-
-    // if (new Date(result.arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : new Date(filter.arrivalTime.min))) {
-    //   filter.arrivalTime.min = result.arrival.at;
-    // }
-    // if (new Date(result.arrival.at) > (!filter.arrivalTime.max ? 0 : new Date(filter.arrivalTime.max))) {
-    //   filter.arrivalTime.max = result.arrival.at;
-    // }
-
-    return result;
-  };
-};
-
-const makePriceObject = (flightPrice, travelerPricings) => ({
-  total: parseFloat(flightPrice.total),
-  grandTotal: parseFloat(flightPrice.grandTotal),
-  base: parseFloat(flightPrice.base),
-  fees: (flightPrice.fees ?? []).map(fee => ({
-    amount: parseFloat(fee.amount),
-    type: fee.type,
-  })),
-  taxes: (flightPrice.taxes ?? []).map(tax => ({
-    amount: parseFloat(tax.amount),
-    code: tax.code,
-  })),
-  travelerPrices: travelerPricings.map(travelerPrice => {
-    let travelerType;
-    switch (travelerPrice.travelerType) {
-      case "CHILD":
-        travelerType = "CHILD";
-        break;
-
-      case "HELD_INFANT":
-      case "SEATED_INFANT":
-        travelerType = "INFANT";
-        break;
-
-      case "ADULT":
-      case "SENIOR":
-        travelerType = "ADULT";
-        break;
-
-      default:
-    }
-
-    return {
-      total: parseFloat(travelerPrice.price.total),
-      base: parseFloat(travelerPrice.price.base),
-      travelerType,
-      fees: (travelerPrice.price.fees ?? []).map(fee => ({
-        amount: parseFloat(fee.amount),
-        type: fee.type,
-      })),
-      taxes: (travelerPrice.price.taxes ?? []).map(tax => ({
-        amount: parseFloat(tax.amount),
-        code: tax.code,
-      })),
-    }
-  }),
-});
-
-const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass, filter) => {
-  return (flight, index) => {
-    result = {
-      code: index,
-      availableSeats: flight.numberOfBookableSeats,
-      currencyCode: flight.price.currency,
-      travelClass,
-      price: makePriceObject(flight.price, flight.travelerPricings),
-      itineraries: flight.itineraries.map(itinerary => {
-        let result = {
-          duration: dateTime.convertAmadeusTime(itinerary.duration),
-          segments: itinerary.segments.map(makeFlightSegmentsArray(aircrafts, airlines, airports, filter)),
-        };
-
-        if (result.duration < filter.duration.min) {
-          filter.duration.min = result.duration;
-        }
-        if (result.duration > filter.duration.max) {
-          filter.duration.max = result.duration;
-        }
-
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) < (!filter.departureTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.departureTime.min))) {
-          filter.departureTime.min = result.segments[0].departure.at;
-        }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].departure.at) > (!filter.departureTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.departureTime.max))) {
-          filter.departureTime.max = result.segments[0].departure.at;
-        }
-
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) < (!filter.arrivalTime.min ? Number.POSITIVE_INFINITY : dateTime.getMinutesFromIsoString(filter.arrivalTime.min))) {
-          filter.arrivalTime.min = result.segments[0].arrival.at;
-        }
-        if (dateTime.getMinutesFromIsoString(result.segments[0].arrival.at) > (!filter.arrivalTime.max ? 0 : dateTime.getMinutesFromIsoString(filter.arrivalTime.max))) {
-          filter.arrivalTime.max = result.segments[0].arrival.at;
-        }
-
-        return result;
-      }),
-    };
-
-    if (result.price < filter.price.min) {
-      filter.price.min = result.price;
-    }
-    if (result.price > filter.price.max) {
-      filter.price.max = result.price;
-    }
-
-    return result;
-  };
-};
-
 // NOTE: Search origin or destination
 module.exports.searchOriginDestination = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
+    keyword = keyword.trim();
+    const isKeywordEmpty = !keyword;
+    let ipInfo;
     if (!keyword) {
       if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
-        const ip = request.getRequestIpAddress(req);
-        const ipInfo = await getIpInfo("24.48.0.1");
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
+        ipInfo = await getIpInfo(ip);
+        // ipInfo = await getIpInfo("5.239.149.82");
+        console.log({ ip, ipInfo });
         if (ipInfo.status === "success") {
           keyword = ipInfo.city;
         }
@@ -236,22 +41,14 @@ module.exports.searchOriginDestination = async (req, res) => {
       }
     }
 
-    const result = await countryRepository.search(keyword, 5);
-    // const reKeyword = new RegExp(`.*${keyword}.*`, "i");
-
-    // const foundCountries = result.filter(country => reKeyword.test(`${country.name}|${country.code}`));
-    // const distinctCountries = foundCountries.reduce((list, country) => ({ ...list, [country.code]: { name: country.name, cities: country.countryInfo.cities } }), {});
-    // const countriesArray = Object.entries(distinctCountries).map(country => ({ code: country[0], name: country[1].name, cities: country[1].cities }));
-
-    // const foundCities = result.filter(country => reKeyword.test(`${country.cities.name}|${country.cities.code}`));
-    // const distinctCities = foundCities.reduce((list, country) => ({ ...list, [country.cities.code]: country.cities.name }), {});
-    // const citiesArray = Object.entries(distinctCities).map(city => ({ code: city[0], name: city[1] }));
-
-    // const foundAirports = result.filter(country => reKeyword.test(`${country.cities.airports.name}|${country.cities.airports.code}`));
-    // const distinctAirports = foundAirports.reduce((list, country) => ({ ...list, [country.cities.airports.code]: country.cities.airports.name }), {});
-    // const airportsArray = Object.entries(distinctAirports).map(airport => ({ code: airport[0], name: airport[1] }));
-
-    // response.success(res, { countries: countriesArray, cities: citiesArray, airports: airportsArray });
+    let result = await countryRepository.search(keyword, 5);
+    if (!!isKeywordEmpty && (result.airports.length === 0)) {
+      result = await countryRepository.search(keyword.replace(/-/g, " "), 5);
+    }
+    if (!!isKeywordEmpty && (result.airports.length === 0)) {
+      keyword = ipInfo.country;
+      result = await countryRepository.search(keyword, 5)
+    }
     response.success(res, result);
   } catch (e) {
     response.exception(res, e);
@@ -268,125 +65,280 @@ module.exports.getPopularWaypoints = async (req, res) => {
     response.exception(res, e);
   }
 };
+const getSearchFlightsByPaginate = (flightInfo, flights, page = 0, pageSize, additionalFields = {}) => {
+  if (page == -1) {
+    page = 0;
+    pageSize = flights.length;
+  }
+
+  return {
+    code: flightInfo.code,
+    ...additionalFields,
+    origin: {
+      code: flightInfo.origin.code,
+      name: flightInfo.origin.name,
+      description: flightInfo.origin.description,
+    },
+    destination: {
+      code: flightInfo.destination.code,
+      name: flightInfo.destination.name,
+      description: flightInfo.destination.description,
+    },
+    time: flightInfo.time,
+    flights: arrayHelper.pagination(flights.map(flight => {
+      const { providerData, ...fInfo } = flight;
+
+      return fInfo;
+    }).sort((flight1, flight2) => flight1.price.total - flight2.price.total), page, pageSize),
+  };
+};
+
+const appendProviderResult = async (origin, destination, time, flights, searchCode) => {
+  let flightInfo = await flightInfoRepository.createFlightInfo(
+    origin,
+    destination,
+    time,
+    searchCode,
+  );
+
+  // TODO: Make last search distinct
+  // TODO: Update search and append only last search
+  flightInfo.flights = flights;
+  flightInfo.filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flights);
+
+  // if (searchCode === -1) {
+  //   searchCode = flightInfo.searches.push({
+  //     code: await flightInfoRepository.generateUniqueCode(),
+  //     flights: flights,
+  //     filter: flightHelper.getFilterLimitsFromFlightDetailsArray(flights),
+  //   }) - 1;
+  // } else {
+  //   flightInfo.searches[searchCode].flights = flights;
+  //   flightInfo.searches[searchCode].filter = flightHelper.getFilterLimitsFromFlightDetailsArray(flightInfo.searches[searchCode].flights);
+  // }
+
+  await flightInfo.save();
+
+  return flightInfo;
+};
+
+const checkIfProviderNotRestrictedForThisRoute = (flightConditions, activeProviders) => {
+  return activeProviders.filter(provider => {
+    const providerIsRestricted = flightConditions.some(flightCondition => {
+      const anyAirlines = !!flightCondition.airline.exclude && (!flightCondition.airline.items || (flightCondition.airline.items.length === 0));
+      if (!!anyAirlines) {
+        if (!!flightCondition.isRestricted && flightCondition.providerNames.includes(EProvider.find(provider.name))) {
+          return true;
+        }
+        if (!flightCondition.isRestricted && !flightCondition.providerNames.includes(EProvider.find(provider.name))) {
+          return true;
+        }
+        return false;
+      } else {
+        return false
+      }
+      ;
+    });
+
+    return !providerIsRestricted;
+  });
+};
+
+module.exports.filterFlightDetailsByFlightConditions = (flightConditions, providerName, flightDetails) => {
+  let filteredFlights = flightDetails;
+
+  // TODO: Check commission for each condition
+  // TODO: Check additional commission for business
+
+  flightConditions.forEach(flightCondition => {
+    filteredFlights = filteredFlights.filter(flight =>
+      flight.itineraries.every(itinerary => {
+        const first = 0, last = itinerary.segments.length - 1;
+        const originCode = itinerary.segments[first].departure.airport.code;
+        const destinationCode = itinerary.segments[last].arrival.airport.code;
+        const airlineCode = itinerary.segments[first].airline.code;
+        let found = false;
+
+        // NOTE: Check if origin exclude is false and flight origin is in origins list
+        let foundOrigin = !flightCondition.origin.exclude && flightCondition.origin.items.some(origin => origin.code === originCode);
+        // NOTE: Check if origin exclude is true and flight origin is not in origins list
+        foundOrigin = foundOrigin || (!!flightCondition.origin.exclude && !flightCondition.origin.items.some(origin => origin.code === originCode));
+
+        // NOTE: Check if destination exclude is false and flight destination is in destinations list
+        let foundDestination = !flightCondition.destination.exclude && flightCondition.destination.items.some(destination => destination.code === destinationCode);
+        // NOTE: Check if destination exclude is true and flight destination is not in destinations list
+        foundDestination = foundDestination || (!!flightCondition.destination.exclude && !flightCondition.destination.items.some(destination => destination.code === destinationCode));
+
+        // NOTE: Check if airline exclude is false and flight airline is in airlines list
+        let foundAirline = !flightCondition.airline.exclude && flightCondition.airline.items.some(airline => airline.code === airlineCode);
+        // NOTE: Check if airline exclude is true and flight airline is not in airlines list
+        foundAirline = foundAirline || (!!flightCondition.airline.exclude && !flightCondition.airline.items.some(airline => airline.code === airlineCode));
+
+        if (!foundOrigin || !foundDestination || !foundAirline) {
+          found = true;
+        }
+        if (!flightCondition.isRestricted && flightCondition.providerNames.includes(providerName)) {
+          found = true;
+        }
+        if (!!flightCondition.isRestricted && !flightCondition.providerNames.includes(providerName)) {
+          found = true;
+        }
+
+        return found;
+      })
+    );
+  });
+
+  return filteredFlights;
+};
+
+module.exports.addCommissionToFlightDetails = commissions => flight => {
+  commissions.forEach(commission => {
+    const passConditions = flight.itineraries.some(itinerary => {
+      const first = 0, last = itinerary.segments.length - 1;
+      const originCode = itinerary.segments[first].departure.airport.code;
+      const destinationCode = itinerary.segments[last].arrival.airport.code;
+      const airlineCode = itinerary.segments[first].airline.code;
+      let found = false;
+
+      // NOTE: Check if origin exclude is false and flight origin is in origins list
+      let foundOrigin = !commission.origin.exclude && commission.origin.items.some(origin => origin.code === originCode);
+      // NOTE: Check if origin exclude is true and flight origin is not in origins list
+      foundOrigin = foundOrigin || (!!commission.origin.exclude && !commission.origin.items.some(origin => origin.code === originCode));
+
+      // NOTE: Check if destination exclude is false and flight destination is in destinations list
+      let foundDestination = !commission.destination.exclude && commission.destination.items.some(destination => destination.code === destinationCode);
+      // NOTE: Check if destination exclude is true and flight destination is not in destinations list
+      foundDestination = foundDestination || (!!commission.destination.exclude && !commission.destination.items.some(destination => destination.code === destinationCode));
+
+      // NOTE: Check if airline exclude is false and flight airline is in airlines list
+      let foundAirline = !commission.airline.exclude && commission.airline.items.some(airline => airline.code === airlineCode);
+      // NOTE: Check if airline exclude is true and flight airline is not in airlines list
+      foundAirline = foundAirline || (!!commission.airline.exclude && !commission.airline.items.some(airline => airline.code === airlineCode));
+
+      if (!!foundOrigin && !!foundDestination && !!foundAirline) {
+        found = true;
+      }
+
+      return found;
+    });
+
+    if (!!passConditions) {
+      let commissionPercent = flight.price.base;
+      commissionPercent *= commission.value.percent / 100;
+      commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+      flight.price.commissions.push({
+        percent: commission.value.percent,
+        constant: commission.value.constant,
+      });
+
+      flight.price.total += commissionPercent + commission.value.constant;
+      flight.price.grandTotal += commissionPercent + commission.value.constant;
+    }
+  });
+};
 
 // NOTE: Search flights
 module.exports.searchFlights = async (req, res) => {
   try {
-    let segments = makeSegmentsArray(req.query.segments);
-
-    const departureDate = dateTime.excludeDateFromIsoString(req.query.departureDate.toISOString());
-    const returnDate = dateTime.excludeDateFromIsoString(req.query.returnDate ? req.query.returnDate.toISOString() : "");
-
-    let result;
-    if (!segments || (segments.length === 0)) {
-      result = await amadeus.flightOffersSingleSearch(req.query.origin, req.query.destination, departureDate, returnDate, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
-    } else {
-      result = await amadeus.flightOffersMultiSearch(req.query.origin, req.query.destination, departureDate, returnDate, segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass);
+    let decodedToken;
+    if ((req?.header("BusinessMode") ?? "").toString().toLowerCase() == "true") {
+      try {
+        decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+        if (decodedToken.type !== "BUSINESS") {
+          response.error(res, "user_invalid", 400);
+          return;
+        }
+      } catch (e) {
+        console.trace(e);
+        response.error(res, "access_denied", 403);
+        return;
+      }
+    }
+    let testMode = process.env.TEST_MODE != "false";
+    /**
+     * @type {Promise<Array>}
+     */
+    let activeProviders = await providerRepository.getActiveProviders();
+    if (!!decodedToken && (decodedToken.type === "BUSINESS")) {
+      const { data: user } = await accountManagement.getUserInfo(decodedToken.user);
+      const business = user.businesses.find(b => decodedToken.business === b.code);
+      activeProviders = activeProviders.filter(provider => EProvider.check(business?.thirdPartyAccount?.availableProviders ?? [], provider.name));
     }
 
-    if (!!result.data && (result.data.length > 0)) {
-      const stops = result.data
-        .reduce((res, cur) => [...res, ...cur.itineraries], [])
-        .reduce((res, cur) => [...res, ...cur.segments], [])
-        .filter(segment => !!segment.stops)
-        .reduce((res, cur) => [...res, ...cur.stops], [])
-        .map(stop => stop.iataCode);
+    const activeProviderCount = activeProviders.length;
+    const lastSearch = [];
+    let hasResult = false;
+    let providerNumber = 0;
+    const {
+      origin,
+      destination
+    } = await flightHelper.getOriginDestinationCity(req.query.origin, req.query.destination);
+    const flightInfo = await appendProviderResult(origin, destination, new Date(req.query.departureDate).toISOString(), []);
+    const searchCode = flightInfo.code;
 
-      const filter = {
-        stops: [],
-        aircrafts: [],
-        airports: [],
-        airlines: [],
-        price: {
-          min: Number.POSITIVE_INFINITY,
-          max: Number.NEGATIVE_INFINITY,
-        },
-        departureTime: {
-          min: undefined,
-          max: undefined,
-        },
-        arrivalTime: {
-          min: undefined,
-          max: undefined,
-        },
-        duration: {
-          min: Number.POSITIVE_INFINITY,
-          max: Number.NEGATIVE_INFINITY,
-        },
-        // priceFrom: Number.POSITIVE_INFINITY,
-        // priceTo: 0,
-        // departureTimeFrom: undefined,
-        // departureTimeTo: undefined,
-        // arrivalTimeFrom: undefined,
-        // arrivalTimeTo: undefined,
-        // durationFrom: Number.POSITIVE_INFINITY,
-        // durationTo: 0,
-      };
-      const airports = !!result.dictionaries ? await countryRepository.getAirportsByCode([...Object.keys(result.dictionaries.locations), ...stops]) : [];
-      const aircrafts = !!result.dictionaries ? result.dictionaries.aircraft : [];
-      const carriers = !!result.dictionaries ? result.dictionaries.carriers : [];
-      const flightDetails = result.data.map(makeFlightDetailsArray(aircrafts, carriers, airports, req.query.travelClass, filter));
-
-      filter.departureTime.min = dateTime.getMinutesFromIsoString(filter.departureTime.min);
-      filter.departureTime.max = dateTime.getMinutesFromIsoString(filter.departureTime.max);
-
-      filter.arrivalTime.min = dateTime.getMinutesFromIsoString(filter.arrivalTime.min);
-      filter.arrivalTime.max = dateTime.getMinutesFromIsoString(filter.arrivalTime.max);
-
-      let origin;
-      let destination;
-      origin = await countryRepository.getCityByCode(req.query.origin);
-      destination = await countryRepository.getCityByCode(req.query.destination);
-
-      if (!origin) {
-        origin = !!airports[req.query.origin] ? airports[req.query.origin].city : { code: "UNKNOWN", name: "UNKNOWN" };
+    if (req.method === "SOCKET") {
+      response.success(res, getSearchFlightsByPaginate(flightInfo, [], req.header("Page"), req.header("PageSize"), { completed: false }));
+      if (!socketClients[res.clientId]) {
+        socketClients[res.clientId] = {};
       }
+      socketClients[res.clientId].lastSearchFlight = flightInfo.code;
+    }
 
-      if (!destination) {
-        destination = !!airports[req.query.destination] ? airports[req.query.destination].city : { code: "UNKNOWN", name: "UNKNOWN" };
-      }
+    if (activeProviderCount === 0) {
+      response.error(res, "provider_not_available", 404);
+      return;
+    }
 
-      let flightInfo = await flightInfoRepository.findOne({
-        origin,
-        destination,
-        time: req.query.departureDate.toISOString(),
-      });
+    const flightConditions = await flightConditionRepository.findFlightCondition(req.query.origin, req.query.destination);
+    // TODO: Check if user logged in as business user
+    const commissions = await commissionRepository.findCommission(req.query.origin, req.query.destination, decodedToken?.business);
+    const providersResultCompleted = activeProviders.reduce((res, cur) => ({
+      ...res,
+      [cur.title]: false,
+    }), {});
 
-      if (!flightInfo) {
-        flightInfo = new FlightInfo({
-          origin,
-          destination,
-          time: req.query.departureDate,
+    activeProviders.forEach(provider => {
+      const providerHelper = eval(EProvider.find(provider.name).toLowerCase() + "Helper");
+
+      providerHelper.searchFlights(req.query, testMode).then(async flight => {
+        if (req.method === "SOCKET") {
+          if (searchCode !== socketClients[res.clientId].lastSearchFlight) {
+            return;
+          }
+        }
+
+        const flightDetails = this.filterFlightDetailsByFlightConditions(flightConditions, EProvider.find(provider.name), flight.flightDetails);
+        flightDetails.forEach(this.addCommissionToFlightDetails(commissions.filter(commission => (commission?.providerNames ?? []).includes(EProvider.find(provider.name)))));
+
+        lastSearch.push(...flightDetails);
+        appendProviderResult(flight.origin, flight.destination, req.query.departureDate.toISOString(), lastSearch, searchCode, req.header("Page"), req.header("PageSize")).catch(e => {
+          console.trace(e);
         });
-      }
 
-      const searchIndex = flightInfo.searches.push({
-        code: await flightInfoRepository.generateUniqueCode(),
-        flights: flightDetails,
-        filter,
-      }) - 1;
+        hasResult = true;
 
-      await flightInfo.save();
-
-      response.success(res, {
-        code: flightInfo.searches[searchIndex].code,
-        origin: {
-          code: flightInfo.origin.code,
-          name: flightInfo.origin.name,
-          description: flightInfo.origin.description,
-        },
-        destination: {
-          code: flightInfo.destination.code,
-          name: flightInfo.destination.name,
-          description: flightInfo.destination.description,
-        },
-        time: flightInfo.time,
-        flights: flightDetails,
-        // AMADEUS_RESULT: result,
+        if ((req.method === "SOCKET") && (req.header("Page") === -1)) {
+          providersResultCompleted[provider.title] = true;
+          const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
+          response.success(res, getSearchFlightsByPaginate(flightInfo, flightDetails, req.header("Page"), req.header("PageSize"), { completed }));
+        } else if (++providerNumber === activeProviderCount) {
+          response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize")));
+        }
+      }).catch(e => {
+        console.error(`Provider (${provider.title}) returns error: `, e);
+        const completed = Object.values(providersResultCompleted).every(providerCompleted => !!providerCompleted);
+        providersResultCompleted[provider.title] = true;
+        if (++providerNumber === activeProviderCount) {
+          if (!hasResult && (req.method === "SOCKET")) {
+            response.exception(res, e);
+          } else {
+            response.success(res, getSearchFlightsByPaginate(flightInfo, lastSearch, req.header("Page"), req.header("PageSize"), { completed }));
+          }
+        }
       });
-    } else {
-      response.success(res, {});
-    }
+    });
   } catch (e) {
     response.exception(res, e);
   }
@@ -398,33 +350,33 @@ module.exports.getFilterLimit = async (req, res) => {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
     response.success(res, {
-      stops: flightInfo.searches.filter.stops,
-      aircrafts: flightInfo.searches.filter.aircrafts,
-      airports: flightInfo.searches.filter.airports.map(airport => ({
+      stops: flightInfo.filter.stops,
+      aircrafts: flightInfo.filter.aircrafts,
+      airports: flightInfo.filter.airports.map(airport => ({
         code: airport.code,
         name: airport.name,
         description: airport.description,
       })),
-      airlines: flightInfo.searches.filter.airlines.map(airline => ({
+      airlines: flightInfo.filter.airlines.map(airline => ({
         code: airline.code,
         name: airline.name,
         description: airline.description,
       })),
       price: {
-        min: flightInfo.searches.filter.price.min,
-        max: flightInfo.searches.filter.price.max,
+        min: flightInfo.filter.price.min,
+        max: flightInfo.filter.price.max,
       },
       departureTime: {
-        min: flightInfo.searches.filter.departureTime.min,
-        max: flightInfo.searches.filter.departureTime.max,
+        min: flightInfo.filter.departureTime.min,
+        max: flightInfo.filter.departureTime.max,
       },
       arrivalTime: {
-        min: flightInfo.searches.filter.arrivalTime.min,
-        max: flightInfo.searches.filter.arrivalTime.max,
+        min: flightInfo.filter.arrivalTime.min,
+        max: flightInfo.filter.arrivalTime.max,
       },
       duration: {
-        min: flightInfo.searches.filter.duration.min,
-        max: flightInfo.searches.filter.duration.max,
+        min: flightInfo.filter.duration.min,
+        max: flightInfo.filter.duration.max,
       },
     });
   } catch (e) {
@@ -437,7 +389,13 @@ module.exports.filterFlights = async (req, res) => {
   try {
     const flightInfo = await flightInfoRepository.getSearchByCode(req.params.searchId);
 
-    const flights = flightInfo.searches.flights.map(flight => {
+    const now = new Date();
+
+    if (now - flightInfo.searchedTime > process.env.SEARCH_TIMEOUT * 60 * 1000) {
+      throw "search_expired";
+    }
+
+    const flights = flightInfo.flights.map(flight => {
       let itineraries = [];
       if ((!req.query.priceFrom || (flight.price >= req.query.priceFrom)) && (!req.query.priceTo || (flight.price <= req.query.priceTo))) {
         itineraries = flight.itineraries.map(itinerary => ({
@@ -544,12 +502,12 @@ module.exports.filterFlights = async (req, res) => {
             return false;
           }
 
-          const departureTime = dateTime.getMinutesFromIsoString(itinerary.segments[0].departure.at);
+          const departureTime = dateTimeHelper.getMinutesFromIsoString(itinerary.segments[0].departure.at);
 
           result = result && (!req.query.departureTimeFrom || (departureTime >= req.query.departureTimeFrom));
           result = result && (!req.query.departureTimeTo || (departureTime <= req.query.departureTimeTo));
 
-          const arrivalTime = dateTime.getMinutesFromIsoString(itinerary.segments[0].arrival.at);
+          const arrivalTime = dateTimeHelper.getMinutesFromIsoString(itinerary.segments[0].arrival.at);
 
           result = result && (!req.query.arrivalTimeFrom || (arrivalTime >= req.query.arrivalTimeFrom));
           result = result && (!req.query.arrivalTimeTo || (arrivalTime <= req.query.arrivalTimeTo));
@@ -596,7 +554,7 @@ module.exports.filterFlights = async (req, res) => {
     }).filter(flight => flight.itineraries.length > 0);
 
     response.success(res, {
-      code: flightInfo.searches.code,
+      code: flightInfo.code,
       origin: {
         code: flightInfo.origin.code,
         name: flightInfo.origin.name,
@@ -608,8 +566,28 @@ module.exports.filterFlights = async (req, res) => {
         description: flightInfo.destination.description,
       },
       time: flightInfo.time,
-      flights,
+      flights: arrayHelper.pagination(flights, req.header("Page"), req.header("PageSize")),
+      // flights,
     });
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+// NOTE: Get specific flight's price
+module.exports.getFlightPrice = async (req, res) => {
+  try {
+    const amadeusFlightObject = await amadeusHelper.regenerateAmadeusFlightOfferObject(req.params.searchId, req.params.flightCode);
+
+    const result = await amadeus.updateFlightPrice(amadeusFlightObject);
+
+    if (!!result.data && !!result.data.flightOffers && (result.data.flightOffers.length > 0)) {
+      const price = makePriceObject(result.data.flightOffers[0].price, result.data.flightOffers[0].travelerPricings);
+
+      response.success(res, price);
+    } else {
+      response.success(res, {});
+    }
   } catch (e) {
     response.exception(res, e);
   }
@@ -618,7 +596,56 @@ module.exports.filterFlights = async (req, res) => {
 // NOTE: Get specific flight
 module.exports.getFlight = async (req, res) => {
   try {
-    const flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightIndex);
+    let testMode = process.env.TEST_MODE != "false";
+
+    let flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+
+    if (!flightInfo) {
+      response.error(res, "flight_not_found", 404);
+      return;
+    }
+    const isBookedFlight = await bookedFlightRepository.findOne({
+      searchedFlightCode: req.params.searchId,
+      flightDetailsCode: req.params.flightCode
+    });
+    if (!isBookedFlight) {
+      const providerName = flightInfo.flights.provider.toLowerCase();
+      const providerHelper = eval(providerName + "Helper");
+      const newPrice = await providerHelper.airRevalidate(flightInfo, testMode);
+
+      // if(!newPrice){
+      //   console.log('err :', newPrice)
+      //   response.exception(res, 'This Flight Not Available, Please try booking another flight.')
+      // }
+      if (!!newPrice.error) {
+        response.exception(res, newPrice.error);
+        return;
+      }
+      let oldPrice = flightInfo.flights.price.total;
+      let commissionValue = 0;
+
+      newPrice.total += flightInfo.flights.price.commissions.reduce((res, cur) => {
+        let commissionPercent = newPrice.base;
+        commissionPercent *= cur.percent / 100;
+        commissionPercent = Math.round(commissionPercent * 100) / 100;
+
+        commissionValue += commissionPercent + cur.constant;
+        res += commissionValue;
+
+        return res;
+      }, 0);
+
+      let priceChange = (oldPrice - newPrice.total !== 0) ? true : false;
+      if (!!priceChange) {
+        await flightInfoRepository.updateFlightDetails(req.params.searchId, req.params.flightCode, newPrice);
+        flightInfo = await flightInfoRepository.getFlight(req.params.searchId, req.params.flightCode);
+      }
+
+      flightInfo.flights.price.fees.push({
+        amount: commissionValue,
+        type: EFeeType.get("COMMISSION"),
+      });
+    }
 
     response.success(res, {
       code: req.params.searchId,
@@ -634,17 +661,25 @@ module.exports.getFlight = async (req, res) => {
       },
       time: flightInfo.time,
       flight: {
-        code: flightInfo.flight.code,
-        availableSeats: flightInfo.flight.availableSeats,
-        currencyCode: flightInfo.flight.currencyCode,
-        // price: flightInfo.flight.price,
+        code: flightInfo.flights.code,
+        availableSeats: flightInfo.flights.availableSeats,
+        currencyCode: flightInfo.flights.currencyCode,
+        fare: flightInfo.flights.providerData.fare,
+        duration: flightInfo.flights.duration,
+        travelClass: flightInfo.flights.travelClass,
         price: {
-          total: flightInfo.flight.price.total,
-          grandTotal: flightInfo.flight.price.grandTotal,
-          base: flightInfo.flight.price.base,
-          travelerPrices: flightInfo.flight.price.travelerPrices.map(travelerPrice => ({
+          total: flightInfo.flights.price.total,
+          grandTotal: flightInfo.flights.price.grandTotal,
+          base: flightInfo.flights.price.base,
+          commissions: flightInfo.flights.price.commissions.map(commission => ({
+            percent: commission.percent,
+            constant: commission.constant,
+          })),
+          travelerPrices: flightInfo.flights.price.travelerPrices.map(travelerPrice => ({
+            type: travelerPrice.travelerType,
             total: travelerPrice.total,
             base: travelerPrice.base,
+            count: travelerPrice.count,
             fees: travelerPrice.fees.map(fee => ({
               amount: fee.amount,
               type: EFeeType.find(fee.type),
@@ -654,16 +689,16 @@ module.exports.getFlight = async (req, res) => {
               code: tax.code,
             })),
           })),
-          fees: flightInfo.flight.price.fees.map(fee => ({
+          fees: flightInfo.flights.price.fees.map(fee => ({
             amount: fee.amount,
             type: EFeeType.find(fee.type),
           })),
-          taxes: flightInfo.flight.price.taxes.map(tax => ({
+          taxes: flightInfo.flights.price.taxes.map(tax => ({
             amount: tax.amount,
             code: tax.code,
           })),
         },
-        itineraries: flightInfo.flight.itineraries.map(itinerary => ({
+        itineraries: flightInfo.flights.itineraries.map(itinerary => ({
           duration: itinerary.duration,
           segments: itinerary.segments.map(segment => ({
             duration: segment.duration,
@@ -736,6 +771,8 @@ module.exports.getFlight = async (req, res) => {
         })),
       }
     });
+
+
   } catch (e) {
     response.exception(res, e);
   }
@@ -755,8 +792,12 @@ module.exports.getPopularFlights = async (req, res) => {
 // NOTE: Get countries
 module.exports.getCountries = async (req, res) => {
   try {
-    const countries = await countryRepository.findMany();
-    response.success(res, countries.map(country => ({ code: country.code, name: country.name, dialingCode: country.dialingCode })));
+    const countries = await countryRepository.findMany({}, "name");
+    response.success(res, countries.map(country => ({
+      code: country.code,
+      name: country.name,
+      dialingCode: country.dialingCode
+    })));
   } catch (e) {
     response.exception(res, e);
   }
@@ -783,6 +824,21 @@ module.exports.getAirports = async (req, res) => {
   }
 };
 
+// NOTE: Get airlines
+module.exports.getAirlines = async (req, res) => {
+  try {
+    const airline = await airlineRepository.findMany();
+
+    response.success(res, airline.map(airline => ({
+      code: airline.code,
+      name: airline.name,
+      description: airline.description
+    })));
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
 // NOTE: Get covid 19 area report
 module.exports.restrictionCovid19 = async (req, res) => {
   try {
@@ -803,4 +859,107 @@ module.exports.flightCreateOrder = async (req, res) => {
     response.exception(res, e);
   }
 };
+
+// NOTE: Flight
+// NOTE: Search origin or destination by Amadeus
+module.exports.searchOriginDestinationAmadeus = async (req, res) => {
+  try {
+    let keyword = req.query.keyword ?? "";
+    const isKeywordEmpty = !keyword;
+    let ipInfo;
+    if (!keyword) {
+      if (EFlightWaypoint.check("ORIGIN", req.params.waypointType)) {
+        let ip = request.getRequestIpAddress(req);
+        ip = ip.includes(':') ? ip.split(':')[0] : ip;
+
+        ipInfo = await getIpInfo(ip);
+        // ipInfo = await getIpInfo("5.239.149.82");
+        // ipInfo = await getIpInfo("161.185.160.93");
+        console.log({ ip, ipInfo });
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.countryCode;
+        // }
+        // if (ipInfo.status === "success") {
+        //   keyword = ipInfo.city;
+        // }
+        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const { data: resultTransformed } = transformDataAmadeus(result);
+        response.success(res, resultTransformed);
+      } else {
+        response.error(res, "keyword_required", 400);
+        return;
+      }
+    } else {
+      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const { data: resultTransformed } = transformDataAmadeus(result);
+      response.success(res, resultTransformed);
+    }
+  } catch (e) {
+    response.exception(res, e);
+  }
+
+
+};
+
+// NOTE: Get history flights
+module.exports.getHistoryFlights = async (req, res) => {
+  try {
+    // const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
+    const list = await flightInfoRepository.getHistoryFlights(req.header("PageSize"));
+    let params = [];
+   
+    list.items.forEach(l => {
+      if (l.flights.length > 0) {
+        params.push({
+          time: l.time,
+          travelClass: l.flights[0].travelClass,
+          passengers: l.flights[0].price.travelerPrices,
+          segments: l.flights[0].itineraries.map(i => {
+            return {
+              origin: i.segments[0].departure.city.code,
+              departure: i.segments[0].departure.at,
+              destination: i.segments[i.segments.length - 1].arrival.city.code,
+              arrival: i.segments[i.segments.length - 1].arrival.at
+            }
+          })
+        })
+      }
+    });
+  
+    list.items = params;
+    response.success(res, list);
+
+  } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+//Internal Function
+function transformDataAmadeus(data) {
+  const newData = [];
+
+  data.forEach(element => {
+    newData.push({
+      subType: element.subType,
+      name: toCamelCase(element.name),
+      code: element.iataCode,
+      geoCode: element.geoCode,
+      address: element.address
+    })
+  });
+
+
+  return {
+    data: newData
+  };
+}
+
+function toCamelCase(input) {
+  var result = input.toLowerCase().replace(/\s+(\w)?/gi,
+    (match, letter) => {
+      return letter.toUpperCase()
+    }).replace(/([A-Z])/g, " $1");
+
+  return result.charAt(0).toUpperCase() + result.slice(1);
+}
 

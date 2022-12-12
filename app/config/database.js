@@ -1,21 +1,22 @@
 module.exports = {
   get mongodb() {
-    // let result = process.env.MONGO_PREFIX + "://";
+    let result = process.env.MONGO_PREFIX + "://";
 
-    // if (process.env.MONGO_USERNAME) {
-    //   result += process.env.MONGO_USERNAME;
-    //   if (process.env.MONGO_PASSWORD) {
-    //     result += ":" + process.env.MONGO_PASSWORD + "@";
-    //   }
-    // }
+    if (process.env.MONGO_USERNAME) {
+      result += process.env.MONGO_USERNAME;
+      if (process.env.MONGO_PASSWORD) {
+        result += ":" + process.env.MONGO_PASSWORD + "@";
+      }
+    }
 
-    // result += process.env.MONGO_HOST;
+    result += process.env.MONGO_HOST;
 
-    // if (process.env.MONGO_PORT) {
-    //   result += ":" + process.env.MONGO_PORT;
-    // }
+    if (process.env.MONGO_PORT) {
+      result += ":" + process.env.MONGO_PORT;
+    }
 
-    return process.env.MONGO_URL;
+    return result;
+    // return process.env.MONGO_URL;
   },
   get redis() {
     let result = "redis://";

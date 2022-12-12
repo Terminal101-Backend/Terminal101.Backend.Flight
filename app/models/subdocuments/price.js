@@ -1,10 +1,12 @@
 const mongoose = require("mongoose");
+const CommissionValue = require("./commissionValue");
 const Fee = require("./fee");
 const PriceDetails = require("./priceDetails");
 const Tax = require("./tax");
 const Schema = mongoose.Schema;
 
 const price = new Schema({
+
 	total: {
 		type: Number,
 		required: true,
@@ -19,6 +21,10 @@ const price = new Schema({
 	},
 	travelerPrices: {
 		type: [PriceDetails],
+		default: [],
+	},
+	commissions: {
+		type: [CommissionValue],
 		default: [],
 	},
 	fees: {

@@ -1,204 +1,139 @@
-const { Joi } = require("celebrate");
+const Joi = require("joi");
+const {baseValidator} = require("../core");
+const {EFlightWaypoint, ETravelClass} = require("../constants");
 
-const { BaseValidator } = require("../core");
+module.exports.searchOriginDestination = baseValidator({
+  body: {},
+  params: {
+    waypointType: EFlightWaypoint.validator({required: true}),
+  },
+  query: {
+    keyword: Joi.string().allow(""),
+  },
+});
 
-class SearchOriginDestination extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getPopularWaypoints = baseValidator({
+  body: {},
+  params: {
+    waypointType: EFlightWaypoint.validator({required: true}),
+  },
+});
 
-    const params = {
-      waypointType: Joi.string().required(),
-    };
+module.exports.searchFlights = baseValidator({
+  body: {},
+  query: {
+    origin: Joi.string().required(),
+    destination: Joi.string().required(),
+    departureDate: Joi.date().required(),
+    returnDate: Joi.date(),
+    adults: Joi.number().default(1),
+    children: Joi.number(),
+    infants: Joi.number(),
+    travelClass: ETravelClass.validator({default: "ECONOMY"}),
+    segments: [
+      Joi.string(),
+      Joi.array().items(Joi.string()),
+    ],
+  },
+}, true);
 
-    const query = {
-      keyword: Joi.string(),
-    };
+module.exports.getFilterLimit = baseValidator({
+  body: {},
+  params: {
+    searchId: Joi.string().required(),
+  },
+});
 
-    super(body);
-    this.params(params);
-    this.query(query);
-  }
-};
+module.exports.filterFlights = baseValidator({
+  body: {},
+  params: {
+    searchId: Joi.string().required(),
+  },
+  query: {
+    stops: [
+      Joi.string(),
+      Joi.array().items(Joi.number()),
+    ],
+    airports: [
+      Joi.string(),
+      Joi.array().items(Joi.string()),
+    ],
+    airlines: [
+      Joi.string(),
+      Joi.array().items(Joi.string()),
+    ],
+    priceFrom: Joi.number(),
+    priceTo: Joi.number(),
+    departureTimeFrom: Joi.number().default(0),
+    departureTimeTo: Joi.number().default(23 * 60 + 59),
+    arrivalTimeFrom: Joi.number().default(0),
+    arrivalTimeTo: Joi.number().default(23 * 60 + 59),
+    durationFrom: Joi.number(),
+    durationTo: Joi.number(),
+  },
+});
 
-class GetPopularWaypoints extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getFlightPrice = baseValidator({
+  body: {},
+  params: {
+    searchId: Joi.string().required(),
+    flightCode: Joi.string().required(),
+  },
+});
 
-    const params = {
-      waypointType: Joi.string().required(),
-    };
+module.exports.getFlight = baseValidator({
+  body: {},
+  params: {
+    searchId: Joi.string().required(),
+    flightCode: Joi.string().required(),
+  },
+});
 
-    super(body);
-    this.params(params);
-  }
-};
+module.exports.getPopularFlights = baseValidator({
+  body: {},
+});
 
-class SearchFlights extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getCountries = baseValidator({
+  body: {},
+});
 
-    const query = {
-      origin: Joi.string().required(),
-      destination: Joi.string().required(),
-      departureDate: Joi.date().required(),
-      returnDate: Joi.date(),
-      adults: Joi.number().default(1),
-      children: Joi.number(),
-      infants: Joi.number(),
-      travelClass: Joi.string().default("ECONOMY"),
-      segments: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-    };
+module.exports.getCities = baseValidator({
+  body: {},
+  params: {
+    code: Joi.string().required(),
+  },
+});
 
-    super(body);
-    this.query(query);
-  }
-};
+module.exports.getAirports = baseValidator({
+  body: {},
+  params: {
+    countryCode: Joi.string().required(),
+    cityCode: Joi.string().required(),
+  },
+});
 
-class GetFilters extends BaseValidator {
-  constructor() {
-    const body = {
-    };
+module.exports.getAirlines = baseValidator({
+  body: {},
+});
 
-    const params = {
-      searchId: Joi.string().required(),
-    };
+module.exports.restrictionCovid19 = baseValidator({
+  body: {},
+  params: {
+    countryCode: Joi.string().required(),
+    cityCode: Joi.string(),
+  },
+});
 
-    super(body);
-    this.params(params);
-  }
-};
+module.exports.searchOriginDestinationAmadeus = baseValidator({
+  body: {},
+  params: {
+    waypointType: EFlightWaypoint.validator({required: true}),
+  },
+  query: {
+    keyword: Joi.string(),
+  },
+});
 
-class FilterFlights extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      searchId: Joi.string().required(),
-    };
-
-    const query = {
-      stops: [
-        Joi.string(),
-        Joi.array().items(Joi.number()),
-      ],
-      airports: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-      airlines: [
-        Joi.string(),
-        Joi.array().items(Joi.string()),
-      ],
-      priceFrom: Joi.number(),
-      priceTo: Joi.number(),
-      departureTimeFrom: Joi.number().default(0),
-      departureTimeTo: Joi.number().default(23 * 60 + 59),
-      arrivalTimeFrom: Joi.number().default(0),
-      arrivalTimeTo: Joi.number().default(23 * 60 + 59),
-      durationFrom: Joi.number(),
-      durationTo: Joi.number(),
-    };
-
-    super(body);
-    this.params(params);
-    this.query(query);
-  }
-};
-
-class GetFlight extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      searchId: Joi.string().required(),
-      flightIndex: Joi.number().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetPopularFlights extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    super(body);
-  }
-};
-
-class GetCountries extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    super(body);
-  }
-};
-
-class GetCities extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      code: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class GetAirports extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      countryCode: Joi.string().required(),
-      cityCode: Joi.string().required(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-class RestrictionCovid19 extends BaseValidator {
-  constructor() {
-    const body = {
-    };
-
-    const params = {
-      countryCode: Joi.string().required(),
-      cityCode: Joi.string(),
-    };
-
-    super(body);
-    this.params(params);
-  }
-};
-
-module.exports = {
-  searchOriginDestination: new SearchOriginDestination(),
-  getPopularWaypoints: new GetPopularWaypoints(),
-  searchFlights: new SearchFlights(),
-  getFilterLimit: new GetFilters(),
-  filterFlights: new FilterFlights(),
-  getFlight: new GetFlight(),
-  getPopularFlights: new GetPopularFlights(),
-  getCountries: new GetCountries(),
-  getCities: new GetCities(),
-  getAirports: new GetAirports(),
-  restrictionCovid19: new RestrictionCovid19(),
-};
+module.exports.getHistoryFlights = baseValidator({
+  body: {},
+}, true);

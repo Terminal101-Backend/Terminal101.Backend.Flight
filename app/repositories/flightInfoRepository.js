@@ -1,7 +1,11 @@
 const BaseRepository = require("../core/baseRepository");
-const { FlightInfo, Country } = require("../models/documents");
+const { FlightInfo } = require("../models/documents");
 const { EFlightWaypoint } = require("../constants");
 const { generateRandomString } = require("../helpers/stringHelper");
+const pagination = require("../helpers/paginationHelper");
+const dateTime = require("../helpers/dateTimeHelper");
+const filterHelper = require("../helpers/filterHelper");
+const paginationHelper = require("../helpers/paginationHelper");
 
 class FlightInfoRepository extends BaseRepository {
   constructor() {
@@ -13,13 +17,19 @@ class FlightInfoRepository extends BaseRepository {
    * @param {String} origin 
    * @param {String} destination 
    * @param {Date} time 
+   * @param {String} [code] 
    * @returns {Promise<FlightInfo>}
    */
-  async createFlightInfo(origin, destination, time) {
-    let flightInfo = await this.findOne({ origin, destination, time });
+  async createFlightInfo(origin, destination, time, code) {
+    let flightInfo;
+
+    if (!!code) {
+      flightInfo = await this.findOne({ code });
+    }
 
     if (!flightInfo) {
-      flightInfo = new FlightInfo({ origin, destination, time });
+      const code = await this.generateUniqueCode();
+      flightInfo = new FlightInfo({ code, origin, destination, time });
       await flightInfo.save();
     }
 
@@ -30,18 +40,21 @@ class FlightInfoRepository extends BaseRepository {
 
   }
 
-  async getCachedPopularWaypoints(waypointType, count = 10) {
+  async getCachedPopularWaypoints(waypointType, count = 10, page, pageSize, filters, sort) {
     let result = [];
 
     if (EFlightWaypoint.check(["ORIGIN", "DESTINATION"], waypointType)) {
       const agrFlightInfo = FlightInfo.aggregate();
-      agrFlightInfo.append({ $unwind: "$searches" });
+      // agrFlightInfo.append({ $unwind: "$searches" });
 
+      agrFlightInfo.append({ $match: { [waypointType.toLowerCase() + ".code"]: { $ne: "UNKNOWN" } } });
       agrFlightInfo.append({
         $group: {
           _id: {
-            airport: "$" + waypointType.toLowerCase(),
-            // waypoint: "$waypoint.cities.airports.name",
+            airport: {
+              code: "$" + waypointType.toLowerCase() + ".code",
+              name: "$" + waypointType.toLowerCase() + ".name",
+            },
           },
           count: {
             $sum: 1,
@@ -54,7 +67,6 @@ class FlightInfoRepository extends BaseRepository {
         $addFields: {
           airport: "$_id.airport",
           count: "$count",
-          // name: "$_id.waypoint"
         }
       });
       agrFlightInfo.append({
@@ -65,26 +77,29 @@ class FlightInfoRepository extends BaseRepository {
           _id: 0,
         }
       });
-      result = await agrFlightInfo.exec();
+      filterHelper.filterAndSort(agrFlightInfo, filters, sort);
+      result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+      // result = await agrFlightInfo.exec();
     }
 
-    return result.map(flight => ({
+    result.items.map(flight => ({
       code: flight.airport.code,
       name: flight.airport.name,
       description: flight.airport.description,
       count: flight.count,
     }));
+    return result;
   }
 
   async cachePopularFlights() {
 
   }
 
-  async getCachedPopularFlights(count = 10) {
+  async getCachedPopularFlights(count = 10, page, pageSize, filters, sort) {
     let result = [];
 
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $unwind: "$searches" });
     agrFlightInfo.append({
       $group: {
         _id: {
@@ -108,9 +123,11 @@ class FlightInfoRepository extends BaseRepository {
       }
     });
     agrFlightInfo.append({ $project: { origin: 1, destination: 1, time: 1, count: 1, _id: 0 } });
-    result = await agrFlightInfo.exec();
+    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
 
-    return result.map(flight => ({
+    result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+
+    result.items.map(flight => ({
       origin: {
         code: flight.origin.code,
         name: flight.origin.name,
@@ -123,6 +140,8 @@ class FlightInfoRepository extends BaseRepository {
       },
       time: flight.time,
     }));
+
+    return result;
   }
 
   /**
@@ -136,8 +155,9 @@ class FlightInfoRepository extends BaseRepository {
       code = generateRandomString(length, length, true, true, true);
 
       const agrFlightInfo = FlightInfo.aggregate();
-      agrFlightInfo.append({ $unwind: "$searches" });
-      agrFlightInfo.append({ $match: { "searches.code": code } });
+      // agrFlightInfo.append({ $unwind: "$searches" });
+      // agrFlightInfo.append({ $match: { "searches.code": code } });
+      agrFlightInfo.append({ $match: { code } });
       const searches = await agrFlightInfo.exec();
       if (searches.length > 0) {
         code = "";
@@ -154,8 +174,9 @@ class FlightInfoRepository extends BaseRepository {
    */
   async getSearchByCode(searchCode) {
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
-    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    // agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    agrFlightInfo.append({ $match: { code: searchCode } });
     const searches = await agrFlightInfo.exec();
 
     if (searches.length > 0) {
@@ -166,31 +187,92 @@ class FlightInfoRepository extends BaseRepository {
   /**
    * 
    * @param {String} searchCode 
-   * @param {String} flightIndex 
+   * @param {String} flightCode 
    * @returns {Promise<FlightInfo>}
    */
-  async getFlight(searchCode, flightIndex) {
+  async getFlight(searchCode, flightCode) {
     const agrFlightInfo = FlightInfo.aggregate();
-    agrFlightInfo.append({ $unwind: "$searches" });
-    // agrFlightInfo.append({ $unwind: "$searches.flights" });
-    agrFlightInfo.append({ $match: { "searches.code": searchCode } });
-    agrFlightInfo.append({
-      $addFields: {
-        "flight": {
-          $arrayElemAt: ["$searches.flights", flightIndex]
-        },
-      }
-    });
+    // agrFlightInfo.append({ $unwind: "$searches" });
+    // agrFlightInfo.append({ $match: { "searches.code": searchCode } });
+    agrFlightInfo.append({ $unwind: "$flights" });
+    agrFlightInfo.append({ $match: { code: searchCode } });
+    agrFlightInfo.append({ $match: { "flights.code": flightCode } });
+    // agrFlightInfo.append({
+    //   $addFields: {
+    //     "flight": {
+    //       $arrayElemAt: ["$searches.flights", flightCode]
+    //     },
+    //   }
+    // });
     agrFlightInfo.append({
       $project: {
         searches: 0,
       }
     });
+
     const searches = await agrFlightInfo.exec();
 
     if (searches.length > 0) {
       return searches[0];
     }
+  }
+
+  async updateFlightDetails(code, flightDetailsCode, newPrice) {
+    // TODO: Update Other fields
+    await FlightInfo.updateOne(
+      {
+        code,
+        "flights.code": flightDetailsCode
+      },
+      {
+        // TODO:: Update more Fields
+        $set: {
+          "flights.$.price": newPrice,
+        }
+      }
+    ).then((res) => {
+      return res
+    })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+  /** 
+  * @param {Number} page
+  * @param {Number} pageSize
+  * @param {{field: value}[]} filters
+  * @param {String} sort
+  * @returns {Promise<FlightInfo>}
+  */
+  async getHistoryFlights(count = 20, page, pageSize, filters, sort) {
+    const agrFlightInfo = FlightInfo.aggregate().allowDiskUse(true);
+
+    agrFlightInfo.append({
+      $project: {
+        "origin": { "code": 1 },
+        "destination": { "code": 1 },
+        "time": { $dateToString: { format: "%Y-%m-%d", date: "$time" } },
+        "_id": 0,
+        "flights": {
+          "travelClass": 1,
+          "itineraries": {
+            "segments.departure.at": 1,
+            "segments.departure.city.code": 1,
+            "segments.arrival.at": 1,
+            "segments.arrival.city.code": 1
+          },
+          "price": { "travelerPrices.count": 1, "travelerPrices.travelerType": 1 }
+        }
+      }
+    });
+    agrFlightInfo.append({ $sort: { time: -1 } });
+    agrFlightInfo.append({ $limit: count });
+
+    filterHelper.filterAndSort(agrFlightInfo, filters, sort);
+    const result = await paginationHelper.rootPagination(agrFlightInfo, page, pageSize);
+    // const result = await agrFlightInfo.exec();
+    return result;
+
   }
 };
 
