@@ -18,6 +18,6 @@ module.exports = (app) => {
 
 
   app.use((req, res, next) => {
-    res.status(404).send("oops ! 404");
+    res.status(404).send("oops {Flight} ! 404");
   });
 };
