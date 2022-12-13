@@ -1,11 +1,15 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
 let accessToken = "";
+let testMode;
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
   async config => {
-    config.baseURL = process.env.AMADEUS_BASE_URL;
+    testMode = config?.testMode ?? false;
+    const pathPostFix = testMode ? "_TEST" : "";
+
+    config.baseURL = process.env['AMADEUS_BASE_URL' + pathPostFix];
     config.headers = {
       'Authorization': `Bearer ${accessToken}`,
       'Accept': 'application/json',
@@ -26,23 +30,25 @@ axiosApiInstance.interceptors.response.use((response) => {
 
   if (!!error.response && [401, 403].includes(error.response.status) && !originalRequest._retry) {
     originalRequest._retry = true;
-    await getAccessToken();
+    const pathPostFix = testMode ? "_TEST" : "";
+
+    await getAccessToken(pathPostFix);
     axios.defaults.headers.common['Authorization'] = 'Bearer ' + accessToken;
     return axiosApiInstance(originalRequest);
   }
   return Promise.reject(error);
 });
 
-const getAccessToken = async () => {
+const getAccessToken = async (pathPostFix) => {
   const params = new URLSearchParams();
   params.append("grant_type", "client_credentials");
-  params.append("client_id", process.env.AMADEUS_API_KEY);
-  params.append("client_secret", process.env.AMADEUS_API_SECRET);
+  params.append("client_id", process.env['AMADEUS_API_KEY' + pathPostFix]);
+  params.append("client_secret", process.env['AMADEUS_API_SECRET' + pathPostFix]);
   delete axios.defaults.headers.common['Authorization'];
 
   const {
     data: response
-  } = await axios.post(process.env.AMADEUS_BASE_URL + "/v1/security/oauth2/token", params, {
+  } = await axios.post(process.env['AMADEUS_BASE_URL' + pathPostFix] + "/v1/security/oauth2/token", params, {
     headers: {
       'content-type': 'application/x-www-form-urlencoded'
     },
@@ -53,7 +59,7 @@ const getAccessToken = async () => {
   return response;
 };
 
-const airlineCodeLookup = async code => {
+const airlineCodeLookup = async (code, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.get("/v1/reference-data/airlines", {
@@ -65,7 +71,7 @@ const airlineCodeLookup = async code => {
   return response;
 };
 
-const searchAirportAndCity = async keyword => {
+const searchAirportAndCity = async (keyword, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.get("/v1/reference-data/locations", {
@@ -78,7 +84,7 @@ const searchAirportAndCity = async keyword => {
   return response;
 };
 
-const flightOffersSingleSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+const flightOffersSingleSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.get("/v2/shopping/flight-offers", {
@@ -101,7 +107,7 @@ const flightOffersSingleSearch = async (originLocationCode, destinationLocationC
   return response;
 };
 
-const flightOffersMultiSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD") => {
+const flightOffersMultiSearch = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments, adults = 1, children, infants, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
   const originDestinations = [];
   originDestinations.push({
     id: 0,
@@ -169,7 +175,7 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
   return response;
 };
 
-const covid19AreaReport = async (countryCode, cityCode) => {
+const covid19AreaReport = async (countryCode, cityCode, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.get("/v1/duty-of-care/diseases/covid19-area-report", {
@@ -182,7 +188,7 @@ const covid19AreaReport = async (countryCode, cityCode) => {
   return response;
 };
 
-const updateFlightPrice = async flightOffer => {
+const updateFlightPrice = async (flightOffer, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.post("/v1/shopping/flight-offers/pricing", {
@@ -195,7 +201,7 @@ const updateFlightPrice = async flightOffer => {
   return response;
 };
 
-const flightCreateOrder = async (flightOffer, travelers) => {
+const flightCreateOrder = async (flightOffer, travelers, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.post("/v1/booking/flight-orders", {
@@ -209,7 +215,7 @@ const flightCreateOrder = async (flightOffer, travelers) => {
   return response;
 };
 
-const getFlightOrder = async (orderId) => {
+const getFlightOrder = async (orderId, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.get(`/v1/booking/flight-orders/${orderId}`);
@@ -217,7 +223,7 @@ const getFlightOrder = async (orderId) => {
   return response;
 };
 
-const deleteFlightOrder = async (orderId) => {
+const deleteFlightOrder = async (orderId, testMode = true) => {
   const {
     data: response
   } = await axiosApiInstance.delete(`/v1/booking/flight-orders/${orderId}`);
@@ -225,11 +231,13 @@ const deleteFlightOrder = async (orderId) => {
   return response;
 };
 
-const searchAirportAndCityWithAccessToken = async keyword => {
-  const accessToken = await getAccessToken();
+const searchAirportAndCityWithAccessToken = async (keyword, testMode = true) => {
+  const pathPostFix = testMode ? "_TEST" : "";
+
+  const accessToken = await getAccessToken(pathPostFix);
 
   axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
-  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations", {
+  const { data: response } = await axiosApiInstance.get(process.env['AMADEUS_BASE_URL' + pathPostFix] + "/v1/reference-data/locations", {
     params: {
       subType: "AIRPORT,CITY",
       keyword
@@ -238,11 +246,12 @@ const searchAirportAndCityWithAccessToken = async keyword => {
   return response;
 };
 
-const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude) => {
-  const accessToken = await getAccessToken();
+const searchAirportAndCityNearestWithAccessToken = async (latitude, longitude, testMode = true) => {
+  const pathPostFix = testMode ? "_TEST" : "";
+  const accessToken = await getAccessToken(pathPostFix);
 
   axiosApiInstance.headers = { 'Authorization': 'Bearer ' + accessToken.access_token };
-  const { data: response } = await axiosApiInstance.get(process.env.AMADEUS_BASE_URL + "/v1/reference-data/locations/airports", {
+  const { data: response } = await axiosApiInstance.get(process.env['AMADEUS_BASE_URL' + pathPostFix] + "/v1/reference-data/locations/airports", {
     params: {
       latitude,
       longitude,

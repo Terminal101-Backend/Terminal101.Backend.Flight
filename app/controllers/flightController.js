@@ -578,8 +578,9 @@ module.exports.filterFlights = async (req, res) => {
 module.exports.getFlightPrice = async (req, res) => {
   try {
     const amadeusFlightObject = await amadeusHelper.regenerateAmadeusFlightOfferObject(req.params.searchId, req.params.flightCode);
-
-    const result = await amadeus.updateFlightPrice(amadeusFlightObject);
+    
+    let testMode = process.env.TEST_MODE;
+    const result = await amadeus.updateFlightPrice(amadeusFlightObject, testMode);
 
     if (!!result.data && !!result.data.flightOffers && (result.data.flightOffers.length > 0)) {
       const price = makePriceObject(result.data.flightOffers[0].price, result.data.flightOffers[0].travelerPricings);
@@ -842,7 +843,8 @@ module.exports.getAirlines = async (req, res) => {
 // NOTE: Get covid 19 area report
 module.exports.restrictionCovid19 = async (req, res) => {
   try {
-    const report = await amadeus.covid19AreaReport(req.params.countryCode, req.params.cityCode);
+    let testMode = process.env.TEST_MODE;
+    const report = await amadeus.covid19AreaReport(req.params.countryCode, req.params.cityCode, testMode);
 
     response.success(res, report);
   } catch (e) {
@@ -852,7 +854,8 @@ module.exports.restrictionCovid19 = async (req, res) => {
 
 module.exports.flightCreateOrder = async (req, res) => {
   try {
-    const report = await amadeus.flightCreateOrder(req.body);
+    let testMode = process.env.TEST_MODE;
+    const report = await amadeus.flightCreateOrder(req.body, testMode);
 
     response.success(res, report);
   } catch (e) {
@@ -865,6 +868,8 @@ module.exports.flightCreateOrder = async (req, res) => {
 module.exports.searchOriginDestinationAmadeus = async (req, res) => {
   try {
     let keyword = req.query.keyword ?? "";
+    let testMode = process.env.TEST_MODE;
+
     const isKeywordEmpty = !keyword;
     let ipInfo;
     if (!keyword) {
@@ -882,7 +887,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         // if (ipInfo.status === "success") {
         //   keyword = ipInfo.city;
         // }
-        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon);
+        const { data: result } = await amadeus.searchAirportAndCityNearestWithAccessToken(ipInfo.lat, ipInfo.lon, testMode);
         const { data: resultTransformed } = transformDataAmadeus(result);
         response.success(res, resultTransformed);
       } else {
@@ -890,7 +895,7 @@ module.exports.searchOriginDestinationAmadeus = async (req, res) => {
         return;
       }
     } else {
-      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword);
+      const { data: result } = await amadeus.searchAirportAndCityWithAccessToken(keyword, testMode);
       const { data: resultTransformed } = transformDataAmadeus(result);
       response.success(res, resultTransformed);
     }
