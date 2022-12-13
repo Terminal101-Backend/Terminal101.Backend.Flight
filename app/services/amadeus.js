@@ -66,7 +66,7 @@ const airlineCodeLookup = async (code, testMode = true) => {
     params: {
       airlineCodes: code
     }
-  });
+  }, {testMode});
 
   return response;
 };
@@ -79,7 +79,7 @@ const searchAirportAndCity = async (keyword, testMode = true) => {
       subType: "AIRPORT,CITY",
       keyword
     },
-  });
+  }, {testMode});
 
   return response;
 };
@@ -102,7 +102,7 @@ const flightOffersSingleSearch = async (originLocationCode, destinationLocationC
       // nonStop,
       currencyCode,
     },
-  });
+  }, {testMode});
 
   return response;
 };
@@ -170,7 +170,7 @@ const flightOffersMultiSearch = async (originLocationCode, destinationLocationCo
     originDestinations,
     travelers,
     sources: ["GDS"],
-  });
+  }, {testMode});
 
   return response;
 };
@@ -183,7 +183,7 @@ const covid19AreaReport = async (countryCode, cityCode, testMode = true) => {
       countryCode,
       cityCode,
     },
-  });
+  }, {testMode});
 
   return response;
 };
@@ -196,7 +196,7 @@ const updateFlightPrice = async (flightOffer, testMode = true) => {
       type: "flight-offers-pricing",
       flightOffers: [flightOffer]
     }
-  });
+  }, {testMode});
 
   return response;
 };
@@ -210,7 +210,7 @@ const flightCreateOrder = async (flightOffer, travelers, testMode = true) => {
       flightOffers: [flightOffer],
       travelers,
     }
-  });
+  }, {testMode});
 
   return response;
 };
@@ -218,7 +218,7 @@ const flightCreateOrder = async (flightOffer, travelers, testMode = true) => {
 const getFlightOrder = async (orderId, testMode = true) => {
   const {
     data: response
-  } = await axiosApiInstance.get(`/v1/booking/flight-orders/${orderId}`);
+  } = await axiosApiInstance.get(`/v1/booking/flight-orders/${orderId}`, {testMode});
 
   return response;
 };
@@ -226,7 +226,7 @@ const getFlightOrder = async (orderId, testMode = true) => {
 const deleteFlightOrder = async (orderId, testMode = true) => {
   const {
     data: response
-  } = await axiosApiInstance.delete(`/v1/booking/flight-orders/${orderId}`);
+  } = await axiosApiInstance.delete(`/v1/booking/flight-orders/${orderId}`, {testMode});
 
   return response;
 };
