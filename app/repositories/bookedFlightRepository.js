@@ -344,35 +344,49 @@ class BookedFlightRepository extends BaseRepository {
     let bookedFlight;
     let duplicate = false;
 
+    let orSegments = [];
+    let orPassengers = [];
+    let agrBookedFlight = BookedFlight.aggregate();
     for (const segment of itineraries.segments) {
-      let agrBookedFlight = BookedFlight.aggregate();
-      agrBookedFlight.append({
-        $unwind: "$flightSegments"
+      orSegments.push({
+        'flightSegments.departure.at': segment.departure.at,
+        'flightSegments.arrival.at': segment.arrival.at,
+        'flightSegments.flightNumber': segment.flightNumber
       });
-      agrBookedFlight.append({
-        $match: {
-          "flightSegments.departure.city.code": segment.departure.city.code,
-          "flightSegments.departure.at": segment.departure.at,
-          "flightSegments.arrival.city.code": segment.arrival.city.code,
-          "flightSegments.arrival.at": segment.arrival.at
-        }
-      });
-      agrBookedFlight.append({
-        $unwind: "$passengers"
-      });
-      for (const passenger of passengers) {
-        agrBookedFlight.append({
-          $match: {
-            "passengers.documentCode": passenger.documentCode,
-            "passengers.documentIssuedAt": passenger.documentIssuedAt
-          }
-        })
+    }
+    for (const passenger of passengers) {
+      orPassengers.push({
+        'passengers.documentCode': passenger.documentCode,
+        'passengers.documentIssuedAt': passenger.documentIssuedAt
+      })
+    }
+
+    agrBookedFlight.append({
+      $project: {
+        flightSegments: 1,
+        passengers: 1
       }
-      bookedFlight = await agrBookedFlight.exec();
-      if (!!bookedFlight && bookedFlight.length !== 0) {
-        duplicate = true;
-        break;
+    });
+    agrBookedFlight.append({
+      $unwind: "$flightSegments"
+    });
+    agrBookedFlight.append({
+      $match: {
+        $or: orSegments
       }
+    });
+    agrBookedFlight.append({
+      $unwind: "$passengers"
+    });
+    agrBookedFlight.append({
+      $match: {
+        $or: orPassengers
+      }
+    });
+    bookedFlight = await agrBookedFlight.exec();
+
+    if (!!bookedFlight && bookedFlight.length !== 0) {
+      duplicate = true;
     }
 
     return duplicate;
