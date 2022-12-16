@@ -1,4 +1,4 @@
-name: Account Project CLI
+name: Flight Production CLI
 
 on: 
   push:
