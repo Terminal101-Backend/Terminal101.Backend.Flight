@@ -19,11 +19,11 @@ jobs:
       run: |
          cp /var/www/terminal101/terminal101_back/terminal101.backend.flight/_work/Terminal101.Backend.Flight/tmpfiles/.env /var/www/terminal101/terminal101_back/terminal101.backend.flight/_work/Terminal101.Backend.Flight/Terminal101.Backend.Flight/
          echo Copied
-    # - run: |
-    #     echo "Install Packages"
-    #     npm i
-    #     pm2 stop Account
-    #     pm2 start Account
-    #     pm2 save 
-    #     sudo service nginx restart
-    #     echo "Finish"
+    - run: |
+        echo "Install Packages"
+        npm i
+        pm2 stop Flight
+        pm2 start Flight
+        pm2 save 
+        sudo service nginx restart
+        echo "Finish"

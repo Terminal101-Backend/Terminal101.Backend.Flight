@@ -9,6 +9,7 @@ axiosApiInstance.interceptors.request.use(
     const pathPostfix = testMode ? "_TEST" : "";
 
     config.baseURL = process.env["AMADEUS_SERVICE_BASE_URL" + pathPostfix];
+    console.log(config.baseURL);
     config.headers = {
       // "Authorization": `Bearer ${accessToken}`,
       "Accept": "*/*",
