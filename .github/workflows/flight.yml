@@ -15,10 +15,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    # - name: Copy .env file
-    #   run: |
-    #      cp /var/www/terminal101/terminal101_back/terminal101.backend.account/_work/terminal101.backend.account/tmpfiles/.env /var/www/terminal101/terminal101_back/terminal101.backend.account/_work/terminal101.backend.account/terminal101.backend.account/
-    #      echo Copied
+    - name: Copy .env file
+      run: |
+         cp /var/www/terminal101/terminal101_back/terminal101.backend.account/_work/terminal101.backend.account/tmpfiles/.env /var/www/terminal101/terminal101_back/terminal101.backend.account/_work/terminal101.backend.account/terminal101.backend.account/
+         echo Copied
     # - run: |
     #     echo "Install Packages"
     #     npm i
