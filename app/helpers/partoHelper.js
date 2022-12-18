@@ -172,6 +172,27 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
   };
 };
 
+const makeTicketInfo = (bookedFlight) => {
+  let segments = bookedFlight.passengers;
+  return {
+    tickets: segments.map(s => ({
+      ticketNumber: bookedFlight.providerPnr
+    }))
+  }
+}
+
+const makeFareRules = (rules) => {
+  if(!rules || !Array.isArray(rules))
+    return rules;
+  let rulesString = '';
+    rules.map(rule => {
+    rule.RuleDetails.map(r => {
+      rulesString += r.Category + '  : ' + r.Rules + '\n'
+    })
+  })
+  return rulesString.toString();
+};
+
 module.exports.searchFlights = async (params, testMode) => {
   let segments = flightHelper.makeSegmentsArray(params.segments);
 
@@ -231,6 +252,15 @@ module.exports.searchFlights = async (params, testMode) => {
     origin,
     destination
   } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
+
+  for(flight of flightDetails){
+    let fareRules = await parto.airRules(flight.providerData.fareSourceCode, testMode);
+    let rules = fareRules;
+    if(fareRules.Success === 'true'){
+      rules = fareRules.FareRules;
+    }
+    flight['fareRules'] = makeFareRules(rules);
+  }
 
   // let origin = await countryRepository.getCityByCode(params.origin);
   // let destination = await countryRepository.getCityByCode(params.destination);
@@ -319,7 +349,12 @@ module.exports.cancelBookFlight = async bookedFlight => {
 }
 
 module.exports.issueBookedFlight = async bookedFlight => {
-  return await parto.airBookIssuing(bookedFlight.providerPnr);
+  let status = await parto.airBookIssuing(bookedFlight.providerPnr);
+  let ticketInfo;
+  if(!!status.Success){
+    ticketInfo = makeTicketInfo(bookedFlight);
+  }
+  return ticketInfo;
 }
 
 module.exports.airRevalidate = async flightInfo => {

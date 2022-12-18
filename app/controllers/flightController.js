@@ -12,7 +12,7 @@ const {
   commissionRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const { amadeus, accountManagement } = require("../services");
+const { amadeus, accountManagement, tequila } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
 const socketClients = {};
 
@@ -930,6 +930,18 @@ module.exports.getHistoryFlights = async (req, res) => {
     response.success(res, list);
 
   } catch (e) {
+    response.exception(res, e);
+  }
+};
+
+module.exports.searchTequila = async (req, res) => {
+  try {
+    let result = await tequila.search(
+      req.query.origin, req.query.destination, req.query.departureDate, req.query.returnDate, req.query.segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass)
+    response.success(res, result);
+
+  } catch (e) {
+    console.trace(e);
     response.exception(res, e);
   }
 };

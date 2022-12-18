@@ -75,4 +75,13 @@ router
     flightValidator.getHistoryFlights.check,
     flightController.getHistoryFlights);
 
+// NOTE: Get popular flights
+router
+  .get("/tequila",
+    (req, res, next) => {
+      console.log("Get Tequila flights", req.params, req.body, req.query);
+      next();
+    },
+    flightController.searchTequila);
+
 module.exports = router;

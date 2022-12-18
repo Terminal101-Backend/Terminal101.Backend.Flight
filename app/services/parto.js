@@ -355,6 +355,28 @@ const airRevalidate = async (fareSourceCode, testMode = true) => {
   }
 };
 
+/**
+ *
+ * @param {String} fareSourceCode
+ * @returns
+ */
+ const airRules = async (fareSourceCode, testMode = true) => {
+  const params = {
+    FareSourceCode: fareSourceCode
+  };
+
+  try {
+    const {
+      data: response
+    } = await axiosApiInstance.post("/Air/airRules", params, { testMode });
+
+    return response.data;
+  } catch (e) {
+    console.log('error parto => ', e);
+    return e
+  }
+};
+
 module.exports = {
   createSession,
   airLowFareSearch,
@@ -363,5 +385,6 @@ module.exports = {
   airBookCancel,
   airBookRefund,
   airBookIssuing,
-  airRevalidate
+  airRevalidate,
+  airRules
 };

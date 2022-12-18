@@ -71,6 +71,10 @@ const bookedFlight = new Schema({
     required: false,
   },
   providerName: EProvider.mongoField({ required: true }),
+  extraData: {
+    type: Object,
+    default: {},
+  },
   businessCode: {
     type: String,
     required: false

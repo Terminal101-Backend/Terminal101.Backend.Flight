@@ -37,6 +37,10 @@ const flightDetails = new Schema({
   },
   travelClass: ETravelClass.mongoField({ required: true }),
   provider: EProvider.mongoField({ required: true }),
+  fareRules: {
+    type: String,
+    default: '',
+  }
 }, {
   timestamps: true
 });

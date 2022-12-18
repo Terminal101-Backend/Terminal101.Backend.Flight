@@ -167,6 +167,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
 
         return result;
       }),
+      fareRules: flight.fare.toString(),
     };
 
     return result;
