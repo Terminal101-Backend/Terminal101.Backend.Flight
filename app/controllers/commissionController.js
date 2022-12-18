@@ -30,10 +30,7 @@ module.exports.getCommissions = async (req, res) => {
           items: commission.business.items,
           exclude: commission.business.exclude,
         },
-        member: {
-          items: commission.member.items,
-          exclude: commission.member.exclude,
-        },
+        businessCode: commission.businessCode,
         value: {
           percent: commission.value.percent,
           constant: commission.value.constant,
@@ -87,10 +84,7 @@ module.exports.getCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -149,11 +143,6 @@ module.exports.editCommission = async (req, res) => {
       modified = true;
     }
 
-    if (!!req.body.member && (JSON.stringify(commission.member) !== JSON.stringify(req.body.member))) {
-      commission.member = req.body.member;
-      modified = true;
-    }
-
     if (!!req.body.value && (JSON.stringify(commission.value) !== JSON.stringify(req.body.value))) {
       if (!!req.body.value.percent) {
         commission.value.percent = req.body.value.percent;
@@ -192,10 +181,7 @@ module.exports.editCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -236,10 +222,7 @@ module.exports.deleteCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -256,7 +239,8 @@ module.exports.deleteCommission = async (req, res) => {
 // NOTE: Add flight dondition
 module.exports.addCommission = async (req, res) => {
   try {
-    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, req.body.member, req.body.value);
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, decodedToken.business, req.body.value);
 
     response.success(res, {
       code: commission.code,
@@ -277,10 +261,7 @@ module.exports.addCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,

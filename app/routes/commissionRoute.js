@@ -44,7 +44,7 @@ router
       console.log("Add commission", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     commissionValidator.addCommission.check,
     commissionController.addCommission);
 

@@ -30,10 +30,6 @@ module.exports.editCommission = baseValidator({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool(),
     }),
-    member: Joi.object().keys({
-      items: Joi.array().items(Joi.string()).required(),
-      exclude: Joi.bool(),
-    }),
     value: Joi.object().keys({
       percent: Joi.number(),
       constant: Joi.number(),
@@ -68,10 +64,6 @@ module.exports.addCommission = baseValidator({
       exclude: Joi.bool().default(false),
     }).default({ items: [], exclude: false }),
     business: Joi.object().keys({
-      items: Joi.array().items(Joi.string()).required(),
-      exclude: Joi.bool().default(false),
-    }).default({ items: [], exclude: false }),
-    member: Joi.object().keys({
       items: Joi.array().items(Joi.string()).required(),
       exclude: Joi.bool().default(false),
     }).default({ items: [], exclude: false }),
