@@ -1,5 +1,6 @@
 const axios = require("axios");
 const axiosApiInstance = axios.create();
+const fs = require('fs')
 
 // Request interceptor for API calls
 axiosApiInstance.interceptors.request.use(
@@ -59,6 +60,11 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
         selected_cabins
     }, { testMode });
     console.log('====> ', response)
+    fs.writeFile('app/static/log.txt', 'service tequila search :: ' + JSON.stringify(response), (err) => {
+          
+        // In case of a error throw err.
+        if (err) throw err;
+    })
     const result = {
         success: !!response,
         data: response.data,

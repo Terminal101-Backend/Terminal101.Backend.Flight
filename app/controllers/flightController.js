@@ -12,9 +12,11 @@ const {
   commissionRepository
 } = require("../repositories");
 // const { FlightInfo } = require("../models/documents");
-const { amadeus, accountManagement, tequila } = require("../services");
+const { amadeus, accountManagement } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
 const socketClients = {};
+const tequilaHelper = require('../helpers/tequilaHelper')
+const fs = require('fs')
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -907,7 +909,7 @@ module.exports.getHistoryFlights = async (req, res) => {
     // const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const list = await flightInfoRepository.getHistoryFlights(req.header("PageSize"));
     let params = [];
-   
+
     list.items.forEach(l => {
       if (l.flights.length > 0) {
         params.push({
@@ -925,7 +927,7 @@ module.exports.getHistoryFlights = async (req, res) => {
         })
       }
     });
-  
+
     list.items = params;
     response.success(res, list);
 
@@ -936,11 +938,20 @@ module.exports.getHistoryFlights = async (req, res) => {
 
 module.exports.searchTequila = async (req, res) => {
   try {
-    let result = await tequila.search(
-      req.query.origin, req.query.destination, req.query.departureDate, req.query.returnDate, req.query.segments, req.query.adults, req.query.children, req.query.infants, req.query.travelClass)
+    let result = await tequilaHelper.searchFlights(req.query, true)
+    fs.writeFile('app/static/log.txt', 'controller tequila search :: ' + JSON.stringify(result), (err) => {
+
+      // In case of a error throw err.
+      if (err) throw err;
+    })
     response.success(res, result);
 
   } catch (e) {
+    fs.writeFile('app/static/log.txt', 'controller error :: ' + JSON.stringify(e), (err) => {
+
+      // In case of a error throw err.
+      if (err) throw err;
+    })
     console.trace(e);
     response.exception(res, e);
   }

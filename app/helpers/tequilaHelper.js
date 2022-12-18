@@ -5,6 +5,7 @@ const { flightInfoRepository, countryRepository, airlineRepository } = require("
 const { accountManagement } = require("../services");
 const { EProvider } = require("../constants");
 const segment = require("../models/subdocuments/segment");
+const fs = require('fs')
 
 const makeSegmentsArray = segments => {
     segments = segments ?? [];
@@ -193,7 +194,11 @@ module.exports.searchFlights = async (params, testMode) => {
         search_id: searchId,
         fx_rate: rate
     } = await tequila.search(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
-
+    fs.writeFile('app/static/log.txt', 'helper tequila search :: ' + JSON.stringify(tequilaSearchResult), (err) => {
+          
+        // In case of a error throw err.
+        if (err) throw err;
+    })
     if (!tequilaSearchResult) {
         return {
             flightDetails: []
@@ -242,7 +247,11 @@ module.exports.searchFlights = async (params, testMode) => {
         createBaggage(flight, info, rate);
         flight.providerData['FareRule'] = fareRule();
     }
-
+    fs.writeFile('app/static/log.txt', 'helper tequila search1 :: ' + JSON.stringify(flightDetails), (err) => {
+          
+        // In case of a error throw err.
+        if (err) throw err;
+    })
     return {
         origin,
         destination,
