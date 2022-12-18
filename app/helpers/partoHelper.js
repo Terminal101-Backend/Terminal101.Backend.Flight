@@ -186,7 +186,7 @@ const makeFareRules = (rules) => {
     return rules;
   let rulesString = '';
     rules.map(rule => {
-    rule.map(r => {
+    rule.RuleDetails.map(r => {
       rulesString += r.Category + '  : ' + r.Rules + '\n'
     })
   })
