@@ -194,7 +194,7 @@ module.exports.searchFlights = async (params, testMode) => {
         search_id: searchId,
         fx_rate: rate
     } = await tequila.search(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
-    fs.writeFile('app/static/log.txt', 'helper tequila search :: ' + JSON.stringify(tequilaSearchResult), (err) => {
+    fs.appendFileSync('app/static/log.txt', 'helper tequila search :: ' + JSON.stringify(tequilaSearchResult), (err) => {
           
         // In case of a error throw err.
         if (err) throw err;
@@ -247,7 +247,7 @@ module.exports.searchFlights = async (params, testMode) => {
         createBaggage(flight, info, rate);
         flight.providerData['FareRule'] = fareRule();
     }
-    fs.writeFile('app/static/log.txt', 'helper tequila search1 :: ' + JSON.stringify(flightDetails), (err) => {
+    fs.appendFileSync('app/static/log.txt', 'helper tequila search1 :: ' + JSON.stringify(flightDetails), (err) => {
           
         // In case of a error throw err.
         if (err) throw err;
