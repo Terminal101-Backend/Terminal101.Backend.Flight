@@ -6,8 +6,9 @@ const { EProvider } = require("../constants");
 // NOTE: Get all business
 module.exports.getCommissions = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const { items: commissions, ...result } = await commissionRepository.getCommissions(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    const { items: commissions, ...result } = await commissionRepository.getCommissions(decodedToken.business ?? "ADMIN", req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     response.success(res, {
       ...result,

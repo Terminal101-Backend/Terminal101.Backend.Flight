@@ -432,8 +432,13 @@ class CommissionRepository extends BaseRepository {
    * @param {String} sort
    * @returns {Promise<Commission[]>}
    */
-  async getCommissions(page, pageSize, filters, sort) {
+  async getCommissions(businessCode, page, pageSize, filters, sort) {
     const agrCommission = Commission.aggregate();
+    agrCommission.append({
+      $match: {
+        businessCode,
+      }
+    });
     agrCommission.append(this.#getConditionCountryPipeline(true));
     agrCommission.append(this.#getConditionCityPipeline(true));
     agrCommission.append(this.#getConditionAirportPipeline(true));
