@@ -938,8 +938,13 @@ module.exports.getHistoryFlights = async (req, res) => {
 
 module.exports.searchTequila = async (req, res) => {
   try {
-    let result = await tequilaHelper.searchFlights(req.query, true)
-    fs.appendFileSync('app/static/log.txt', 'controller tequila search :: ' + JSON.stringify(result), (err) => {
+    fs.appendFileSync('app/static/log.txt', '\ncontroller ', (err) => {
+
+      // In case of a error throw err.
+      if (err) throw err;
+    })
+    let result = await tequilaHelper.searchFlights(req.query, true);
+    fs.appendFileSync('app/static/log.txt', '\ncontroller tequila search :: ' + JSON.stringify(result), (err) => {
 
       // In case of a error throw err.
       if (err) throw err;
@@ -947,7 +952,7 @@ module.exports.searchTequila = async (req, res) => {
     response.success(res, result);
 
   } catch (e) {
-    fs.appendFileSync('app/static/log.txt', 'controller error :: ' + JSON.stringify(e), (err) => {
+    fs.appendFileSync('app/static/log.txt', '\ncontroller error :: ' + JSON.stringify(e), (err) => {
 
       // In case of a error throw err.
       if (err) throw err;

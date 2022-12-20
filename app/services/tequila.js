@@ -24,6 +24,11 @@ axiosApiInstance.interceptors.request.use(
 
 
 module.exports.search = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
+    fs.appendFileSync('app/static/log.txt', '\nservice ', (err) => {
+
+        // In case of a error throw err.
+        if (err) throw err;
+      })
     let selected_cabins;
     switch (travelClass) {
         case "FIRST":
@@ -60,7 +65,7 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
         selected_cabins
     }, { testMode });
     console.log('====> ', response)
-    fs.appendFileSync('app/static/log.txt', 'service tequila search :: ' + JSON.stringify(response), (err) => {
+    fs.appendFileSync('app/static/log.txt', '\nservice tequila search :: ' + JSON.stringify(response), (err) => {
           
         // In case of a error throw err.
         if (err) throw err;
