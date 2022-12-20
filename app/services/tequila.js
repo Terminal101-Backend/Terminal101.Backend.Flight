@@ -15,7 +15,7 @@ axiosApiInstance.interceptors.request.use(
             // 'Content-Type': 'application/json',
             // 'Accept-Encoding': 'gzip, deflate, br',
         }
-        fs.appendFileSync('app/static/log.txt', '\nconfig: ' + config, (err) => {
+        fs.appendFileSync('app/static/log.txt', '\nconfig: ' + JSON.stringify(config), (err) => {
             if (err) throw err;
         })
         return config;
