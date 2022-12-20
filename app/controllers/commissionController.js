@@ -240,6 +240,11 @@ module.exports.deleteCommission = async (req, res) => {
 module.exports.addCommission = async (req, res) => {
   try {
     const decodedToken = token.decodeToken(req.header("Authorization"));
+    if(decodedToken.type === 'BUSINESS'){
+      if(req.body.business.items.length === 0 && !req.body.business.exclude){
+        throw 'Information not entered correctly';
+      }
+    }
     const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, decodedToken.business, req.body.value);
 
     response.success(res, {
