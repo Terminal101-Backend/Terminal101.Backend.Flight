@@ -59,9 +59,9 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
             fly_to: destinationLocationCode,
             dateFrom: departureDate,
             dateTo: returnDate,
-            adults,
-            children,
-            infants,
+            adults: parseInt(adults),
+            children: parseInt(children),
+            infants: parseInt(infants),
             curr: currencyCode,
             selected_cabins
         }, { testMode });
