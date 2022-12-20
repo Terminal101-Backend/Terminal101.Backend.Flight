@@ -81,14 +81,14 @@ const pay = async (bookedFlight) => {
       })();
     } else {
       console.log("Your credit is not enough");
-      // bookedFlight.statuses.push({
-      //   status: EBookedFlightStatus.get("PAYING"),
-      //   description: "Client credit is not enough",
-      //   changedBy: "SERVICE",
-      // });
+      bookedFlight.statuses.push({
+        status: EBookedFlightStatus.get("PAYING"),
+        description: "Client credit is not enough",
+        changedBy: "SERVICE",
+      });
       //TODO: send email or SMS to user message -> (Your credit is not enough, please resharge your wallet and book again)
-      throw 'Credit is not enough';
-      // await bookedFlight.save();
+
+      await bookedFlight.save();
     }
 
   } catch (e) {
