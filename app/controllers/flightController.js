@@ -938,7 +938,7 @@ module.exports.getHistoryFlights = async (req, res) => {
 
 module.exports.searchTequila = async (req, res) => {
   try {
-    fs.appendFileSync('app/static/log.txt', '\ncontroller ', (err) => {
+    fs.writeFileSync('app/static/log.txt', '\ncontroller ', (err) => {
 
       // In case of a error throw err.
       if (err) throw err;
