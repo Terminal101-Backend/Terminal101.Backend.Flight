@@ -182,25 +182,32 @@ const makeTicketInfo = (bookedFlight) => {
 
 module.exports.searchFlights = async (params, testMode) => {
     fs.appendFileSync('app/static/log.txt', '\nhelper ', (err) => {
-
-        // In case of a error throw err.
         if (err) throw err;
-      })
+    })
     let segments = makeSegmentsArray(params.segments);
-
+    fs.appendFileSync('app/static/log.txt', '\nhelper1 ' + params.departureDate, (err) => {
+        if (err) throw err;
+    })
     params.departureDate = new Date(params.departureDate);
     params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
-
+    fs.appendFileSync('app/static/log.txt', '\nhelper2 ' + params.departureDate, (err) => {
+        if (err) throw err;
+    })
     const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
+    fs.appendFileSync('app/static/log.txt', '\nhelpe3 ' + params.departureDate, (err) => {
+        if (err) throw err;
+    })
     const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
-
+    fs.appendFileSync('app/static/log.txt', '\nhelper4 ' + params.departureDate, (err) => {
+        if (err) throw err;
+    })
     let {
         data: tequilaSearchResult,
         search_id: searchId,
         fx_rate: rate
     } = await tequila.search(params.origin, params.destination, departureDate, returnDate, segments, params.adults, params.children, params.infants, params.travelClass, undefined, undefined, undefined, undefined, testMode);
     fs.appendFileSync('app/static/log.txt', '\nhelper tequila search :: ' + JSON.stringify(tequilaSearchResult), (err) => {
-          
+
         // In case of a error throw err.
         if (err) throw err;
     })
@@ -253,7 +260,7 @@ module.exports.searchFlights = async (params, testMode) => {
         flight.providerData['FareRule'] = fareRule();
     }
     fs.appendFileSync('app/static/log.txt', '\nhelper tequila search1 :: ' + JSON.stringify(flightDetails), (err) => {
-          
+
         // In case of a error throw err.
         if (err) throw err;
     })
