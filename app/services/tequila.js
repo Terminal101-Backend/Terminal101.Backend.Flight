@@ -24,60 +24,67 @@ axiosApiInstance.interceptors.request.use(
 
 
 module.exports.search = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
-    fs.appendFileSync('app/static/log.txt', '\nservice ', (err) => {
+    try {
+        fs.appendFileSync('app/static/log.txt', '\nservice ', (err) => {
 
-        // In case of a error throw err.
-        if (err) throw err;
-      })
-    let selected_cabins;
-    switch (travelClass) {
-        case "FIRST":
-            selected_cabins = "F";
-            break;
+            // In case of a error throw err.
+            if (err) throw err;
+        })
+        let selected_cabins;
+        switch (travelClass) {
+            case "FIRST":
+                selected_cabins = "F";
+                break;
 
-        case "BUSINESS":
-            selected_cabins = "C";
-            break;
+            case "BUSINESS":
+                selected_cabins = "C";
+                break;
 
-        case "ECONOMY":
-            selected_cabins = "M";
-            break;
+            case "ECONOMY":
+                selected_cabins = "M";
+                break;
 
-        case "PREMIUM_ECONOMY":
-            selected_cabins = "W";
-            break;
+            case "PREMIUM_ECONOMY":
+                selected_cabins = "W";
+                break;
 
-        default:
-            throw "travel_class_invalid";
+            default:
+                throw "travel_class_invalid";
+        }
+
+        const {
+            data: response
+        } = await axiosApiInstance.get("/search", {
+            fly_from: originLocationCode,
+            fly_to: destinationLocationCode,
+            dateFrom: departureDate,
+            dateTo: returnDate,
+            adults,
+            children,
+            infants,
+            curr: currencyCode,
+            selected_cabins
+        }, { testMode });
+        console.log('====> ', response)
+        fs.appendFileSync('app/static/log.txt', '\nservice tequila search :: ' + JSON.stringify(response), (err) => {
+
+            // In case of a error throw err.
+            if (err) throw err;
+        })
+        const result = {
+            success: !!response,
+            data: response.data,
+            search_id: response.search_id,
+            fx_rate: response.fx_rate
+        };
+
+        return result;
+    } catch (e) {
+        fs.appendFileSync('app/static/log.txt', '\nservice error :: ' + JSON.stringify(e), (err) => {
+            if (err) throw err;
+        })
+        throw e;
     }
-
-    const {
-        data: response
-    } = await axiosApiInstance.get("/search", {
-        fly_from: originLocationCode,
-        fly_to: destinationLocationCode,
-        dateFrom: departureDate,
-        dateTo: returnDate,
-        adults,
-        children,
-        infants,
-        curr: currencyCode,
-        selected_cabins
-    }, { testMode });
-    console.log('====> ', response)
-    fs.appendFileSync('app/static/log.txt', '\nservice tequila search :: ' + JSON.stringify(response), (err) => {
-          
-        // In case of a error throw err.
-        if (err) throw err;
-    })
-    const result = {
-        success: !!response,
-        data: response.data,
-        search_id: response.search_id,
-        fx_rate: response.fx_rate
-    };
-
-    return result;
 };
 
 module.exports.checkFlights = async (bToken, sessionId, baggageNumber, adults, children, infants, currencyCode, testMode = true) => {

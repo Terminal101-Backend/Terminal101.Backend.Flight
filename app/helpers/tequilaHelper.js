@@ -185,22 +185,13 @@ module.exports.searchFlights = async (params, testMode) => {
         if (err) throw err;
     })
     let segments = makeSegmentsArray(params.segments);
-    fs.appendFileSync('app/static/log.txt', '\nhelper1 ' + params.departureDate, (err) => {
-        if (err) throw err;
-    })
+
     params.departureDate = new Date(params.departureDate);
     params.returnDate = params.returnDate ? new Date(params.returnDate) : "";
-    fs.appendFileSync('app/static/log.txt', '\nhelper2 ' + params.departureDate, (err) => {
-        if (err) throw err;
-    })
+
     const departureDate = dateTimeHelper.excludeDateFromIsoString(params.departureDate.toISOString());
-    fs.appendFileSync('app/static/log.txt', '\nhelpe3 ' + params.departureDate, (err) => {
-        if (err) throw err;
-    })
     const returnDate = dateTimeHelper.excludeDateFromIsoString(params.returnDate ? params.returnDate.toISOString() : "");
-    fs.appendFileSync('app/static/log.txt', '\nhelper4 ' + params.departureDate, (err) => {
-        if (err) throw err;
-    })
+
     let {
         data: tequilaSearchResult,
         search_id: searchId,
