@@ -15,7 +15,9 @@ axiosApiInstance.interceptors.request.use(
             // 'Content-Type': 'application/json',
             // 'Accept-Encoding': 'gzip, deflate, br',
         }
-
+        fs.appendFileSync('app/static/log.txt', '\nconfig: ' + config, (err) => {
+            if (err) throw err;
+        })
         return config;
     },
     error => {
@@ -26,8 +28,6 @@ axiosApiInstance.interceptors.request.use(
 module.exports.search = async (originLocationCode, destinationLocationCode, departureDate, returnDate, segments = [], adults = 1, children = 0, infants = 0, travelClass, includedAirlineCodes, excludedAirlineCodes, nonStop, currencyCode = "USD", testMode = true) => {
     try {
         fs.appendFileSync('app/static/log.txt', '\nservice ', (err) => {
-
-            // In case of a error throw err.
             if (err) throw err;
         })
         let selected_cabins;
