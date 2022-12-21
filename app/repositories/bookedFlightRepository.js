@@ -411,7 +411,7 @@ class BookedFlightRepository extends BaseRepository {
     });
     // return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
     const result = await agrBookedFlight.exec();
-    return !!result && !!result[0] ? result : undefined;
+    return !!result && !!result[0] ? result : [];
   }
 };
 
