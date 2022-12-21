@@ -52,31 +52,28 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
                 throw "travel_class_invalid";
         }
 
-        const {
-            data: response
-        } = await axiosApiInstance.get("/search", {
+    const {
+        data: response
+    } = await axiosApiInstance.get("/search", {
+        params: {
             fly_from: originLocationCode,
             fly_to: destinationLocationCode,
             dateFrom: departureDate,
             dateTo: returnDate,
-            adults: parseInt(adults),
-            children: parseInt(children),
-            infants: parseInt(infants),
+            adults,
+            children,
+            infants,
             curr: currencyCode,
             selected_cabins
-        }, { testMode });
-        console.log('====> ', response)
-        fs.appendFileSync('app/static/log.txt', '\nservice tequila search :: ' + JSON.stringify(response), (err) => {
-
-            // In case of a error throw err.
-            if (err) throw err;
-        })
-        const result = {
-            success: !!response,
-            data: response.data,
-            search_id: response.search_id,
-            fx_rate: response.fx_rate
-        };
+        }
+    }, { testMode });
+    console.log('====> ', response)
+    const result = {
+        success: !!response,
+        data: response.data,
+        search_id: response.search_id,
+        fx_rate: response.fx_rate
+    };
 
         return result;
     } catch (e) {
