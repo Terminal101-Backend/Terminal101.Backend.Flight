@@ -7,8 +7,9 @@ const { EProvider } = require("../constants");
 // NOTE: Get all flight conditions
 module.exports.getFlightConditions = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const { items: flightConditions, ...result } = await flightConditionRepository.getFlightConditions(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    const { items: flightConditions, ...result } = await flightConditionRepository.getFlightConditions(decodedToken.business ?? "ADMIN", req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     response.success(res, {
       ...result,

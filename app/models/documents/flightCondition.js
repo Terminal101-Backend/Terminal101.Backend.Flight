@@ -30,6 +30,10 @@ const flightCondition = new Schema({
     type: Boolean,
     default: false,
   },
+  businessCode: {
+    type: String,
+    required: true,
+  },
   isActive: {
     type: Boolean,
     default: true,

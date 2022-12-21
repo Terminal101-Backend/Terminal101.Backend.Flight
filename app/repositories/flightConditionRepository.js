@@ -431,8 +431,13 @@ class FlightConditionRepository extends BaseRepository {
    * @param {String} sort
    * @returns {Promise<FlightCondition[]>}
    */
-  async getFlightConditions(page, pageSize, filters, sort) {
+  async getFlightConditions(businessCode, page, pageSize, filters, sort) {
     const agrFlightCondition = FlightCondition.aggregate();
+    agrFlightCondition.append({
+      $match: {
+        businessCode,
+      }
+    })
     agrFlightCondition.append(this.#getConditionCountryPipeline(true));
     agrFlightCondition.append(this.#getConditionCityPipeline(true));
     agrFlightCondition.append(this.#getConditionAirportPipeline(true));

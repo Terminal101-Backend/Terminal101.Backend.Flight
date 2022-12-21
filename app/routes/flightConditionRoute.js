@@ -11,7 +11,7 @@ router
       console.log("Get all flight conditions", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightConditionValidator.getFlightConditions.check,
     flightConditionController.getFlightConditions);
 
@@ -22,7 +22,7 @@ router
       console.log("Get one flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightConditionValidator.getFlightCondition.check,
     flightConditionController.getFlightCondition);
 
@@ -33,7 +33,7 @@ router
       console.log("Edit flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightConditionValidator.editFlightCondition.check,
     flightConditionController.editFlightCondition);
 
@@ -44,7 +44,7 @@ router
       console.log("Add flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightConditionValidator.addFlightCondition.check,
     flightConditionController.addFlightCondition);
 
@@ -55,7 +55,7 @@ router
       console.log("Delete flight condition", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     flightConditionValidator.deleteFlightCondition.check,
     flightConditionController.deleteFlightCondition);
 
