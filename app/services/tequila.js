@@ -48,15 +48,17 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
     const {
         data: response
     } = await axiosApiInstance.get("/search", {
-        fly_from: originLocationCode,
-        fly_to: destinationLocationCode,
-        dateFrom: departureDate,
-        dateTo: returnDate,
-        adults,
-        children,
-        infants,
-        curr: currencyCode,
-        selected_cabins
+        params: {
+            fly_from: originLocationCode,
+            fly_to: destinationLocationCode,
+            dateFrom: departureDate,
+            dateTo: returnDate,
+            adults,
+            children,
+            infants,
+            curr: currencyCode,
+            selected_cabins
+        }
     }, { testMode });
     console.log('====> ', response)
     const result = {
