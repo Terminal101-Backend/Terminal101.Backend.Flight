@@ -146,7 +146,7 @@ module.exports.payForFlight = async (req, res) => {
     const bookedFlight = await bookedFlightRepository.findOne({ transactionId: req.body.externalTransactionId });
     // TODO: Get last flight price from our DB
 
-    if (!!req.body.confirmed)
+    if (!!req.body.confirmed && !await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT"))
       await pay(bookedFlight);
     else if (!await bookedFlightRepository.hasStatus(bookedFlight.code, "EXPIRED_PAYMENT")) {
       //send SMS or Email to passenger
