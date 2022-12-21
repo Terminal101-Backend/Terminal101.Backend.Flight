@@ -461,10 +461,11 @@ class CommissionRepository extends BaseRepository {
    * @param {Number} code 
    * @returns {Promise<Commission>}
    */
-  async getCommission(code) {
+  async getCommission(businessCode, code) {
     const agrCommission = Commission.aggregate();
     agrCommission.append({
       $match: {
+        businessCode,
         code,
       }
     });

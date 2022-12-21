@@ -59,8 +59,9 @@ module.exports.getCommissions = async (req, res) => {
 // NOTE: Get one commission
 module.exports.getCommission = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const commission = await commissionRepository.getCommission(req.params.code);
+    const commission = await commissionRepository.getCommission(decodedToken.business ?? "ADMIN", req.params.code);
 
     if (!commission) {
       throw "condition_not_found";
@@ -112,9 +113,10 @@ module.exports.getCommission = async (req, res) => {
 // NOTE: Edit commission
 module.exports.editCommission = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     let modified = false;
 
-    const commission = await commissionRepository.findOne({ code: req.params.code });
+    const commission = await commissionRepository.findOne({ businessCode: decodedToken.business ?? 'ADMIN', code: req.params.code });
     if (!commission) {
       response.error(res, "commission_not_exists", 404);
     }
@@ -199,7 +201,8 @@ module.exports.editCommission = async (req, res) => {
 // NOTE: Delete commission
 module.exports.deleteCommission = async (req, res) => {
   try {
-    const commission = await commissionRepository.deleteOne({ code: req.params.code });
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const commission = await commissionRepository.deleteOne({ businessCode: decodedToken.business ?? 'ADMIN', code: req.params.code });
     if (!commission) {
       response.error(res, "commission_not_exists", 404);
     }

@@ -11,7 +11,7 @@ router
       console.log("Get all commissions", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     commissionValidator.getCommissions.check,
     commissionController.getCommissions);
 
@@ -22,7 +22,7 @@ router
       console.log("Get one commission", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     commissionValidator.getCommission.check,
     commissionController.getCommission);
 
@@ -33,7 +33,7 @@ router
       console.log("Edit commission", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     commissionValidator.editCommission.check,
     commissionController.editCommission);
 
@@ -55,7 +55,7 @@ router
       console.log("Delete commission", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("BUSINESS", "SERVICE", "SUPER_ADMIN", "ADMIN"),
     commissionValidator.deleteCommission.check,
     commissionController.deleteCommission);
 
