@@ -378,7 +378,7 @@ class BookedFlightRepository extends BaseRepository {
     return duplicate;
   }
 
-  async getBookedFlightsChartHistory(category, businessCode, filters, sort) {
+  async getBookedFlightsChartHistory(businessCode, category, filters, sort) {
     let format = category === 'YEAR' ? "%Y" : category === 'MONTH' ? "%m" : "%Y-%m-%d"
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
@@ -411,7 +411,7 @@ class BookedFlightRepository extends BaseRepository {
     });
     // return await paginationHelper.rootPagination(agrBookedFlight, page, pageSize);
     const result = await agrBookedFlight.exec();
-    return !!result && !!result[0] ? result : undefined;
+    return !!result && !!result[0] ? result : [];
   }
 };
 
