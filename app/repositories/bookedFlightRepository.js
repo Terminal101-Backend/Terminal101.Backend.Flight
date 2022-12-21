@@ -378,7 +378,7 @@ class BookedFlightRepository extends BaseRepository {
     return duplicate;
   }
 
-  async getBookedFlightsChartHistory(category, businessCode, filters, sort) {
+  async getBookedFlightsChartHistory(businessCode, category, filters, sort) {
     let format = category === 'YEAR' ? "%Y" : category === 'MONTH' ? "%m" : "%Y-%m-%d"
     const agrBookedFlight = BookedFlight.aggregate();
     agrBookedFlight.append({
