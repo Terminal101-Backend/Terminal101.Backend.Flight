@@ -412,8 +412,8 @@ class FlightConditionRepository extends BaseRepository {
    * @param Boolean} isRestricted
    * @returns {Promise<FlightCondition>}
    */
-  async createFlightCondition(origin, destination, airline, providerNames, commissions, isRestricted = false) {
-    const flightCondition = new FlightCondition({ origin, destination, airline, providerNames, isRestricted });
+  async createFlightCondition(businessCode, origin, destination, airline, providerNames, commissions, isRestricted = false) {
+    const flightCondition = new FlightCondition({ businessCode, origin, destination, airline, providerNames, isRestricted });
 
     const lastFlightCondition = await FlightCondition.find().sort({ code: -1 }).limit(1);
     flightCondition.code = !!lastFlightCondition[0] ? lastFlightCondition[0].code + 1 : 0;
@@ -460,10 +460,11 @@ class FlightConditionRepository extends BaseRepository {
    * @param {Number} code 
    * @returns {Promise<FlightCondition>}
    */
-  async getFlightCondition(code) {
+  async getFlightCondition(businessCode, code) {
     const agrFlightCondition = FlightCondition.aggregate();
     agrFlightCondition.append({
       $match: {
+        businessCode,
         code,
       }
     });

@@ -50,8 +50,9 @@ module.exports.getFlightConditions = async (req, res) => {
 // NOTE: Get one flight condition
 module.exports.getFlightCondition = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const flightCondition = await flightConditionRepository.getFlightCondition(req.params.code);
+    const flightCondition = await flightConditionRepository.getFlightCondition(decodedToken.business ?? "ADMIN", req.params.code);
 
     if (!flightCondition) {
       throw "condition_not_found";
@@ -94,8 +95,9 @@ module.exports.getFlightCondition = async (req, res) => {
 module.exports.editFlightCondition = async (req, res) => {
   try {
     let modified = false;
+    const decodedToken = token.decodeToken(req.header("Authorization"));
 
-    const flightCondition = await flightConditionRepository.findOne({ code: req.params.code });
+    const flightCondition = await flightConditionRepository.findOne({businessCode: decodedToken.business ?? "ADMIN", code: req.params.code });
     if (!!req.body.origin && ((flightCondition.origin.exclude !== req.body.origin.exclude) || (JSON.stringify(flightCondition.origin.items) !== JSON.stringify(req.body.origin.items)))) {
       flightCondition.origin = req.body.origin;
       modified = true;
@@ -161,7 +163,8 @@ module.exports.editFlightCondition = async (req, res) => {
 // NOTE: Delete flight condition
 module.exports.deleteFlightCondition = async (req, res) => {
   try {
-    const flightCondition = await flightConditionRepository.deleteOne({ code: req.params.code });
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const flightCondition = await flightConditionRepository.deleteOne({ businessCode: decodedToken.business ?? "ADMIN", code: req.params.code });
 
     !!flightCondition ?
       response.success(res, {
@@ -191,7 +194,8 @@ module.exports.deleteFlightCondition = async (req, res) => {
 // NOTE: Add flight dondition
 module.exports.addFlightCondition = async (req, res) => {
   try {
-    const flightCondition = await flightConditionRepository.createFlightCondition(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commissions, req.body.isRestricted);
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const flightCondition = await flightConditionRepository.createFlightCondition(decodedToken.business ?? "ADMIN", req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.commissions, req.body.isRestricted);
 
     response.success(res, {
       code: flightCondition.code,
