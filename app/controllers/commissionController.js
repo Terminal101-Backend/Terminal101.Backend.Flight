@@ -6,8 +6,9 @@ const { EProvider } = require("../constants");
 // NOTE: Get all business
 module.exports.getCommissions = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const { items: commissions, ...result } = await commissionRepository.getCommissions(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
+    const { items: commissions, ...result } = await commissionRepository.getCommissions(decodedToken.business ?? "ADMIN", req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
     response.success(res, {
       ...result,
@@ -30,10 +31,7 @@ module.exports.getCommissions = async (req, res) => {
           items: commission.business.items,
           exclude: commission.business.exclude,
         },
-        member: {
-          items: commission.member.items,
-          exclude: commission.member.exclude,
-        },
+        businessCode: commission.businessCode,
         value: {
           percent: commission.value.percent,
           constant: commission.value.constant,
@@ -61,8 +59,9 @@ module.exports.getCommissions = async (req, res) => {
 // NOTE: Get one commission
 module.exports.getCommission = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const commission = await commissionRepository.getCommission(req.params.code);
+    const commission = await commissionRepository.getCommission(decodedToken.business ?? "ADMIN", req.params.code);
 
     if (!commission) {
       throw "condition_not_found";
@@ -87,10 +86,7 @@ module.exports.getCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -117,9 +113,10 @@ module.exports.getCommission = async (req, res) => {
 // NOTE: Edit commission
 module.exports.editCommission = async (req, res) => {
   try {
+    const decodedToken = token.decodeToken(req.header("Authorization"));
     let modified = false;
 
-    const commission = await commissionRepository.findOne({ code: req.params.code });
+    const commission = await commissionRepository.findOne({ businessCode: decodedToken.business ?? 'ADMIN', code: req.params.code });
     if (!commission) {
       response.error(res, "commission_not_exists", 404);
     }
@@ -146,11 +143,6 @@ module.exports.editCommission = async (req, res) => {
 
     if (!!req.body.business && (JSON.stringify(commission.business) !== JSON.stringify(req.body.business))) {
       commission.business = req.body.business;
-      modified = true;
-    }
-
-    if (!!req.body.member && (JSON.stringify(commission.member) !== JSON.stringify(req.body.member))) {
-      commission.member = req.body.member;
       modified = true;
     }
 
@@ -192,10 +184,7 @@ module.exports.editCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -212,7 +201,8 @@ module.exports.editCommission = async (req, res) => {
 // NOTE: Delete commission
 module.exports.deleteCommission = async (req, res) => {
   try {
-    const commission = await commissionRepository.deleteOne({ code: req.params.code });
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    const commission = await commissionRepository.deleteOne({ businessCode: decodedToken.business ?? 'ADMIN', code: req.params.code });
     if (!commission) {
       response.error(res, "commission_not_exists", 404);
     }
@@ -236,10 +226,7 @@ module.exports.deleteCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,
@@ -256,7 +243,13 @@ module.exports.deleteCommission = async (req, res) => {
 // NOTE: Add flight dondition
 module.exports.addCommission = async (req, res) => {
   try {
-    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, req.body.member, req.body.value);
+    const decodedToken = token.decodeToken(req.header("Authorization"));
+    if(decodedToken.type === 'BUSINESS'){
+      if(req.body.business.items.length === 0 && !req.body.business.exclude){
+        throw 'Information not entered correctly';
+      }
+    }
+    const commission = await commissionRepository.createCommission(req.body.origin, req.body.destination, req.body.airline, req.body.providerNames, req.body.business, decodedToken.business, req.body.value);
 
     response.success(res, {
       code: commission.code,
@@ -277,10 +270,7 @@ module.exports.addCommission = async (req, res) => {
         items: commission.business.items,
         exclude: commission.business.exclude,
       },
-      member: {
-        items: commission.member.items,
-        exclude: commission.member.exclude,
-      },
+      businessCode: commission.businessCode,
       value: {
         percent: commission.value.percent,
         constant: commission.value.constant,

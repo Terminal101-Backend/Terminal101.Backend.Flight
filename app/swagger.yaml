@@ -730,7 +730,7 @@ paths:
               $ref: "#/definitions/BookFlightStatus"
 
   /flight/book/order/{bookedFlightCode}:
-      # NOTE: Order bookedFlight by business
+    # NOTE: Order bookedFlight by business
     post:
       tags:
         - Book
@@ -1352,7 +1352,7 @@ definitions:
       count:
         type: number
         example: 13
-  
+
   HistoryFlight:
     properties:
       time:
@@ -1777,8 +1777,6 @@ definitions:
         $ref: "#/definitions/Condition"
       business:
         $ref: "#/definitions/Condition"
-      member:
-        $ref: "#/definitions/Condition"
       value:
         $ref: "#/definitions/CommissionValue"
       providerNames:
@@ -1799,8 +1797,9 @@ definitions:
         $ref: "#/definitions/Condition"
       business:
         $ref: "#/definitions/Condition"
-      member:
-        $ref: "#/definitions/Condition"
+      businessCode:
+        type: string
+        value: BSN132627
       value:
         $ref: "#/definitions/CommissionValue"
       providerNames:
@@ -1820,8 +1819,6 @@ definitions:
       airline:
         $ref: "#/definitions/Condition"
       business:
-        $ref: "#/definitions/Condition"
-      member:
         $ref: "#/definitions/Condition"
       value:
         $ref: "#/definitions/CommissionValue"
@@ -2019,12 +2016,7 @@ definitions:
         type: number
         example: 1
       travelerType:
-        enum:
-          [
-            ADULT,
-            CHILD,
-            INFANTS,
-          ]
+        enum: [ADULT, CHILD, INFANTS]
         type: string
         example: ADULT
 
