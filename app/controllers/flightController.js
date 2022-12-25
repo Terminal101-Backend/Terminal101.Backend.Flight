@@ -15,6 +15,7 @@ const {
 const { amadeus, accountManagement, tequila } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
 const socketClients = {};
+const tequilaHelper = require('../helpers/tequilaHelper');
 
 // NOTE: Flight
 // NOTE: Search origin or destination

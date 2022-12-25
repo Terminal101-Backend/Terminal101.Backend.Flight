@@ -7,6 +7,7 @@ const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus, EProvider, EUserType, EFeeType } = require("../constants");
 const { common } = require("../services");
 const flightTicketController = require("./flightTicketController");
+const tequilaHelper = require('../helpers/tequilaHelper')
 
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {

@@ -210,7 +210,7 @@ class FlightInfoRepository extends BaseRepository {
     }
   }
 
-  async updateFlightDetails(code, flightDetailsCode, newPrice) {
+  async updateFlightDetails(code, flightDetailsCode, newPrice, combinations) {
     // TODO: Update Other fields
     await FlightInfo.updateOne(
       {
@@ -221,6 +221,7 @@ class FlightInfoRepository extends BaseRepository {
         // TODO:: Update more Fields
         $set: {
           "flights.$.price": newPrice,
+          "flights.$.providerData.combinations": combinations,
         }
       }
     ).then((res) => {

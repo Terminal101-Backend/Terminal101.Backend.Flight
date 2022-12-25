@@ -60,7 +60,7 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
             selected_cabins
         }
     }, { testMode });
-    console.log('====> ', response)
+
     const result = {
         success: !!response,
         data: response.data,
@@ -85,7 +85,7 @@ module.exports.checkFlights = async (bToken, sessionId, baggageNumber, adults, c
             session_id: sessionId
         }
     }, { testMode });
-    console.log('====> ', response)
+
     const result = {
         success: !!response,
         data: response
@@ -129,8 +129,8 @@ module.exports.saveBook = async (passengers, booking_token, session_id, baggage,
 
     }
     let holdBag, handBag = [];
-    handBag = baggage.filter(item.combination.category === 'hand_bag');
-    holdBag = baggage.filter(item.combination.category === 'hold_bag');
+    handBag = baggage.filter(item => item.combination.category === 'hand_bag');
+    holdBag = baggage.filter(item => item.combination.category === 'hold_bag');
     let temp;
 
     holdBag.forEach(bag => {
@@ -172,10 +172,20 @@ module.exports.saveBook = async (passengers, booking_token, session_id, baggage,
         session_id,
         baggage: handBag.concat(holdBag),
     };
-
+    console.log('----> ', handBag.concat(holdBag))
     const {
         data: response
-    } = await axiosApiInstance.post("/booking/save_booking", query, { testMode });
+    } = await axiosApiInstance.post("/booking/save_booking", {
+        data: {
+            health_declaration_checked: true,
+            lang: "en",
+            passengers: travelersInfo,
+            locale: "en",
+            booking_token,
+            session_id,
+            baggage: handBag.concat(holdBag),
+        }
+    }, { testMode });
     console.log('====> ', response)
     const result = {
         success: !!response,

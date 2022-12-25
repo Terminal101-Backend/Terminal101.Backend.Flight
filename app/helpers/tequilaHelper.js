@@ -114,11 +114,11 @@ const makePriceObject = (flight, adults, children, infants, rate) => ({
 const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "ECONOMY", searchId, currencyRate) => {
     return (flight, index) => {
 
-        let code = flight.route[0].operating_carrier;
+        let code = flight.route[0].airline;
         result = {
             code: `TQL-${index}`,
             owner: airlines[code],
-            availableSeats: flight.availability.seats,
+            availableSeats: flight.availability.seats ?? 0,
             currencyCode: 'USD', //TODO: get from data
             travelClass,
             provider: EProvider.get("TEQUILA"),
@@ -126,6 +126,12 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
                 bookingToken: flight.booking_token,
                 searchId,
                 currencyRate,
+                combinations: [],
+            },
+            price: {
+                total: parseFloat(flight.price),
+                grandTotal: parseFloat(flight.price),
+                base: parseFloat(flight.fare.adults),
             },
             itineraries: [
                 {
@@ -139,7 +145,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
     };
 };
 
-const createBaggage = (flight, info, rate) => {
+const createBaggage = (info, rate) => {
     let combinations = [];
     info.baggage.combinations.hold_bag.forEach(holdBag => {
         holdBag.price.currency = 'USD';
@@ -159,8 +165,7 @@ const createBaggage = (flight, info, rate) => {
         handBag.price.merchant = handBag.price.merchant * rate;
         combinations.push({ combination: handBag });
     });
-
-    flight.providerData['combinations'] = combinations;
+    return combinations;
 }
 
 const fareRule = () => {
@@ -214,10 +219,10 @@ module.exports.searchFlights = async (params, testMode) => {
     );
 
     const carriers = Object.keys(tequilaSearchResult
-        .reduce((res, cur) => [...res, ...cur.route], [])
+        .reduce((res, cur) => [...res, ...cur.airlines], [])
         .reduce((res, cur) => ({
             ...res,
-            [cur.operating_carrier]: 1,
+            [cur]: 1,
         }), {})
     );
 
@@ -233,13 +238,8 @@ module.exports.searchFlights = async (params, testMode) => {
     const { origin, destination } = await flightHelper.getOriginDestinationCity(params.origin, params.destination, airports);
 
     for (flight of flightDetails) {
-        let { data: info } = await tequila.checkFlights(flight.providerData.bookingToken, flight.providerData.searchId, params.adults + params.children + params.infants, params.adults, params.children, params.infants, 'USD', testMode);
-
-        flight.providerData['baggageNumber'] = params.adults + params.children + params.infants;
-        flight.providerData['passengerNumber'] = { adults: params.adults, children: params.children, infants: params.infants };
-
-        flight['price'] = makePriceObject(info, params.adults, params.children, params.infants, rate);
-        createBaggage(flight, info, rate);
+        flight.providerData['baggageNumber'] = parseInt(params.adults ?? 1) + parseInt(params.children ?? 0) + parseInt(params.infants ?? 0);
+        flight.providerData['passengerNumber'] = { adults: params.adults ?? 1, children: params.children ?? 0, infants: params.infants ?? 0};
         flight.providerData['FareRule'] = fareRule();
     }
 
@@ -296,7 +296,7 @@ module.exports.bookFlight = async (params, testMode) => {
     const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
     const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-    const { data: bookedFlight } = await tequila.saveBook(travelers, params.flightDetails.providerData.bookingToken, params.flightDetails.providerData.searchId, params.flightDetails.flights.providerData.combinations, testMode);
+    const { data: bookedFlight } = await tequila.saveBook(travelers, params.flightDetails.flights.providerData.bookingToken, params.flightDetails.flights.providerData.searchId, params.flightDetails.flights.providerData.combinations, testMode);
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.booking_id;
     await flightInfo.save();
     let extraData = {
@@ -306,8 +306,13 @@ module.exports.bookFlight = async (params, testMode) => {
 };
 
 module.exports.airRevalidate = async (flightInfo, testMode) => {
-    let info = await tequila.checkFlights(flightInfo.providerData.bookingToken, flightInfo.providerData.searchId, flightInfo.providerData.baggageNumber, flightInfo.providerData.passengerNumber.adults, flightInfo.providerData.passengerNumber.children, flightInfo.providerData.passengerNumber.infants, 'USD', testMode);
-    let newPrice = makePriceObject(info, flightInfo.providerData.passengerNumber.adults, flightInfo.providerData.passengerNumber.children, flightInfo.providerData.passengerNumber.infants, flightInfo.providerData.currencyRate);
+    let { data: info } = await tequila.checkFlights(flightInfo.flights.providerData.bookingToken, flightInfo.flights.providerData.searchId, flightInfo.flights.providerData.baggageNumber, flightInfo.flights.providerData.passengerNumber.adults, flightInfo.flights.providerData.passengerNumber.children, flightInfo.flights.providerData.passengerNumber.infants, 'USD', testMode);
+    let newPrice = makePriceObject(info, flightInfo.flights.providerData.passengerNumber.adults, flightInfo.flights.providerData.passengerNumber.children, flightInfo.flights.providerData.passengerNumber.infants, flightInfo.flights.providerData.currencyRate);
+    if (!flightInfo.flights.providerData.combination) {
+        let combinations = createBaggage(info, flightInfo.flights.providerData.currencyRate);
+        await flightInfoRepository.updateFlightDetails(flightInfo.code, flightInfo.flights.code, flightInfo.flights.price, combinations);
+    }
+
     return newPrice;
 };
 
