@@ -9,10 +9,11 @@ axiosApiInstance.interceptors.request.use(
 
         config.baseURL = process.env["TEQUILA_BASE_URL" + pathPostfix];
         config.headers = {
-            // 'Accept': '*/*',
+            'Accept': '*/*',
             'apikey': process.env['TEQUILA_API_KEY' + pathPostfix],
-            // 'Content-Type': 'application/json',
-            // 'Accept-Encoding': 'gzip, deflate, br',
+            'Content-Type': 'application/json',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'KW-Auth-Token': config?.token ?? ''
         }
 
         return config;
@@ -47,7 +48,7 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
 
     const {
         data: response
-    } = await axiosApiInstance.get("/search", {
+    } = await axiosApiInstance.get("/v2/search", {
         params: {
             fly_from: originLocationCode,
             fly_to: destinationLocationCode,
@@ -74,7 +75,7 @@ module.exports.search = async (originLocationCode, destinationLocationCode, depa
 module.exports.checkFlights = async (bToken, sessionId, baggageNumber, adults, children, infants, currencyCode, testMode = true) => {
     const {
         data: response
-    } = await axiosApiInstance.get("/booking/check_flights", {
+    } = await axiosApiInstance.get("/v2/booking/check_flights", {
         params: {
             booking_token: bToken,
             bnum: baggageNumber,
@@ -94,7 +95,7 @@ module.exports.checkFlights = async (bToken, sessionId, baggageNumber, adults, c
     return result;
 }
 
-module.exports.saveBook = async (passengers, booking_token, session_id, baggage, testMode = true) => {
+module.exports.saveBook = async (passengers, contact, booking_token, session_id, baggage, testMode = true) => {
     const travelersInfo = [];
     const infant = 2 * 365 * 24 * 3600 * 1000;
     const child = 12 * 365 * 24 * 3600 * 1000;
@@ -113,18 +114,21 @@ module.exports.saveBook = async (passengers, booking_token, session_id, baggage,
             case "FEMALE":
                 namePrefix = "ms";
                 break;
+            case "OTHER":
+                namePrefix = "mr";
+                break;
         }
         travelersInfo.push({
-            birthday: passengers[index].birthDate,
+            birthday: passengers[index].birthDate.split('T')[0],
             cardno: passengers[index].document.code,
             category: type,
             email: 'info@terminal101.co',
-            expiration: passengers[index].document.expirationDate,
+            expiration: passengers[index].document.expirationDate.split('T')[0],
             title: namePrefix,
             name: passengers[index].firstName,
             surname: passengers[index].lastName,
             nationality: passengers[index].document.issuedAt,
-            phone: '+98123456789'
+            phone: contact.mobileNumber
         })
 
     }
@@ -172,21 +176,11 @@ module.exports.saveBook = async (passengers, booking_token, session_id, baggage,
         session_id,
         baggage: handBag.concat(holdBag),
     };
-    console.log('----> ', handBag.concat(holdBag))
+
     const {
         data: response
-    } = await axiosApiInstance.post("/booking/save_booking", {
-        data: {
-            health_declaration_checked: true,
-            lang: "en",
-            passengers: travelersInfo,
-            locale: "en",
-            booking_token,
-            session_id,
-            baggage: handBag.concat(holdBag),
-        }
-    }, { testMode });
-    console.log('====> ', response)
+    } = await axiosApiInstance.post("/v2/booking/save_booking", query, { testMode });
+
     const result = {
         success: !!response,
         data: response
@@ -202,8 +196,8 @@ module.exports.issue = async (bookingId, transactionId, testMode = true) => {
     }
     const {
         data: response
-    } = await axiosApiInstance.post("/booking/confirm_payment", query, { testMode });
-    console.log('====> ', response)
+    } = await axiosApiInstance.post("/v2/booking/confirm_payment", query, { testMode });
+
     const result = {
         success: !!response,
         data: response
@@ -212,27 +206,25 @@ module.exports.issue = async (bookingId, transactionId, testMode = true) => {
     return result;
 }
 
-module.exports.cancel = async (bookingId, transactionId, testMode = true) => {
+module.exports.cancel = async (bookingId, testMode = true) => {
     const {
         data: authToken
     } = await axiosApiInstance.post("/manage/create_auth_token", { testMode });
     const config = {
-        headers: {
-            "KW-Auth-Token": authToken.authorization_token,
-        },
+        token: authToken.authorization_token,
         testMode
     };
 
+    let query = [
+        {
+            booking_id: parseInt(bookingId)
+        }
+    ]
+
     const {
         data: response
-    } = await axiosApiInstance.post("/manage/refunds", {
-        params: {
-            booking_id: bookingId,
-            transaction_id: transactionId
-        }
-    }, config);
+    } = await axiosApiInstance.post("/manage/refunds", query, config);
 
-    console.log('====> ', response)
     const result = {
         success: !!response,
         data: response
@@ -246,17 +238,24 @@ module.exports.cancelStatus = async (booking_ids, testMode = true) => {
         data: authToken
     } = await axiosApiInstance.post("/manage/create_auth_token", { testMode });
 
-    const options = {
-        headers: { "KW-Auth-Token": authToken.authorization_token }
+    const config = {
+        token: authToken.authorization_token,
+        testMode
     };
+
+    let query = [
+        {
+            booking_id: parseInt(booking_ids)
+        }
+    ]
 
     const {
         data: response
-    } = await axiosApiInstance.post("/manage/refunds", { params: { booking_ids } }, options, { testMode });
-    console.log('====> ', response)
+    } = await axiosApiInstance.post("/manage/refunds", query, config);
+
     const result = {
         success: !!response,
-        data: response
+        data: response[0].refund_state
     };
 
     return result;

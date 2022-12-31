@@ -147,6 +147,7 @@ const makeFlightDetailsArray = (aircrafts, airlines, airports, travelClass = "EC
 
 const createBaggage = (info, rate) => {
     let combinations = [];
+    // console.log(JSON.stringify(info.baggage.combinations))
     info.baggage.combinations.hold_bag.forEach(holdBag => {
         holdBag.price.currency = 'USD';
         holdBag.price.amount = holdBag.price.amount * rate;
@@ -239,7 +240,7 @@ module.exports.searchFlights = async (params, testMode) => {
 
     for (flight of flightDetails) {
         flight.providerData['baggageNumber'] = parseInt(params.adults ?? 1) + parseInt(params.children ?? 0) + parseInt(params.infants ?? 0);
-        flight.providerData['passengerNumber'] = { adults: params.adults ?? 1, children: params.children ?? 0, infants: params.infants ?? 0};
+        flight.providerData['passengerNumber'] = { adults: params.adults ?? 1, children: params.children ?? 0, infants: params.infants ?? 0 };
         flight.providerData['FareRule'] = fareRule();
     }
 
@@ -296,7 +297,7 @@ module.exports.bookFlight = async (params, testMode) => {
     const flightInfo = await flightInfoRepository.findOne({ code: params.flightDetails.code });
     const flightIndex = flightInfo.flights.findIndex(flight => flight.code === params.flightDetails.flights.code);
 
-    const { data: bookedFlight } = await tequila.saveBook(travelers, params.flightDetails.flights.providerData.bookingToken, params.flightDetails.flights.providerData.searchId, params.flightDetails.flights.providerData.combinations, testMode);
+    const { data: bookedFlight } = await tequila.saveBook(travelers, params.contact, params.flightDetails.flights.providerData.bookingToken, params.flightDetails.flights.providerData.searchId, params.flightDetails.flights.providerData.combinations, testMode);
     flightInfo.flights[flightIndex].providerData.bookedId = bookedFlight.booking_id;
     await flightInfo.save();
     let extraData = {
@@ -308,10 +309,9 @@ module.exports.bookFlight = async (params, testMode) => {
 module.exports.airRevalidate = async (flightInfo, testMode) => {
     let { data: info } = await tequila.checkFlights(flightInfo.flights.providerData.bookingToken, flightInfo.flights.providerData.searchId, flightInfo.flights.providerData.baggageNumber, flightInfo.flights.providerData.passengerNumber.adults, flightInfo.flights.providerData.passengerNumber.children, flightInfo.flights.providerData.passengerNumber.infants, 'USD', testMode);
     let newPrice = makePriceObject(info, flightInfo.flights.providerData.passengerNumber.adults, flightInfo.flights.providerData.passengerNumber.children, flightInfo.flights.providerData.passengerNumber.infants, flightInfo.flights.providerData.currencyRate);
-    if (!flightInfo.flights.providerData.combination) {
-        let combinations = createBaggage(info, flightInfo.flights.providerData.currencyRate);
-        await flightInfoRepository.updateFlightDetails(flightInfo.code, flightInfo.flights.code, flightInfo.flights.price, combinations);
-    }
+
+    let combinations = createBaggage(info, flightInfo.flights.providerData.currencyRate);
+    await flightInfoRepository.updateFlightDetails(flightInfo.code, flightInfo.flights.code, undefined, combinations);
 
     return newPrice;
 };
@@ -326,5 +326,6 @@ module.exports.issueBookedFlight = async (bookedFlight, testMode) => {
 }
 
 module.exports.cancelBookFlight = async (bookedFlight, testMode) => {
-    return await tequila.cancel(bookedFlight.providerPnr, bookedFlight.extraData.transactionId, testMode);
+    let { data: status } = await tequila.cancel(bookedFlight.providerPnr, testMode);
+    return status;
 }

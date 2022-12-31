@@ -212,25 +212,46 @@ class FlightInfoRepository extends BaseRepository {
 
   async updateFlightDetails(code, flightDetailsCode, newPrice, combinations) {
     // TODO: Update Other fields
-    await FlightInfo.updateOne(
-      {
-        code,
-        "flights.code": flightDetailsCode
-      },
-      {
-        // TODO:: Update more Fields
-        $set: {
-          "flights.$.price": newPrice,
-          "flights.$.providerData.combinations": combinations,
+    if (!!newPrice) {
+      await FlightInfo.updateOne(
+        {
+          code,
+          "flights.code": flightDetailsCode
+        },
+        {
+          // TODO:: Update more Fields
+          $set: {
+            "flights.$.price": newPrice,
+          }
         }
-      }
-    ).then((res) => {
-      return res
-    })
-      .catch((err) => {
-        console.log(err);
-      });
+      ).then((res) => {
+        return res
+      })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+    else if (!!combinations) {
+      await FlightInfo.updateOne(
+        {
+          code,
+          "flights.code": flightDetailsCode
+        },
+        {
+          // TODO:: Update more Fields
+          $set: {
+            "flights.$.providerData.combinations": combinations,
+          }
+        }
+      ).then((res) => {
+        return res
+      })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
   }
+
   /** 
   * @param {Number} page
   * @param {Number} pageSize

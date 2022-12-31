@@ -398,11 +398,10 @@ module.exports.bookFlight = async (req, res) => {
 
     //NOTE: Set Timer on Timeout
     let timeoutProvider = providerBookResult.timeout > 0 ? providerBookResult.timeout : new Date().getTime() + parseInt(process.env.PAYMENT_TIMEOUT_CREDIT);
-    let timeout = paymentMethod.type === 'STRIPE' ?
-      timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT) :
-      Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO));
-    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod.type, timeout: timeoutProvider });
-
+    let timeout = (!paymentMethod || (paymentMethod.type === "STRIPE")) ?
+      Math.max(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.MIN_TIMEOUT)) :
+      Math.max(Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO)), parseInt(process.env.MIN_TIMEOUT));
+    setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod?.type, timeout: timeoutProvider });
     bookedFlight.providerTimeout = timeoutProvider;
     bookedFlight.extraData = providerBookResult.extraData;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
@@ -418,6 +417,7 @@ module.exports.bookFlight = async (req, res) => {
       ...userWalletResult
     });
   } catch (e) {
+    console.trace(e)
     response.exception(res, e);
   }
 };
@@ -585,7 +585,7 @@ module.exports.editUserBookedFlight = async (req, res) => {
 
       case "CANCEL" | "REJECT":
         try {
-          await providerHelper.cancelBookFlight(bookedFlight);
+          await providerHelper.cancelBookFlight(bookedFlight, testMode);
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get('REJECTED'),
             description: 'The Flight rejected by Provider.',
