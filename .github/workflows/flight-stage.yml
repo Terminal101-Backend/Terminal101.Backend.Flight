@@ -28,7 +28,7 @@ jobs:
           cd /var/www/app/terminal101/terminal101_backend/Terminal101.Backend.Flight
           git checkout stage
           git pull origin stage
-          npm ci
+          npm i
           pm2 status
           pm2 stop Flight
           pm2 start Flight
