@@ -114,7 +114,7 @@ module.exports.getAirports = baseValidator({
 
 module.exports.getAirlines = baseValidator({
   body: {},
-});
+}, true, true);
 
 module.exports.restrictionCovid19 = baseValidator({
   body: {},
