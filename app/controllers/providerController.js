@@ -2,12 +2,20 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { providerRepository } = require("../repositories");
 const { EProvider } = require("../constants");
+const { decodeToken } = require("../helpers/tokenHelper");
+const { accountManagement } = require("../services");
 
 // NOTE: Provider tickets
 // NOTE: Get all provider
 module.exports.getProviders = async (req, res) => {
   try {
-    const providers = await providerRepository.findMany();
+    const decodedToken = decodeToken(req.header("Authorization"));
+    let providers = await providerRepository.findMany();
+
+    if (decodedToken.type === "BUSINESS") {
+      const { data: availableProviders } = await accountManagement.getThirdPartyUserAvailableProviders(decodedToken.user, decodedToken.business);
+      providers = providers.filter(provider => availableProviders.includes(EProvider.find(provider.name)));
+    }
 
     response.success(res, providers.map(provider => ({
       name: EProvider.find(provider.name),

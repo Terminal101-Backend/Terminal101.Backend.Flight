@@ -11,7 +11,7 @@ router
       console.log("Get all providers", req.params, req.body, req.query);
       next();
     },
-    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN"),
+    checkAccess.checkUserType("SERVICE", "SUPER_ADMIN", "ADMIN", "BUSINESS"),
     providerValidator.getProviders.check,
     providerController.getProviders);
 
