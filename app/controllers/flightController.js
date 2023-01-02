@@ -829,13 +829,16 @@ module.exports.getAirports = async (req, res) => {
 // NOTE: Get airlines
 module.exports.getAirlines = async (req, res) => {
   try {
-    const airline = await airlineRepository.findMany();
+    const { items: airlines, ...result } = await airlineRepository.getAirlines(req.header("Page"), req.header("PageSize"), req.query.filter, req.query.sort);
 
-    response.success(res, airline.map(airline => ({
-      code: airline.code,
-      name: airline.name,
-      description: airline.description
-    })));
+    response.success(res, {
+      ...result,
+      itesm: airlines.map(airline => ({
+        code: airline.code,
+        name: airline.name,
+        description: airline.description
+      }))
+    });
   } catch (e) {
     response.exception(res, e);
   }

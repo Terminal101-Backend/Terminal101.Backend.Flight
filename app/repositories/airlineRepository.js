@@ -1,4 +1,6 @@
 const BaseRepository = require("../core/baseRepository");
+const filterHelper = require("../helpers/filterHelper");
+const paginationHelper = require("../helpers/paginationHelper");
 const { Airline } = require("../models/documents");
 
 /**
@@ -61,6 +63,13 @@ class AirlineRepository extends BaseRepository {
 
       return airlines;
     }, {});
+  }
+
+  async getAirlines(page, pageSize, filters, sort) {
+    const agrAirline = Airline.aggregate();
+
+    filterHelper.filterAndSort(agrAirline, filters, sort);
+    return await paginationHelper.rootPagination(agrAirline, page, pageSize);
   }
 };
 
