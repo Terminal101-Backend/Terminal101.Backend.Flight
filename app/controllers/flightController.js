@@ -16,7 +16,6 @@ const { amadeus, accountManagement } = require("../services");
 const { flightHelper, amadeusHelper, partoHelper, avtraHelper, dateTimeHelper, arrayHelper, worldticketHelper, tokenHelper } = require("../helpers");
 const socketClients = {};
 const tequilaHelper = require('../helpers/tequilaHelper')
-const fs = require('fs')
 
 // NOTE: Flight
 // NOTE: Search origin or destination
@@ -937,27 +936,6 @@ module.exports.getHistoryFlights = async (req, res) => {
     response.success(res, list);
 
   } catch (e) {
-    response.exception(res, e);
-  }
-};
-
-module.exports.searchTequila = async (req, res) => {
-  try {
-    let result = await tequilaHelper.searchFlights(req.query, true)
-    fs.writeFile('app/static/log.txt', 'controller tequila search :: ' + JSON.stringify(result), (err) => {
-
-      // In case of a error throw err.
-      if (err) throw err;
-    })
-    response.success(res, result);
-
-  } catch (e) {
-    fs.writeFile('app/static/log.txt', 'controller error :: ' + JSON.stringify(e), (err) => {
-
-      // In case of a error throw err.
-      if (err) throw err;
-    })
-    console.trace(e);
     response.exception(res, e);
   }
 };

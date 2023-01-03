@@ -7,6 +7,7 @@ const { accountManagement, wallet, amadeus } = require("../services");
 const { EBookedFlightStatus, EProvider, EUserType, EFeeType } = require("../constants");
 const { common } = require("../services");
 const flightTicketController = require("./flightTicketController");
+const tequilaHelper = require('../helpers/tequilaHelper')
 
 // NOTE: Book Flight
 const pay = async (bookedFlight) => {
@@ -406,7 +407,6 @@ module.exports.bookFlight = async (req, res) => {
       Math.max(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.MIN_TIMEOUT)) :
       Math.max(Math.min(timeoutProvider - new Date().getTime() - parseInt(process.env.PAYMENT_TIMEOUT), parseInt(process.env.PAYMENT_TIMEOUT_CRYPTO)), parseInt(process.env.MIN_TIMEOUT));
     setTimeout(paymentTimeout, timeout, { code: bookedFlight.code, method: paymentMethod?.type, timeout: timeoutProvider });
-
     bookedFlight.providerTimeout = timeoutProvider;
     bookedFlight.extraData = providerBookResult.extraData;
     // bookedFlight.transactionId = userWalletResult.externalTransactionId;
@@ -422,6 +422,7 @@ module.exports.bookFlight = async (req, res) => {
       ...userWalletResult
     });
   } catch (e) {
+    console.trace(e)
     response.exception(res, e);
   }
 };
@@ -589,7 +590,7 @@ module.exports.editUserBookedFlight = async (req, res) => {
 
       case "CANCEL" | "REJECT":
         try {
-          await providerHelper.cancelBookFlight(bookedFlight);
+          await providerHelper.cancelBookFlight(bookedFlight, testMode);
           bookedFlight.statuses.push({
             status: EBookedFlightStatus.get("REJECTED"),
             description: "The Flight rejected by Provider.",
