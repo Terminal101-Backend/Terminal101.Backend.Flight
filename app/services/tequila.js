@@ -174,7 +174,7 @@ module.exports.saveBook = async (passengers, contact, booking_token, session_id,
         locale: "en",
         booking_token,
         session_id,
-        baggage: handBag.concat(holdBag),
+        baggage: handBag.concat(holdBag).filter(item => item.passengers.length !== 0),
     };
 
     const {
