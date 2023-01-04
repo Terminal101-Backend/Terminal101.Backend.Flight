@@ -15,6 +15,7 @@ const addProviders = async () => {
   await providerRepository.createProvider("PARTO", "Parto");
   await providerRepository.createProvider("AVTRA", "Avtra");
   await providerRepository.createProvider("WORLDTICKET", "Worldticket");
+  await providerRepository.createProvider("TEQUILA", "Tequila");
 };
 
 const addCountriesCitiesAirports = async () => {

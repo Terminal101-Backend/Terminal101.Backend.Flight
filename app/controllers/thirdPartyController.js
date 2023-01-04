@@ -2,13 +2,14 @@ const response = require("../helpers/responseHelper");
 const request = require("../helpers/requestHelper");
 const { providerRepository, flightInfoRepository, bookedFlightRepository } = require("../repositories");
 const { EBookedFlightStatus, EProvider, EUserType } = require("../constants");
-const { amadeus, parto, avtra, accountManagement, wallet } = require("../services");
-const { tokenHelper, avtraHelper, worldticketHelper, partoHelper, amadeusHelper, flightHelper, arrayHelper } = require("../helpers");
+const { amadeus, parto, avtra, accountManagement, wallet, tequila } = require("../services");
+const { tokenHelper, avtraHelper, worldticketHelper, partoHelper, amadeusHelper, flightHelper, arrayHelper, tequilaHelper } = require("../helpers");
 const providerHelpers = {
   AVTRA: avtraHelper,
   WORLDTICKET: worldticketHelper,
   AMADEUS: amadeusHelper,
   PARTO: partoHelper,
+  TEQUILA: tequila
 }
 
 // NOTE: Search flights by provider owner
