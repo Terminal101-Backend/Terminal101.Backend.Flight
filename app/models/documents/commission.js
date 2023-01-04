@@ -27,9 +27,9 @@ const commission = new Schema({
     type: [String],
     default: [],
   },
-  member: {
-    type: Condition,
-    default: {},
+  businessCode: {
+    type: String,
+    required: true,
   },
   business: {
     type: Condition,

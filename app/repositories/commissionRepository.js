@@ -190,7 +190,7 @@ class CommissionRepository extends BaseRepository {
           code: 1,
           providerNames: 1,
           business: 1,
-          member: 1,
+          businessCode: 1,
           value: 1,
           isActive: 1,
           "airline.exclude": 1,
@@ -332,7 +332,7 @@ class CommissionRepository extends BaseRepository {
           value: 1,
           providerNames: 1,
           business: 1,
-          member: 1,
+          businessCode: 1,
           isActive: 1,
           "airline.exclude": 1,
           "airline.items": {
@@ -413,8 +413,8 @@ class CommissionRepository extends BaseRepository {
    * @param {String} providerNames
    * @returns {Promise<Commission>}
    */
-  async createCommission(origin, destination, airline, providerNames, business, member, value) {
-    const commission = new Commission({ origin, destination, airline, providerNames, business, member, value });
+  async createCommission(origin, destination, airline, providerNames, business, businessCode, value) {
+    const commission = new Commission({ origin, destination, airline, providerNames, business, businessCode: businessCode ?? "ADMIN", value });
 
     const lastCommission = await Commission.find().sort({ code: -1 }).limit(1);
     commission.code = !!lastCommission[0] ? lastCommission[0].code + 1 : 0;
@@ -432,8 +432,13 @@ class CommissionRepository extends BaseRepository {
    * @param {String} sort
    * @returns {Promise<Commission[]>}
    */
-  async getCommissions(page, pageSize, filters, sort) {
+  async getCommissions(businessCode, page, pageSize, filters, sort) {
     const agrCommission = Commission.aggregate();
+    agrCommission.append({
+      $match: {
+        businessCode,
+      }
+    });
     agrCommission.append(this.#getConditionCountryPipeline(true));
     agrCommission.append(this.#getConditionCityPipeline(true));
     agrCommission.append(this.#getConditionAirportPipeline(true));
@@ -456,10 +461,11 @@ class CommissionRepository extends BaseRepository {
    * @param {Number} code 
    * @returns {Promise<Commission>}
    */
-  async getCommission(code) {
+  async getCommission(businessCode, code) {
     const agrCommission = Commission.aggregate();
     agrCommission.append({
       $match: {
+        businessCode,
         code,
       }
     });

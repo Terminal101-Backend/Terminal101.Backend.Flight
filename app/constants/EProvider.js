@@ -9,6 +9,7 @@ class EProvider extends Enum {
     this.add("PARTO");
     this.add("AVTRA");
     this.add("WORLDTICKET");
+    this.add("TEQUILA");
 
     this.freeze();
   }
