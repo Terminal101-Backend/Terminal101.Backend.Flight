@@ -833,7 +833,7 @@ module.exports.getAirlines = async (req, res) => {
 
     response.success(res, {
       ...result,
-      itesm: airlines.map(airline => ({
+      items: airlines.map(airline => ({
         code: airline.code,
         name: airline.name,
         description: airline.description
