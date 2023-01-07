@@ -62,7 +62,7 @@ module.exports.getCommission = async (req, res) => {
   try {
     const decodedToken = tokenHelper.decodeToken(req.header("Authorization"));
     const providers = await providerRepository.findMany();
-    const commission = await commissionRepository.getCommission(decodedToken.business ?? "ADMIN", req.params.code);
+    const commission = await commissionRepository.getCommission(decodedToken.business ?? "ADMIN", parseInt(req.params.code));
 
     if (!commission) {
       throw "condition_not_found";
